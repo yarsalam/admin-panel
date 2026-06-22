@@ -1,0 +1,40 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_DATABASE: admin_yarsalam
+    ports:
+      - "5530:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  phpmyadmin_admin:
+    image: phpmyadmin:5
+    container_name: phpmyadmin_admin
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: admin123
+    depends_on:
+      - mysql
+
+  admin-backend:   # اسم سرویس بک‌اند ادمین (فرضی)
+    build: ./apps/server
+    ports:
+      - "4000:4000"
+    environment:
+      - USER_API_BASE_URL=http://host.docker.internal:5001
+      - USER_API_KEY=your-super-secret-key
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  mysql_data:
