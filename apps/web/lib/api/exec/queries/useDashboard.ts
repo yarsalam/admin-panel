@@ -41,7 +41,9 @@ export const usePhaseDistribution = () => {
   return useQuery<PhaseDistribution[]>({
     queryKey: ["exec", "dashboard", "phase-distribution"],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/dashboard/phase-distribution");
+      const { data } = await apiClient.get(
+        "/exec/dashboard/phase-distribution",
+      );
       return data;
     },
     staleTime: 5 * 60 * 1000,

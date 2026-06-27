@@ -18,7 +18,10 @@ import databaseConfig from 'src/config/database.config';
         database: config.get<string>('database.database'),
         entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
         // رفع: synchronize=false در production — از migration استفاده شود
-        synchronize: config.get('NODE_ENV') !== 'production',
+        // synchronize: config.get('NODE_ENV') !== 'production',
+        autoLoadEntities: true,
+        synchronize: true,
+        logging: true,
       }),
     }),
   ],

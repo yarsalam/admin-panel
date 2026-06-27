@@ -18,9 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: configService.get('JWT_SECRET') || 'super-secret',
     });
+    console.log('JWT_SECRET =', configService.get('JWT_SECRET'));
   }
 
   async validate(payload: { sub: number; email: string }) {
+    console.log('JWT PAYLOAD =', payload);
     const user = await this.adminUserRepo.findOne({
       where: { id: payload.sub, isActive: true },
     });

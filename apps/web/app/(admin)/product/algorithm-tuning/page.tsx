@@ -1,8 +1,7 @@
 "use client";
 import { withPageProtection } from "@/components/withPageProtection";
-import GlobalText from "@/components/ui/GlobalText";
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   getPhaseWeights,
   getFeatureWeights,
@@ -12,8 +11,10 @@ import {
 import SectionTitle from "@/components/ui/SectionTitle";
 import CustomButton from "@/components/ui/CustomButton";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useSetPhaseWeight, useUpdateFeatureWeight } from "@/lib/api/product/mutations/useAlgorithmTuning";
-
+import {
+  useSetPhaseWeight,
+  useUpdateFeatureWeight,
+} from "@/lib/api/product/mutations/useAlgorithmTuning";
 
 function AlgorithmTuningPage() {
   const [selUserId, setSelUserId] = useState("");
@@ -39,10 +40,9 @@ function AlgorithmTuningPage() {
     enabled: false,
   });
 
-  const updatePhaseMut = useMutation({
-    mutationFn: ({ key, value }: { key: string; value: number }) =>
-      useSetPhaseWeight(key, value),
-  });
+  // رفع باگ: هوک‌های mutation باید در بالای کامپوننت صدا زده شوند، نه داخل onBlur/mutationFn
+  const updatePhaseMut = useSetPhaseWeight();
+  const updateFeatureMut = useUpdateFeatureWeight();
 
   return (
     <div className="space-y-8 p-4">
@@ -94,7 +94,7 @@ function AlgorithmTuningPage() {
                     defaultValue={w}
                     className="w-16 border rounded px-1"
                     onBlur={(e) =>
-                      useUpdateFeatureWeight({
+                      updateFeatureMut.mutate({
                         type: "main",
                         index: i,
                         value: Number(e.target.value),

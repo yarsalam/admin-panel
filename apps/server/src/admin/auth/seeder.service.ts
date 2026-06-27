@@ -30,6 +30,7 @@ export class SeederService implements OnModuleInit {
   }
 
   private async seedUsers() {
+    console.log('SEEDER STARTED');
     for (const user of defaultUsers) {
       const existing = await this.adminUserRepo.findOne({
         where: { email: user.email },
