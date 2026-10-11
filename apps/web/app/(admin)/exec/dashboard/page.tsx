@@ -1142,14 +1142,14 @@ function MetricsSection({ data, deltas }: { data: any; deltas: any }) {
               },
               {
                 l: "میانگین پیام",
-                v: `${matchHealth?.avgMessagesPerMatch ?? 0}`,
+                v: `${matchHealth?.avgMessages ?? 0}`,
                 c: ds.text,
               },
               {
                 l: "First Msg",
-                v: `${matchHealth?.firstMessageSuccessRate ?? 0}٪`,
+                v: `${matchHealth?.firstMessageSuccess ?? 0}٪`,
                 c:
-                  (matchHealth?.firstMessageSuccessRate ?? 0) >= 50
+                  (matchHealth?.firstMessageSuccess ?? 0) >= 50
                     ? C.ok
                     : C.warn,
               },
