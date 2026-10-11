@@ -429,10 +429,10 @@ function DatingHealthRadar({
     },
     {
       metric: "Match Rate",
-      value: Math.min(100, (matchHealth?.matchRate?.current ?? 0) * 7),
+      value: Math.min(100, (matchHealth?.matchRate ?? 0) * 7),
     },
-    { metric: "مکالمه", value: matchHealth?.conversationRate?.current ?? 0 },
-    { metric: "پاسخ‌دهی", value: matchHealth?.replyRate?.current ?? 0 },
+    { metric: "مکالمه", value: matchHealth?.conversationRate ?? 0 },
+    { metric: "پاسخ‌دهی", value: matchHealth?.replyRate ?? 0 },
     { metric: "Anti-Ghost", value: 100 - (matchHealth?.ghostingRate ?? 0) },
     {
       metric: "Retention D30",
@@ -1066,18 +1066,18 @@ function MetricsSection({ data, deltas }: { data: any; deltas: any }) {
             <>
               <BarMeter
                 label="Match Rate"
-                value={matchHealth?.matchRate?.current ?? 0}
+                value={matchHealth?.matchRate ?? 0}
                 max={20}
                 color={C.accent}
               />
               <BarMeter
                 label="Conversation Rate"
-                value={matchHealth?.conversationRate?.current ?? 0}
+                value={matchHealth?.conversationRate ?? 0}
                 color={C.ok}
               />
               <BarMeter
                 label="Reply Rate"
-                value={matchHealth?.replyRate?.current ?? 0}
+                value={matchHealth?.replyRate ?? 0}
                 color={C.accent}
               />
               <BarMeter
@@ -1142,14 +1142,14 @@ function MetricsSection({ data, deltas }: { data: any; deltas: any }) {
               },
               {
                 l: "میانگین پیام",
-                v: `${matchHealth?.avgMessagesPerMatch ?? 0}`,
+                v: `${matchHealth?.avgMessages ?? 0}`,
                 c: ds.text,
               },
               {
                 l: "First Msg",
-                v: `${matchHealth?.firstMessageSuccessRate ?? 0}٪`,
+                v: `${matchHealth?.firstMessageSuccess ?? 0}٪`,
                 c:
-                  (matchHealth?.firstMessageSuccessRate ?? 0) >= 50
+                  (matchHealth?.firstMessageSuccess ?? 0) >= 50
                     ? C.ok
                     : C.warn,
               },
@@ -1183,7 +1183,11 @@ function MetricsSection({ data, deltas }: { data: any; deltas: any }) {
 function DeepDiveSection({ data }: { data: any }) {
   const ds = useDS();
   const { funnel, growth, safety, recommendations } = data ?? {};
-  const funnelSteps = funnel?.steps ?? [];
+  const funnelSteps = Array.isArray(funnel)
+    ? funnel
+    : Array.isArray(funnel?.steps)
+      ? funnel.steps
+      : [];
   const mau = growth?.mau?.current ?? 1;
   const bottleneck = funnelSteps.find((s: any) => s.isBottleneck);
   const overallConv =

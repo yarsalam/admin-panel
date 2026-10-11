@@ -4,13 +4,12 @@ import { Repository } from 'typeorm';
 import { AdminUser } from './entities/admin-user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { RoleDefaultPermissions } from './role-permissions';
 
 @Injectable()
 export class AdminAuthService {
   constructor(
     @InjectRepository(AdminUser)
-    private adminUserRepo: Repository<AdminUser>,
+    private readonly adminUserRepo: Repository<AdminUser>,
     private jwtService: JwtService,
   ) {}
 
@@ -18,7 +17,7 @@ export class AdminAuthService {
     const user = await this.adminUserRepo.findOne({ where: { email } });
 
     // رفع باگ: بررسی null بودن passwordHash قبل از compare
-    if (!user || !user.passwordHash) {
+    if (!user || !user.passwordHash || !user.isActive) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -45,20 +44,4 @@ export class AdminAuthService {
     return { access_token: this.jwtService.sign(payload) };
   }
 
-  async createInitialAdmin() {
-    const exists = await this.adminUserRepo.findOne({
-      where: { email: 'admin@yarsalam.com' },
-    });
-    if (!exists) {
-      const hash = await bcrypt.hash('Admin123!', 12);
-      await this.adminUserRepo.save(
-        this.adminUserRepo.create({
-          email: 'admin@yarsalam.com',
-          passwordHash: hash,
-          role: 'superadmin',
-          permissions: RoleDefaultPermissions['superadmin'],
-        }),
-      );
-    }
-  }
 }

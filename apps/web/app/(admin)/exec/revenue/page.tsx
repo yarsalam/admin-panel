@@ -1036,6 +1036,13 @@ function RevenuesPage() {
         </GlobalText>
       </div>
 
+      <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+        برخی تحلیل‌های پیشرفتهٔ درآمد (تفکیک محصول و جنسیت، Cohort، قیف درآمد،
+        Churn، تمرکز درآمد و دقت پیش‌بینی) هنوز از API فعلی بک‌اند ارائه نمی‌شوند؛
+        برای جلوگیری از نمایش دادهٔ ساختگی، تا زمان پیاده‌سازی API مربوطه غیرفعال‌اند.
+        نمودارهای ماهانه، تاریخچه، پیش‌بینی موجود، ناهنجاری‌ها و LTV بر اساس APIهای موجود بارگذاری می‌شوند.
+      </div>
+
       {/* ── ۱. KPI اصلی ── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {mLoading ? (
