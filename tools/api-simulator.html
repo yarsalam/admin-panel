@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>یارسلام — سیمیلاتور ادمین پنل</title>
+<style>
+:root{
+  --bg:#070B14;--s:#0D1220;--b:#1A2235;--b2:#243044;
+  --a:#00D4AA;--a2:#8B5CF6;--warn:#F59E0B;--err:#EF4444;--ok:#22C55E;
+  --t:#E2E8F0;--m:#64748B;--mono:'Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font-family:Tahoma,'Segoe UI',sans-serif;font-size:13px;direction:rtl}
+.hdr{background:var(--s);border-bottom:1px solid var(--b);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.logo{width:32px;height:32px;background:linear-gradient(135deg,var(--a),var(--a2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.hdr h1{font-size:15px;font-weight:700;color:var(--a)}
+.hdr .sub{font-size:10px;color:var(--m);margin-top:2px}
+.layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 57px)}
+.side{background:var(--s);border-left:1px solid var(--b);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.side h4{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--m);padding:4px 0}
+label{font-size:11px;color:var(--m);display:block;margin-bottom:3px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--b);color:var(--t);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;font-family:inherit;direction:rtl}
+input:focus,textarea:focus{border-color:var(--a)}
+textarea{resize:vertical;min-height:60px}
+.btn{padding:8px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s;font-family:inherit}
+.btn-p{background:linear-gradient(135deg,var(--a),#00B894);color:#000;width:100%}
+.btn-p:hover{opacity:.88}.btn-p:disabled{background:var(--b);color:var(--m);cursor:not-allowed}
+.btn-s{background:transparent;color:var(--a);border:1px solid var(--a);width:100%}
+.btn-s:hover{background:rgba(0,212,170,.08)}
+.btn-d{background:transparent;color:var(--err);border:1px solid var(--err);width:100%}
+.status-bar{display:flex;gap:8px;flex-wrap:wrap}
+.badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.b-ok{background:rgba(34,197,94,.15);color:var(--ok)}
+.b-err{background:rgba(239,68,68,.15);color:var(--err)}
+.b-warn{background:rgba(245,158,11,.15);color:var(--warn)}
+.b-info{background:rgba(0,212,170,.15);color:var(--a)}
+.main{overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.section{background:var(--s);border:1px solid var(--b);border-radius:10px;overflow:hidden}
+.sec-hdr{padding:10px 14px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.sec-hdr:hover{background:rgba(255,255,255,.02)}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600}
+.sec-icon{font-size:16px}
+.sec-stats{display:flex;gap:6px;align-items:center}
+.sec-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.sec-body.hidden{display:none}
+.ep-row{display:flex;align-items:center;gap-between;padding:6px 10px;border:1px solid var(--b);border-radius:7px;background:var(--bg);transition:border-color .15s}
+.ep-row:hover{border-color:var(--b2)}
+.ep-row.running{border-color:var(--warn);background:rgba(245,158,11,.04)}
+.ep-row.ok{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
+.ep-row.fail{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)}
+.ep-method{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;min-width:40px;text-align:center;flex-shrink:0}
+.m-get{background:rgba(0,212,170,.15);color:var(--a)}
+.m-post{background:rgba(139,92,246,.15);color:var(--a2)}
+.m-patch{background:rgba(245,158,11,.15);color:var(--warn)}
+.m-delete{background:rgba(239,68,68,.15);color:var(--err)}
+.ep-path{font-family:var(--mono);font-size:11px;color:var(--m);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 8px}
+.ep-label{font-size:11px;color:var(--t);flex-shrink:0;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep-status{font-family:var(--mono);font-size:11px;min-width:50px;text-align:center;flex-shrink:0}
+.ep-lat{font-family:var(--mono);font-size:10px;color:var(--m);min-width:55px;text-align:center;flex-shrink:0}
+.ep-btn{padding:4px 10px;font-size:10px;border-radius:5px;border:1px solid var(--b);background:transparent;color:var(--m);cursor:pointer;flex-shrink:0}
+.ep-btn:hover{border-color:var(--a);color:var(--a)}
+.ep-detail{background:var(--bg);border:1px solid var(--b);border-radius:6px;margin-top:6px;overflow:hidden;display:none}
+.ep-detail.show{display:block}
+.ep-detail-body{padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--m);max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.7}
+.ep-detail-body.ok-text{color:#86efac}
+.ep-detail-body.err-text{color:#fca5a5}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.card{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:12px;text-align:center}
+.card .v{font-size:24px;font-weight:700;font-family:var(--mono)}
+.card .l{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.log-box{background:var(--s);border:1px solid var(--b);border-radius:8px;height:160px;overflow-y:auto;padding:10px 14px;font-family:var(--mono);font-size:10px;line-height:1.9}
+.lg-i{color:var(--a)}.lg-o{color:var(--ok)}.lg-e{color:var(--err)}.lg-w{color:var(--warn)}
+.ts{color:var(--m);font-size:9px;margin-right:6px}
+.pbar{height:3px;background:var(--b);border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--a),var(--a2));border-radius:2px;transition:width .2s}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--s);border:1px solid var(--b);border-radius:12px;width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-hdr{padding:14px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.modal-hdr h3{font-size:13px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--m);cursor:pointer;font-size:18px;padding:2px 6px}
+.modal-body{overflow-y:auto;padding:16px}
+.fix-row{background:var(--bg);border:1px solid var(--b);border-radius:7px;padding:11px 13px;margin-bottom:8px;font-size:11px}
+.fix-title{color:var(--warn);font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.fix-desc{color:var(--m);line-height:1.7}
+.fix-code{background:var(--b);border-radius:5px;padding:8px 10px;margin-top:7px;font-family:var(--mono);font-size:10px;color:#93c5fd;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="logo">🎯</div>
+    <div>
+      <h1>یارسلام — سیمیلاتور ادمین پنل</h1>
+      <div class="sub">تست endpointهای NestJS ادمین با JWT Auth</div>
+    </div>
+  </div>
+  <div class="status-bar" id="topStats">
+    <span class="badge b-info" id="statTotal">۰ درخواست</span>
+    <span class="badge b-ok" id="statOk">۰ موفق</span>
+    <span class="badge b-err" id="statFail">۰ خطا</span>
+  </div>
+</div>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<div class="side">
+  <div>
+    <h4>اتصال</h4>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+      <div><label>آدرس ادمین سرور</label>
+        <input id="adminUrl" value="http://localhost:4000">
+      </div>
+      <div><label>ایمیل ادمین</label>
+        <input id="adminEmail" value="admin@yarsalam.com" autocomplete="off">
+      </div>
+      <div><label>رمز عبور</label>
+        <input id="adminPass" type="password" value="Admin123!" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div><label>JWT Token (بعد از لاگین پر می‌شه)</label>
+      <input id="jwtInput" type="password" placeholder="eyJ..." style="margin-top:3px">
+    </div>
+    <button class="btn btn-s" onclick="doLogin()" style="margin-top:6px">🔑 لاگین ادمین</button>
+  </div>
+
+  <div>
+    <h4>تست‌ها</h4>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button class="btn btn-p" id="runAllBtn" onclick="runAll()">▶ همه تست‌ها</button>
+      <button class="btn btn-s" onclick="runSelected()">▶ انتخابی</button>
+      <button class="btn btn-d" onclick="stopAll()">■ توقف</button>
+    </div>
+  </div>
+
+  <div>
+    <h4>پارامترها</h4>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <div><label>userId برای تست</label><input id="testUserId" value="1"></div>
+      <div><label>تاخیر بین درخواست‌ها (ms)</label><input id="delay" type="number" value="200"></div>
+    </div>
+  </div>
+
+  <div>
+    <h4>گزینه‌ها</h4>
+    <button class="btn btn-s" onclick="showBugReport()">🐛 گزارش مشکلات کد</button>
+  </div>
+
+  <div id="secList" style="display:flex;flex-direction:column;gap:4px"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="cards">
+    <div class="card"><div class="v b-info" id="cTotal" style="color:var(--a)">۰</div><div class="l">کل درخواست</div></div>
+    <div class="card"><div class="v" id="cOk" style="color:var(--ok)">—</div><div class="l">موفقیت</div></div>
+    <div class="card"><div class="v" id="cAvg" style="color:var(--a)">—</div><div class="l">میانگین ms</div></div>
+    <div class="card"><div class="v" id="cFail" style="color:var(--err)">—</div><div class="l">خطا</div></div>
+  </div>
+
+  <div id="progWrap" style="display:none">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--m);margin-bottom:4px">
+      <span id="progLbl">در حال اجرا...</span><span id="progPct">۰٪</span>
+    </div>
+    <div class="pbar"><div class="pfill" id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <div id="sectionsContainer"></div>
+
+  <div class="section">
+    <div class="sec-hdr" onclick="clearLog()">
+      <div class="sec-title"><span>📋</span> لاگ</div>
+      <span style="font-size:10px;color:var(--m)">کلیک برای پاک‌کردن</span>
+    </div>
+    <div class="log-box" id="logEl"></div>
+  </div>
+</div>
+</div>
+
+<!-- BUG REPORT MODAL -->
+<div class="modal-bg" id="bugModal" onclick="if(event.target===this)closeBug()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>🐛 مشکلات شناسایی‌شده در کد</h3>
+      <button class="modal-close" onclick="closeBug()">✕</button>
+    </div>
+    <div class="modal-body" id="bugBody"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const SECTIONS = [
+  {
+    key:'auth', icon:'🔐', label:'احراز هویت', role:'همه',
+    eps:[
+      {m:'POST', p:'/admin/auth/login', lbl:'لاگین ادمین', auth:false, b:()=>({email:G('adminEmail'),password:G('adminPass')})},
+      {m:'GET', p:'/health', lbl:'سلامت سرور', auth:false},
+    ]
+  },
+  {
+    key:'intelligence', icon:'🧠', label:'Intelligence / Mission Control', role:'superadmin,marketing',
+    eps:[
+      {m:'GET', p:'/exec/intelligence/business-score', lbl:'امتیاز سلامت کسب‌وکار'},
+      {m:'GET', p:'/exec/intelligence/top-recommendations', lbl:'توصیه‌های برتر (تا ۱۰)'},
+      {m:'GET', p:'/exec/intelligence/summary', lbl:'خلاصه یکپارچه (CEO view)'},
+    ]
+  },
+  {
+    key:'dashboard', icon:'📊', label:'داشبورد اجرایی', role:'superadmin,marketing',
+    eps:[
+      {m:'GET', p:'/exec/dashboard/kpis', lbl:'KPIهای اصلی'},
+      {m:'GET', p:'/exec/dashboard/phase-distribution', lbl:'توزیع فاز کاربران'},
+      {m:'GET', p:'/exec/dashboard/alerts', lbl:'هشدارهای فعال'},
+      {m:'GET', p:'/exec/dashboard/competitor-radar', lbl:'رادار رقابتی'},
+    ]
+  },
+  {
+    key:'syshealth', icon:'⚙️', label:'سلامت سیستم', role:'superadmin',
+    eps:[
+      {m:'GET', p:'/exec/system-health/metrics', lbl:'متریک‌های ai_ops'},
+      {m:'GET', p:'/exec/system-health/issues', lbl:'مشکلات فعال'},
+      {m:'GET', p:'/exec/system-health/services', lbl:'وضعیت سرویس‌های AI'},
+      {m:'GET', p:'/exec/system-health/security', lbl:'گزارش امنیتی'},
+    ]
+  },
+  {
+    key:'revenue', icon:'💰', label:'درآمد', role:'superadmin,marketing',
+    eps:[
+      {m:'GET', p:'/exec/revenue/total', lbl:'کل درآمد'},
+      {m:'GET', p:'/exec/revenue/by-product', lbl:'درآمد به‌تفکیک محصول'},
+      {m:'GET', p:'/exec/revenue/forecast', lbl:'پیش‌بینی درآمد'},
+    ]
+  },
+  {
+    key:'safety-users', icon:'👤', label:'User360 — نمای ۳۶۰ کاربر', role:'superadmin,support',
+    eps:[
+      {m:'GET', p:'/safety/users/1/profile', lbl:'پروفایل کاربر', p2:()=>`/safety/users/${G('testUserId')}/profile`},
+      {m:'GET', p:'/safety/users/1/activity', lbl:'فعالیت کاربر', p2:()=>`/safety/users/${G('testUserId')}/activity`},
+      {m:'GET', p:'/safety/users/1/financial', lbl:'تاریخچه مالی', p2:()=>`/safety/users/${G('testUserId')}/financial`},
+      {m:'GET', p:'/safety/users/1/reports', lbl:'گزارش‌های ثبت‌شده', p2:()=>`/safety/users/${G('testUserId')}/reports`},
+      {m:'GET', p:'/safety/users/1/moderation-logs', lbl:'لاگ تخلفات', p2:()=>`/safety/users/${G('testUserId')}/moderation-logs`},
+      {m:'GET', p:'/safety/users/1/ai-advice', lbl:'تحلیل AI دستیار', p2:()=>`/safety/users/${G('testUserId')}/ai-advice`},
+    ]
+  },
+  {
+    key:'tickets', icon:'🎫', label:'تیکت‌ها', role:'superadmin,support',
+    eps:[
+      {m:'GET', p:'/safety/tickets', lbl:'لیست تیکت‌ها (با فیلتر)'},
+      {m:'GET', p:'/safety/tickets/1', lbl:'جزئیات تیکت ۱'},
+      {m:'GET', p:'/safety/tickets/1/ai-analysis', lbl:'تحلیل AI تیکت'},
+    ]
+  },
+  {
+    key:'moderation', icon:'🛡️', label:'ماژریشن', role:'superadmin,support',
+    eps:[
+      {m:'GET', p:'/safety/moderation/queue', lbl:'صف بررسی محتوا'},
+      {m:'GET', p:'/safety/reports', lbl:'گزارش‌های کاربران'},
+    ]
+  },
+  {
+    key:'campaigns', icon:'📣', label:'کمپین‌ها', role:'superadmin,marketing',
+    eps:[
+      {m:'GET', p:'/growth/campaigns', lbl:'لیست کمپین‌ها'},
+      {m:'GET', p:'/growth/campaigns/analyze', lbl:'تحلیل کمپین‌ها (AI)'},
+      {m:'GET', p:'/growth/campaigns/ltv-by-source', lbl:'LTV به‌تفکیک منبع'},
+    ]
+  },
+  {
+    key:'seo-studio', icon:'🔍', label:'استودیو سئو', role:'superadmin,marketing',
+    eps:[
+      {m:'GET', p:'/growth/seo-studio/content-ideas', lbl:'ایده‌های محتوا'},
+      {m:'GET', p:'/growth/seo-studio/behavioral-keywords', lbl:'کلمات کلیدی رفتاری'},
+      {m:'GET', p:'/growth/seo-studio/keyword-rankings', lbl:'رتبه کلمات کلیدی'},
+      {m:'GET', p:'/growth/seo-studio/ai-recommendations', lbl:'توصیه‌های سئو AI'},
+    ]
+  },
+  {
+    key:'monetization', icon:'💎', label:'مانیتایزیشن', role:'superadmin,marketing',
+    eps:[
+      {m:'GET', p:'/growth/monetization/predict', lbl:'پیش‌بینی بهترین تبلیغ'},
+      {m:'GET', p:'/growth/monetization/feedback-count', lbl:'تعداد نمونه‌های ML'},
+    ]
+  },
+  {
+    key:'referrals', icon:'🔗', label:'ریفرال‌ها', role:'superadmin,marketing',
+    eps:[
+      {m:'GET', p:'/growth/referrals', lbl:'لیست کمپین‌های ریفرال'},
+      {m:'GET', p:'/growth/referrals/stats', lbl:'آمار ریفرال‌ها'},
+    ]
+  },
+  {
+    key:'algorithm', icon:'🎛️', label:'تنظیم الگوریتم', role:'superadmin,product',
+    eps:[
+      {m:'GET', p:'/product/algorithm-tuning/phase-weights', lbl:'وزن‌های فاز فعلی'},
+      {m:'GET', p:'/product/algorithm-tuning/feature-weights', lbl:'وزن‌های feature store'},
+      {m:'GET', p:'/product/algorithm-tuning/diversity', lbl:'تنظیمات diversity/MMR'},
+      {m:'GET', p:'/product/algorithm-tuning/user-features', lbl:'ویژگی‌های کاربر'},
+    ]
+  },
+  {
+    key:'feed-sim', icon:'🔄', label:'شبیه‌ساز فید', role:'superadmin,product',
+    eps:[
+      {m:'GET', p:'/product/feed-simulator/run?userId=1', lbl:'شبیه‌سازی فید', p2:()=>`/product/feed-simulator/run?userId=${G('testUserId')}`},
+    ]
+  },
+  {
+    key:'bundles', icon:'📦', label:'باندل‌های محصول', role:'superadmin,product',
+    eps:[
+      {m:'GET', p:'/product/bundles', lbl:'لیست باندل‌ها'},
+    ]
+  },
+  {
+    key:'experiments', icon:'🧪', label:'آزمایش‌های A/B', role:'superadmin,product',
+    eps:[
+      {m:'GET', p:'/product/experiments', lbl:'لیست تست‌های فعال'},
+    ]
+  },
+];
+
+// ── Known Bugs from our module analysis ────────────────────────────────────
+const KNOWN_BUGS = [
+  {
+    severity:'critical', icon:'🔴',
+    title:'POST /payments/grant-bundle بدون هیچ احراز هویتی',
+    desc:'در بک‌اند یوزر (refYar)، هر کسی بدون توکن می‌تواند VIP، credits، و boost رایگان فعال کند. این endpoint نه JwtAuthGuard دارد نه AdminApiGuard.',
+    fix:`// src/payments/payments.controller.ts — اضافه کنید:
+@UseGuards(JwtAuthGuard) // یا بهتر: AdminApiGuard
+@Post('grant-bundle/:userId/:bundleCode')`
+  },
+  {
+    severity:'critical', icon:'🔴',
+    title:'POST /boost/grant-free بدون احراز هویت',
+    desc:'همان مشکل — endpoint کاملاً عمومی، هیچ guard ندارد.',
+    fix:`// src/payments/boosts/boostController.ts — اضافه کنید:
+@UseGuards(JwtAuthGuard)
+@Post('grant-free/:userId')`
+  },
+  {
+    severity:'critical', icon:'🔴',
+    title:'ChatGateway WebSocket بدون JWT',
+    desc:'handleConnection هرگز JWT را verify نمی‌کند. نام room قابل پیش‌بینی است (chat_min_max) پس هر کسی می‌تواند مکالمات دیگران را بشنود.',
+    fix:`// src/message/chat.gateway.ts — handleConnection را اصلاح کنید:
+async handleConnection(client: Socket) {
+  const token = client.handshake.auth.token;
+  // اضافه کنید: verify کردن token با JwtService
+}`
+  },
+  {
+    severity:'high', icon:'🟠',
+    title:'get7dMetrics با سینتکس PostgreSQL روی MySQL اجرا می‌شود',
+    desc:'این باگ علت دقیق خطای "SQL syntax error at line 11" است. متد از $1 و CURRENT_DATE - INTERVAL \'7 days\' استفاده می‌کند که سینتکس Postgres است.',
+    fix:`// src/user-metrics/user-metrics.service.ts
+// تغییر دهید:
+WHERE user_id = $1
+AND metric_date >= CURRENT_DATE - INTERVAL '7 days'
+
+// به:
+WHERE user_id = ?
+AND metric_date >= CURDATE() - INTERVAL 7 DAY`
+  },
+  {
+    severity:'high', icon:'🟠',
+    title:'markAsRead پیام/اعلان بدون چک مالکیت',
+    desc:'PATCH /messages/read/:id و PATCH /notifications/read/:id اصلاً userId را چک نمی‌کنند — هر کاربری می‌تواند پیام/نوتیف کاربر دیگری را خوانده‌شده کند.',
+    fix:`// هر دو service:
+async markAsRead(id: number, userId: number) {
+  await this.repo.update(
+    { id, to_id: userId }, // اضافه کنید userId check
+    { read_at: new Date() }
+  );
+}`
+  },
+  {
+    severity:'high', icon:'🟠',
+    title:'GET /suggestions بدون هیچ Guard',
+    desc:'هر کسی بدون لاگین با ?userId=<هر عدد> می‌تواند پیشنهادهای شخصی‌شده هر کاربری را ببیند.',
+    fix:`// src/suggestion/suggestion.controller.ts
+@UseGuards(JwtAuthGuard) // اضافه کنید`
+  },
+  {
+    severity:'medium', icon:'🟡',
+    title:'Sidebar: window.matchMedia روی SSR کرش می‌کند',
+    desc:'در فرانت ادمین، Sidebar.tsx مستقیماً window.matchMedia صدا می‌زند که روی Node.js (SSR) undefined است.',
+    fix:`// components/Sidebar.tsx — اضافه کنید:
+const [isMd, setIsMd] = useState(false);
+useEffect(() => {
+  setIsMd(window.matchMedia("(min-width: 768px)").matches);
+}, []);
+// و همه window.matchMedia ها را با isMd جایگزین کنید`
+  },
+  {
+    severity:'medium', icon:'🟡',
+    title:'BoostService.activateInstant و activateMonthly هیچ caller ندارند',
+    desc:'این دو متد کامل و آماده‌اند (با race-condition fix و PaywallException) ولی هیچ route‌ای به آن‌ها وصل نیست — کاربر بوست‌خریداری‌شده را نمی‌تواند فعال کند.',
+    fix:`// src/payments/boosts/boostController.ts
+@Post('activate/:userId')
+async activate(@Param('userId', ParseIntPipe) userId: number) {
+  return this.boostService.activateInstant(userId);
+}`
+  },
+  {
+    severity:'medium', icon:'🟡',
+    title:'VipService.expireVip هیچ cron job/caller ندارد',
+    desc:'VIP‌های منقضی‌شده در دیتابیس active=true می‌مانند. hasVip این را با چک expiresAt در حافظه جبران می‌کند ولی کوئری‌های مستقیم اشتباه می‌کنند.',
+    fix:`// اضافه کنید یک SchedulerModule:
+@Cron('0 0 * * *') // هر شب نیمه‌شب
+async expireVips() {
+  const expired = await this.repo.find({
+    where: { active: true, expiresAt: LessThan(new Date()) }
+  });
+  for (const v of expired) await this.expireVip(v.userId);
+}`
+  },
+  {
+    severity:'medium', icon:'🟡',
+    title:'POST /feed/dismiss placeholder کامل — هیچ‌کاری انجام نمی‌دهد',
+    desc:'PromotionExposureService.trackDismiss کامل پیاده‌سازی شده ولی از controller صدا زده نمی‌شود. مدل ML هرگز سیگنال منفی دریافت نمی‌کند.',
+    fix:`// src/feed/feed.controller.ts
+@Post('dismiss/:promotionId')
+dismissPromotion(@Param('promotionId') id: string, @Req() req) {
+  return this.feedService.trackDismiss(id, req.user.id); // اضافه کنید
+}`
+  },
+  {
+    severity:'low', icon:'🟡',
+    title:'ThemeContext کلاس "dark" را روی HTML اعمال نمی‌کند',
+    desc:'globals.css از @custom-variant dark (&:where(.dark, .dark *)) استفاده می‌کند پس باید class "dark" روی <html> باشد.',
+    fix:`// app/context/ThemeContext.tsx
+useEffect(() => {
+  if (isDark) document.documentElement.classList.add('dark');
+  else document.documentElement.classList.remove('dark');
+}, [isDark]);`
+  },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let jwt = '';
+let results = {};
+let running = false;
+let stopFlag = false;
+const sel = new Set();
+let totalReqs = 0, okReqs = 0, failReqs = 0, totalLat = 0;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function G(id) { return document.getElementById(id)?.value ?? ''; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function log(msg, t='i') {
+  const el = document.getElementById('logEl');
+  el.innerHTML += `<div class="lg-${t}">${esc(msg)}<span class="ts">${new Date().toLocaleTimeString('fa-IR')}</span></div>`;
+  el.scrollTop = el.scrollHeight;
+}
+function clearLog() { document.getElementById('logEl').innerHTML = ''; }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function baseUrl() { return G('adminUrl').replace(/\/$/, ''); }
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  log('🔑 در حال لاگین...', 'i');
+  try {
+    const res = await fetch(`${baseUrl()}/admin/auth/login`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email: G('adminEmail'), password: G('adminPass')}),
+      signal: AbortSignal.timeout(8000)
+    });
+    const d = await res.json();
+    if (res.ok && (d.access_token || d.token)) {
+      jwt = d.access_token ?? d.token;
+      document.getElementById('jwtInput').value = jwt;
+      log('✅ لاگین موفق — JWT آماده', 'o');
+    } else {
+      log(`❌ لاگین ناموفق: ${JSON.stringify(d)}`, 'e');
+    }
+  } catch(e) {
+    log(`❌ لاگین: ${e.message}`, 'e');
+  }
+}
+
+// ── RUN ────────────────────────────────────────────────────────────────────
+async function runAll() { await startRun(SECTIONS); }
+async function runSelected() {
+  const s = SECTIONS.filter(s => sel.has(s.key));
+  if (!s.length) { log('هیچ بخشی انتخاب نشده', 'w'); return; }
+  await startRun(s);
+}
+function stopAll() { stopFlag = true; log('متوقف شد', 'w'); }
+
+async function startRun(sections) {
+  if (running) return;
+  running = true; stopFlag = false;
+  totalReqs = okReqs = failReqs = totalLat = 0;
+
+  if (!jwt) {
+    jwt = G('jwtInput');
+    if (!jwt) {
+      log('⚠️ توکن نیست — در حال لاگین...', 'w');
+      await doLogin();
+      if (!jwt) { running = false; return; }
+    }
+  }
+
+  const delay = +G('delay') || 200;
+  document.getElementById('runAllBtn').disabled = true;
+  document.getElementById('progWrap').style.display = 'block';
+
+  const tests = sections.flatMap(s => s.eps.map(ep => ({sec: s, ep})));
+  log(`▶ ${tests.length} درخواست شروع می‌شود`, 'i');
+
+  for (let i = 0; i < tests.length; i++) {
+    if (stopFlag) break;
+    const {sec, ep} = tests[i];
+    await doTest(sec, ep);
+    updateProgress(i+1, tests.length);
+    if (delay > 0) await sleep(delay);
+  }
+
+  running = false;
+  document.getElementById('runAllBtn').disabled = false;
+  document.getElementById('progWrap').style.display = 'none';
+  updateCards();
+  log(`✅ تمام شد — موفق: ${okReqs} / خطا: ${failReqs}`, okReqs > 0 ? 'o' : 'e');
+}
+
+async function doTest(sec, ep) {
+  const url = baseUrl() + (ep.p2 ? ep.p2() : ep.p);
+  const hdr = {'Content-Type': 'application/json'};
+  if (ep.auth !== false && jwt) hdr['Authorization'] = `Bearer ${jwt}`;
+
+  const body = ep.b ? JSON.stringify(typeof ep.b === 'function' ? ep.b() : ep.b) : undefined;
+  const t0 = performance.now();
+  let status = 0, ok = false, respText = '', errMsg = '';
+
+  const rowId = `${sec.key}-${ep.p.replace(/[^a-z0-9]/gi,'-')}`;
+  setRowState(rowId, 'running', '', '');
+
+  try {
+    const res = await fetch(url, {method: ep.m || 'GET', headers: hdr, body, signal: AbortSignal.timeout(10000)});
+    status = res.status;
+    ok = status >= 200 && status < 300;
+    respText = await res.text();
+  } catch(e) {
+    errMsg = e.message;
+    ok = false;
+  }
+  const lat = Math.round(performance.now() - t0);
+
+  totalReqs++;
+  totalLat += lat;
+  if (ok) okReqs++; else failReqs++;
+
+  const key = `${sec.key}::${ep.p}`;
+  results[key] = {ok, status, lat, url, resp: respText, err: errMsg, label: ep.lbl};
+
+  setRowState(rowId, ok ? 'ok' : 'fail', status, lat, respText || errMsg);
+  if (!ok || lat > 800) log(`${ok ? '🐢' : '❌'} ${ep.lbl}: ${ok ? lat+'ms' : (status || errMsg)}`, ok ? 'w' : 'e');
+  updateCards();
+}
+
+function setRowState(rowId, state, status, lat, resp) {
+  const row = document.getElementById('row-' + rowId);
+  if (!row) return;
+  row.className = `ep-row ${state}`;
+  const stEl = row.querySelector('.ep-status');
+  const latEl = row.querySelector('.ep-lat');
+  if (stEl) stEl.textContent = status ? String(status) : (state === 'running' ? '...' : '—');
+  if (stEl) stEl.style.color = state === 'ok' ? 'var(--ok)' : state === 'fail' ? 'var(--err)' : 'var(--warn)';
+  if (latEl) latEl.textContent = lat ? lat+'ms' : '';
+  // store resp in data attribute for detail toggle
+  if (resp !== undefined) row.dataset.resp = resp.slice(0, 500);
+  row.dataset.state = state;
+}
+
+function toggleDetail(rowId) {
+  const row = document.getElementById('row-' + rowId);
+  const det = document.getElementById('det-' + rowId);
+  if (!det) return;
+  const show = !det.classList.contains('show');
+  det.classList.toggle('show', show);
+  if (show) {
+    const body = det.querySelector('.ep-detail-body');
+    const resp = row?.dataset.resp ?? '';
+    const state = row?.dataset.state ?? '';
+    try {
+      body.textContent = JSON.stringify(JSON.parse(resp), null, 2);
+    } catch {
+      body.textContent = resp || '—';
+    }
+    body.className = `ep-detail-body ${state === 'ok' ? 'ok-text' : state === 'fail' ? 'err-text' : ''}`;
+  }
+}
+
+function updateProgress(done, total) {
+  const pct = Math.round(done/total*100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progPct').textContent = pct + '٪';
+  document.getElementById('progLbl').textContent = `${done}/${total}`;
+}
+
+function updateCards() {
+  document.getElementById('cTotal').textContent = String(totalReqs);
+  document.getElementById('cOk').textContent = totalReqs > 0 ? Math.round(okReqs/totalReqs*100)+'٪' : '—';
+  document.getElementById('cAvg').textContent = totalReqs > 0 ? Math.round(totalLat/totalReqs)+'ms' : '—';
+  document.getElementById('cFail').textContent = String(failReqs);
+  document.getElementById('statTotal').textContent = totalReqs + ' درخواست';
+  document.getElementById('statOk').textContent = okReqs + ' موفق';
+  document.getElementById('statFail').textContent = failReqs + ' خطا';
+}
+
+// ── RENDER SECTIONS ────────────────────────────────────────────────────────
+function init() {
+  const container = document.getElementById('sectionsContainer');
+  const sideList = document.getElementById('secList');
+
+  SECTIONS.forEach(sec => {
+    // sidebar toggle
+    const sideEl = document.createElement('div');
+    sideEl.innerHTML = `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--m)">
+      <input type="checkbox" onchange="toggleSec('${sec.key}',this.checked)" style="width:auto">
+      ${sec.icon} ${sec.label}
+    </label>`;
+    sideList.appendChild(sideEl);
+
+    // section
+    const div = document.createElement('div');
+    div.className = 'section';
+    div.id = 'sec-' + sec.key;
+
+    const epsHtml = sec.eps.map(ep => {
+      const rowId = `${sec.key}-${ep.p.replace(/[^a-z0-9]/gi,'-')}`;
+      const mClass = `m-${ep.m?.toLowerCase() || 'get'}`;
+      return `<div>
+        <div class="ep-row" id="row-${rowId}" data-state="idle">
+          <span class="ep-method ${mClass}">${ep.m || 'GET'}</span>
+          <span class="ep-path" title="${esc(ep.p)}">${esc(ep.p)}</span>
+          <span class="ep-label">${esc(ep.lbl)}</span>
+          <span class="ep-status" style="color:var(--m)">—</span>
+          <span class="ep-lat"></span>
+          <button class="ep-btn" onclick="toggleDetail('${rowId}')">▾</button>
+        </div>
+        <div class="ep-detail" id="det-${rowId}">
+          <div class="ep-detail-body">—</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    div.innerHTML = `
+      <div class="sec-hdr" onclick="toggleSection('${sec.key}')">
+        <div class="sec-title">
+          <span class="sec-icon">${sec.icon}</span>
+          <span>${sec.label}</span>
+        </div>
+        <div class="sec-stats">
+          <span style="font-size:10px;color:var(--m)">نقش: ${sec.role}</span>
+          <button class="btn btn-s" style="width:auto;padding:3px 8px;font-size:10px" 
+            onclick="event.stopPropagation();runSection('${sec.key}')">▶</button>
+        </div>
+      </div>
+      <div class="sec-body" id="sb-${sec.key}">
+        ${epsHtml}
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function toggleSection(key) {
+  const b = document.getElementById('sb-' + key);
+  if (b) b.classList.toggle('hidden');
+}
+
+function toggleSec(key, checked) {
+  if (checked) sel.add(key); else sel.delete(key);
+}
+
+async function runSection(key) {
+  const sec = SECTIONS.find(s => s.key === key);
+  if (!sec) return;
+  if (!jwt) { await doLogin(); if (!jwt) return; }
+  const delay = +G('delay') || 200;
+  for (const ep of sec.eps) {
+    if (stopFlag) break;
+    await doTest(sec, ep);
+    await sleep(delay);
+  }
+  updateCards();
+}
+
+// ── BUG REPORT ──────────────────────────────────────────────────────────────
+function showBugReport() {
+  const severityOrder = {critical:0, high:1, medium:2, low:3};
+  const sorted = [...KNOWN_BUGS].sort((a,b) => severityOrder[a.severity] - severityOrder[b.severity]);
+  let html = `<div style="font-size:11px;color:var(--m);margin-bottom:12px">
+    ${sorted.filter(b=>b.severity==='critical').length} بحرانی ·
+    ${sorted.filter(b=>b.severity==='high').length} بالا ·
+    ${sorted.filter(b=>b.severity==='medium').length} متوسط ·
+    ${sorted.filter(b=>b.severity==='low').length} پایین
+  </div>`;
+  sorted.forEach(bug => {
+    html += `<div class="fix-row">
+      <div class="fix-title">${bug.icon} ${esc(bug.title)}</div>
+      <div class="fix-desc">${esc(bug.desc)}</div>
+      <div class="fix-code">${esc(bug.fix)}</div>
+    </div>`;
+  });
+  document.getElementById('bugBody').innerHTML = html;
+  document.getElementById('bugModal').classList.add('show');
+}
+function closeBug() { document.getElementById('bugModal').classList.remove('show'); }
+
+init();
+// Auto-expand first 2 sections
+['auth','intelligence'].forEach(k => {
+  const b = document.getElementById('sb-' + k);
+  if (b) b.classList.remove('hidden');
+});
+// Collapse rest
+SECTIONS.slice(2).forEach(sec => {
+  const b = document.getElementById('sb-' + sec.key);
+  if (b) b.classList.add('hidden');
+});
+</script>
+</body>
+</html>

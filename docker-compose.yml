@@ -1,0 +1,89 @@
+networks:
+  shared_network:
+    external: true
+    name: yarsalam_network
+
+services:
+  admin-redis:
+    image: redis:7-alpine
+    container_name: admin_redis
+    restart: unless-stopped
+    ports:
+      - "6381:6379"
+    networks:
+      - shared_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  admin-mysql:
+    image: mysql:8.0
+    container_name: admin_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_DATABASE: admin_yarsalam
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "5530:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-padmin123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - shared_network
+
+  admin-backend:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./apps/server:/app/apps/server
+      - backend_node_modules:/app/apps/server/node_modules
+    command: pnpm run start:dev
+    environment:
+      DB_HOST: admin-mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: admin123
+      DB_NAME: admin_yarsalam
+      DB_SYNC: "true"
+      REDIS_HOST: admin-redis
+      REDIS_PORT: 6379
+      USER_API_BASE_URL: http://backend:5000
+      USER_API_KEY: your-super-secret-key
+    depends_on:
+      admin-mysql:
+        condition: service_healthy
+      admin-redis:
+        condition: service_healthy
+    networks:
+      - shared_network
+
+  admin-web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    volumes:
+      - ./apps/web:/app/apps/web
+      - frontend_node_modules:/app/apps/web/node_modules
+    command: pnpm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    depends_on:
+      - admin-backend
+    networks:
+      - shared_network
+
+volumes:
+  backend_node_modules:
+  frontend_node_modules:
