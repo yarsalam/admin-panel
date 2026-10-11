@@ -43,7 +43,7 @@ services:
       context: .
       dockerfile: apps/server/Dockerfile
     ports:
-      - "4000:4000"
+      - "${PORT:-4000}:4000"
     volumes:
       - ./apps/server:/app/apps/server
       - backend_node_modules:/app/apps/server/node_modules
@@ -62,7 +62,7 @@ services:
       INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
       REDIS_HOST: admin-redis
       REDIS_PORT: 6379
-      USER_API_BASE_URL: http://backend:5000
+      USER_API_BASE_URL: ${USER_API_BASE_URL:-http://backend:5000}
       USER_API_KEY: ${USER_API_KEY:?Set USER_API_KEY to match mobApp INTERNAL_API_KEY}
     depends_on:
       admin-mysql:
@@ -83,7 +83,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
     depends_on:
       - admin-backend
     networks:
