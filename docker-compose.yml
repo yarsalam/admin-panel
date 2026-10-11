@@ -43,7 +43,7 @@ services:
       context: .
       dockerfile: apps/server/Dockerfile
     ports:
-      - "${PORT:-4000}:4000"
+      - "${PORT:-4000}:${PORT:-4000}"
     volumes:
       - ./apps/server:/app/apps/server
       - backend_node_modules:/app/apps/server/node_modules
@@ -55,6 +55,7 @@ services:
       DB_PASS: ${ADMIN_DB_ROOT_PASSWORD:?Set ADMIN_DB_ROOT_PASSWORD in .env}
       DB_NAME: admin_yarsalam
       NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-4000}
       ADMIN_WEB_ORIGINS: ${ADMIN_WEB_ORIGINS:-http://localhost:3000,http://192.168.0.133:3000}
       DB_SYNC: ${DB_SYNC:-true}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
