@@ -10,14 +10,14 @@
 
 پیش‌نیازها: Docker و Docker Compose.
 
-1. فایل نمونهٔ محیط را کپی کن:
+اگر شبکهٔ مشترک بک‌اند وجود ندارد، ابتدا آن را بساز و مطمئن شو سرویس بک‌اند `backend` روی شبکهٔ `yarsalam_network` در حال اجراست:\n\n   `docker network create yarsalam_network`\n\n1. فایل نمونهٔ محیط را کپی کن:
 
    ```bash
    cp .env.example .env
    ```
 
 2. مقادیر نمونه را در `.env` با مقادیر اختصاصی خودت جایگزین کن. حداقل این موارد باید درست باشند:
-   - `ADMIN_DB_ROOT_PASSWORD`: رمز منحصربه‌فرد دیتابیس ادمین.
+   - `ADMIN_DB_ROOT_PASSWORD` و `ADMIN_DB_PASSWORD`: دو رمز منحصربه‌فرد؛ برنامه با کاربر محدود `ADMIN_DB_USER` متصل می‌شود و از حساب root استفاده نمی‌کند.
    - `JWT_SECRET`: کلید تصادفی و طولانی برای امضای JWT؛ می‌توانی با `openssl rand -base64 48` تولیدش کنی.
    - `USER_API_KEY`: باید دقیقاً با `INTERNAL_API_KEY` در بک‌اند `yarsalam/mobApp` یکسان باشد.
    - `INITIAL_ADMIN_EMAIL` و `INITIAL_ADMIN_PASSWORD`: حساب اولیهٔ مدیر ارشد. رمز باید حداقل ۱۶ کاراکتر و غیرقابل حدس باشد.
