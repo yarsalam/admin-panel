@@ -9,7 +9,11 @@ import databaseConfig from 'src/config/database.config';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+      useFactory: (config: ConfigService) => {
+        const isProduction = config.get<string>('NODE_ENV') === 'production';
+        const synchronize =
+          !isProduction && config.get<string>('DB_SYNC') !== 'false';
+        return {
         type: 'mysql',
         host: config.get<string>('database.host'),
         port: config.get<number>('database.port'),
@@ -17,12 +21,11 @@ import databaseConfig from 'src/config/database.config';
         password: config.get<string>('database.password'),
         database: config.get<string>('database.database'),
         entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
-        // رفع: synchronize=false در production — از migration استفاده شود
-        // synchronize: config.get('NODE_ENV') !== 'production',
         autoLoadEntities: true,
-        synchronize: true,
-        logging: true,
-      }),
+        synchronize,
+        logging: !isProduction,
+      };
+      },
     }),
   ],
 })
