@@ -23,14 +23,14 @@ services:
     container_name: admin_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_ROOT_PASSWORD: ${ADMIN_DB_ROOT_PASSWORD:?Set ADMIN_DB_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: admin_yarsalam
       MYSQL_ROOT_HOST: '%'
     ports:
       - "5530:3306"
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-padmin123"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -52,13 +52,17 @@ services:
       DB_HOST: admin-mysql
       DB_PORT: 3306
       DB_USER: root
-      DB_PASS: admin123
+      DB_PASS: ${ADMIN_DB_ROOT_PASSWORD:?Set ADMIN_DB_ROOT_PASSWORD in .env}
       DB_NAME: admin_yarsalam
-      DB_SYNC: "true"
+      NODE_ENV: ${NODE_ENV:-development}
+      DB_SYNC: ${DB_SYNC:-true}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
       REDIS_HOST: admin-redis
       REDIS_PORT: 6379
       USER_API_BASE_URL: http://backend:5000
-      USER_API_KEY: your-super-secret-key
+      USER_API_KEY: ${USER_API_KEY:?Set USER_API_KEY to match mobApp INTERNAL_API_KEY}
     depends_on:
       admin-mysql:
         condition: service_healthy
