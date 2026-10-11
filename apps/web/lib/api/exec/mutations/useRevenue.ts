@@ -35,16 +35,17 @@ export interface StrategicDecision {
   title: string;
   description: string;
   impact: number;
-  roi: number;
+  roi?: number;
 }
 
 export interface LtvSourceRow {
   source: string;
+  currency: string;
   userCount: number;
   totalRevenue: number;
   ltv: number;
-  cac: number;
-  paybackPeriod: number;
+  cac: number | null;
+  paybackPeriod: number | null;
 }
 
 // ─── تایپ‌های جدید ────────────────────────────────────────────────────────────
