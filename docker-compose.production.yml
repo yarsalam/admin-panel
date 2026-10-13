@@ -2,6 +2,12 @@
 # services/volumes remain managed by the same Compose project.
 # Requires Docker Compose v2.24.4+ for !reset.
 services:
+  admin-redis:
+    ports: !reset []
+
+  admin-mysql:
+    ports: !reset []
+
   admin-backend:
     build:
       context: .
