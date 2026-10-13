@@ -1,0 +1,54 @@
+# Apply on top of docker-compose.yml so the existing database and Redis
+# services/volumes remain managed by the same Compose project.
+# Requires Docker Compose v2.24.4+ for !reset.
+services:
+  admin-redis:
+    ports: !reset []
+
+  admin-mysql:
+    ports: !reset []
+
+  admin-backend:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile.production
+    command: ["pnpm", "--filter", "server", "start:prod"]
+    volumes: !reset []
+    environment:
+      NODE_ENV: production
+      DB_SYNC: "false"
+      PORT: ${PORT:-4000}
+      ADMIN_WEB_ORIGINS: ${ADMIN_WEB_ORIGINS:?Set ADMIN_WEB_ORIGINS to the real HTTPS admin origin}
+      DB_HOST: admin-mysql
+      DB_PORT: 3306
+      DB_USER: ${ADMIN_DB_USER:-admin_app}
+      DB_PASS: ${ADMIN_DB_PASSWORD:?Set ADMIN_DB_PASSWORD in .env}
+      DB_NAME: admin_yarsalam
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      REDIS_HOST: admin-redis
+      REDIS_PORT: 6379
+      USER_API_BASE_URL: ${USER_API_BASE_URL:-http://backend:5000}
+      USER_API_KEY: ${USER_API_KEY:?Set USER_API_KEY to match mobApp INTERNAL_API_KEY}
+      NODE_OPTIONS: --max-old-space-size=640
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 0.75
+
+  admin-web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL to the public admin API URL}
+    command: ["pnpm", "--filter", "web", "start"]
+    volumes: !reset []
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      PORT: 3000
+      NODE_OPTIONS: --max-old-space-size=640
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 1.0
