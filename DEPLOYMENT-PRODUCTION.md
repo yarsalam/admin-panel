@@ -26,11 +26,15 @@ Requires Docker Compose v2.24.4 or newer because the override uses the !reset ta
 
 Review the rendered config output locally before sharing it: Compose may display resolved environment values. Do not paste it into public tickets or commit it.
 
+## Automated validation
+
+The GitHub Actions workflow `.github/workflows/production-docker-build.yml` validates the merged Compose configuration and builds both production images without pushing them. A green workflow is required before treating the Dockerfiles as build-verified.
+
 ## Safety notes
 
 - The override does not run database migrations and explicitly sets DB_SYNC=false. Production schema changes should use reviewed migrations.
 - It intentionally keeps the base Compose project's MySQL and Redis services and network, rather than introducing a second database stack. Back up data before any container recreation and verify the actual volume mapping first.
 - Container memory limits are initial guardrails, not performance guarantees: 768 MiB each for the web and API, with Node's old-space cap at 640 MiB. Observe OOM/restarts and adjust from real measurements.
-- The existing base Compose file publishes ports 3000 and 4000. Restrict these with the host firewall or put a reverse proxy in front; only expose HTTPS publicly.
+- The production override binds web/API ports to 127.0.0.1 for a host-based reverse proxy and removes host port publishing for MySQL and Redis. Configure a trusted reverse proxy for HTTPS; do not expose internal service ports publicly.
 - The production Dockerfiles currently retain installed workspace dependencies to keep monorepo resolution predictable. They avoid dev/watch processes and source bind mounts, but a later optimization can use a pruned/standalone runtime image after validating workspace packaging.
 - Do not remove old containers, prune Docker volumes, or run docker compose down -v as part of deployment.
