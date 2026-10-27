@@ -611,15 +611,21 @@ function AlertBanner({
 
 function HeroSection({ data, deltas }: { data: any; deltas: any }) {
   const ds = useDS();
-  const scoreTotal = data?.businessScore?.total ?? 0;
-  const breakdown = data?.businessScore?.breakdown ?? {};
+  const scoreAvailable = data?.businessScore?.dataStatus === "available";
+  const scoreTotal = scoreAvailable ? (data?.businessScore?.total ?? 0) : 0;
+  const breakdown = scoreAvailable ? (data?.businessScore?.breakdown ?? {}) : {};
   const northStar = data?.northStar?.meaningfulConversations ?? 0;
   const femRatio = data?.femaleMetrics?.femaleRatio ?? 0;
   const d30 = data?.retention?.d30 ?? 0;
   const ghosting = data?.matchHealth?.ghostingRate ?? 0;
   const mrrDelta = data?.revenue?.mrrDelta ?? 0;
-  const scoreColor =
-    scoreTotal >= 70 ? C.ok : scoreTotal >= 50 ? C.warn : C.crit;
+  const scoreColor = !scoreAvailable
+    ? C.neutral
+    : scoreTotal >= 70
+      ? C.ok
+      : scoreTotal >= 50
+        ? C.warn
+        : C.crit;
 
   const breakdownConfig = [
     {
@@ -644,7 +650,7 @@ function HeroSection({ data, deltas }: { data: any; deltas: any }) {
     northStar,
   ];
 
-  const narratives = [
+  const narratives = (scoreAvailable ? [
     mrrDelta > 0 && {
       icon: "📈",
       text: `درآمد ${mrrDelta}٪ رشد کرده`,
@@ -675,16 +681,18 @@ function HeroSection({ data, deltas }: { data: any; deltas: any }) {
       text: `+${data.femaleMetrics.newFemaleThisWeek} کاربر زن جدید این هفته`,
       color: C.female,
     },
-  ].filter(Boolean) as { icon: string; text: string; color: string }[];
+  ] : []).filter(Boolean) as { icon: string; text: string; color: string }[];
 
-  const alerts = [
-    ...(data?.alerts ?? []).filter(
-      (a: any) => a.severity === "critical" || a.type === "critical",
-    ),
-    ...(data?.alerts ?? []).filter(
-      (a: any) => a.severity === "warning" || a.type === "warning",
-    ),
-  ].slice(0, 3);
+  const alerts = scoreAvailable
+    ? [
+        ...(data?.alerts ?? []).filter(
+          (a: any) => a.severity === "critical" || a.type === "critical",
+        ),
+        ...(data?.alerts ?? []).filter(
+          (a: any) => a.severity === "warning" || a.type === "warning",
+        ),
+      ].slice(0, 3)
+    : [];
 
   return (
     <div className="grid grid-cols-12 gap-5">
@@ -692,8 +700,19 @@ function HeroSection({ data, deltas }: { data: any; deltas: any }) {
         <Card accent={scoreColor} className="p-5 h-full">
           <SectionLabel color={scoreColor}>Business Health Score</SectionLabel>
           <div className="flex flex-col items-center gap-4">
-            <ScoreRing score={scoreTotal} size={150} />
-            {deltas?.total?.delta != null && (
+            {scoreAvailable ? (
+              <ScoreRing score={scoreTotal} size={150} />
+            ) : (
+              <div className="min-h-[150px] w-full flex flex-col items-center justify-center gap-2 text-center">
+                <span className="text-lg font-bold" style={{ color: ds.muted }}>
+                  داده کافی نیست
+                </span>
+                <p className="text-xs leading-6" style={{ color: ds.dim }}>
+                  تا ثبت فعالیت واقعی کاربران، امتیاز سلامت کسب‌وکار قابل محاسبه نیست.
+                </p>
+              </div>
+            )}
+            {scoreAvailable && deltas?.total?.delta != null && (
               <span
                 className="text-sm font-semibold"
                 style={{
@@ -714,7 +733,7 @@ function HeroSection({ data, deltas }: { data: any; deltas: any }) {
               </span>
             )}
             <div className="w-full space-y-2.5">
-              {breakdownConfig.map(({ key, label, color, weight }) => {
+              {scoreAvailable && breakdownConfig.map(({ key, label, color, weight }) => {
                 const subDelta = (deltas as any)?.[key]?.delta;
                 return (
                   <div key={key}>
@@ -783,14 +802,20 @@ function HeroSection({ data, deltas }: { data: any; deltas: any }) {
                 className="text-[48px] font-bold tabular-nums leading-none"
                 style={{ color: C.accent }}
               >
-                {northStar.toLocaleString("fa-IR")}
+                {scoreAvailable ? northStar.toLocaleString("fa-IR") : "—"}
               </div>
               <p className="text-[11px] mt-2" style={{ color: ds.muted }}>
                 مکالمه با بیش از ۳ پیام متقابل — ۳۰ روز اخیر
               </p>
             </div>
             <div className="flex-1">
-              <Sparkline data={sparkTrend} color={C.accent} height={60} />
+              {scoreAvailable ? (
+                <Sparkline data={sparkTrend} color={C.accent} height={60} />
+              ) : (
+                <p className="text-xs text-center py-5" style={{ color: ds.dim }}>
+                  نمودار پس از ثبت داده‌های واقعی فعال می‌شود.
+                </p>
+              )}
             </div>
           </div>
         </Card>
@@ -837,7 +862,14 @@ function HeroSection({ data, deltas }: { data: any; deltas: any }) {
             ))}
           </div>
         )}
-        {alerts.length === 0 && narratives.length === 0 && (
+        {!scoreAvailable && (
+          <Card accent={C.neutral} className="p-5">
+            <p className="text-sm text-center py-3" style={{ color: ds.muted }}>
+              هنوز داده عملیاتی در پایگاه داده وجود ندارد؛ نمایش هشدار یا امتیاز سلامت در این وضعیت قابل اتکا نیست.
+            </p>
+          </Card>
+        )}
+        {scoreAvailable && alerts.length === 0 && narratives.length === 0 && (
           <Card accent={C.ok} className="p-5">
             <p className="text-sm text-center py-3" style={{ color: ds.muted }}>
               ✅ همه چیز در وضعیت عادی است
