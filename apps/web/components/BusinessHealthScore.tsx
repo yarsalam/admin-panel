@@ -38,6 +38,34 @@ export default function BusinessHealthScore({ score, isLoading }: Props) {
     );
   }
 
+  // Missing status is treated as insufficient data, so an old API response
+  // cannot silently keep displaying a misleading numeric score.
+  if (score.dataStatus !== "available") {
+    return (
+      <div
+        className="bg-[#0F1424] rounded-2xl p-6 flex flex-col items-center gap-4 border border-white/5"
+        role="status"
+        aria-live="polite"
+      >
+        <GlobalText className="text-sm font-bold text-gray-300 tracking-wide">
+          امتیاز سلامت کسب‌وکار
+        </GlobalText>
+        <div className="min-h-48 w-full flex flex-col items-center justify-center gap-3 text-center">
+          <div className="h-20 w-20 rounded-full border-4 border-gray-700 flex items-center justify-center text-gray-500">
+            —
+          </div>
+          <GlobalText className="text-lg font-bold text-gray-200">
+            داده کافی نیست
+          </GlobalText>
+          <p className="max-w-xs text-sm leading-6 text-gray-400">
+            تا دریافت داده‌های عملیاتی معتبر از کاربران، فعالیت‌ها و درآمد، امتیاز
+            سلامت کسب‌وکار نمایش داده نمی‌شود.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const { total, breakdown, trend } = score;
   const radius = 80;
   const circumference = 2 * Math.PI * radius;
@@ -89,13 +117,13 @@ export default function BusinessHealthScore({ score, isLoading }: Props) {
 
       {/* روند */}
       <div className="flex items-center gap-1 text-sm">
-        {trend.direction === "up" && (
+        {trend?.direction === "up" && (
           <span className="text-green-400">↑ {trend.change}</span>
         )}
-        {trend.direction === "down" && (
+        {trend?.direction === "down" && (
           <span className="text-red-400">↓ {Math.abs(trend.change)}</span>
         )}
-        {trend.direction === "stable" && (
+        {trend?.direction === "stable" && (
           <span className="text-gray-400">پایدار</span>
         )}
         <span className="text-gray-500">نسبت به دوره قبل</span>

@@ -160,6 +160,8 @@ export interface SegmentAnalysis {
 
 // ─── Business Score ───────────────────────────────────────────────────────────
 export interface BusinessScore {
+  /** Indicates whether current operational data is sufficient to interpret the score. */
+  dataStatus: 'available' | 'insufficient_data';
   total: number;
   breakdown: {
     femaleHealth: number;
