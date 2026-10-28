@@ -272,7 +272,10 @@ function ForecastAlerts({
   return (
     <div className="space-y-2">
       {alerts.map((a, i) => {
-        const c = cfg[a.type] ?? cfg.info;
+        const c = cfg[a.type] ?? {
+          color: "border-blue-400 bg-blue-50 dark:bg-blue-900/20",
+          icon: "ℹ️",
+        };
         return (
           <div
             key={i}
