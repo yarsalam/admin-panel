@@ -79,7 +79,7 @@ function RevenueAttributionTable({ rows }: { rows: any[] }) {
   const sourceKey =
     ["source", "channel", "name", "acquisitionSource"].find(
       (k) => typeof first[k] === "string",
-    ) ?? Object.keys(first)[0];
+    ) ?? Object.keys(first)[0] ?? "source";
   const ltvKey = ["ltv", "avgLtv", "averageLtv"].find(
     (k) => typeof first[k] === "number",
   );
@@ -119,7 +119,7 @@ function RevenueAttributionTable({ rows }: { rows: any[] }) {
           {rows.map((row, i) => (
             <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
               <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">
-                {String(row[sourceKey])}
+                {String(row[sourceKey] ?? "نامشخص")}
               </td>
               {ltvKey && (
                 <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400 font-medium">
