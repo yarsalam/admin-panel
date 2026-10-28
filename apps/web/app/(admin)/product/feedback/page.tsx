@@ -1,11 +1,11 @@
 "use client";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   getMetrics,
   getConversionInsights,
   getTopFeatures,
 } from "@/lib/api/product/queries/useFeedback";
-import { trainIncremental } from "@/lib/api/product/mutations/useFeedback";
+import { useTrainIncremental } from "@/lib/api/product/mutations/useFeedback";
 import SectionTitle from "@/components/ui/SectionTitle";
 import CustomButton from "@/components/ui/CustomButton";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -23,9 +23,7 @@ export default function FeedbackPage() {
     queryKey: ["feedback", "top-features"],
     queryFn: getTopFeatures,
   });
-  const trainMut = useMutation({
-    mutationFn: (fb: any) => trainIncremental(fb),
-  });
+  const trainMut = useTrainIncremental();
 
   return (
     <div className="space-y-8 p-4">
