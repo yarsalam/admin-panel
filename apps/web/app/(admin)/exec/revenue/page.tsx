@@ -839,7 +839,8 @@ function AttributionSection() {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {sorted.map((row: LtvSourceRow) => {
-                const ratio = row.cac > 0 ? row.ltv / row.cac : 0;
+                const cac = row.cac ?? 0;
+                const ratio = cac > 0 ? row.ltv / cac : 0;
                 const ratioColor =
                   ratio >= 3
                     ? "text-emerald-600"
@@ -862,7 +863,7 @@ function AttributionSection() {
                       {fmt(row.ltv)} تومان
                     </td>
                     <td className="px-4 py-2 text-rose-600">
-                      {fmt(row.cac)} تومان
+                      {fmt(cac)} تومان
                     </td>
                     <td className={`px-4 py-2 font-bold ${ratioColor}`}>
                       {ratio > 0 ? `${ratio.toFixed(1)}×` : "—"}
