@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
+import { panels } from "@/data/panels";
 
 interface User {
   id: number;
@@ -35,13 +36,12 @@ const AuthContext = createContext<AuthContextType>({
 
 // تابع پیدا کردن اولین مسیر مجاز (دقیقاً کپی از login)
 function getFirstAllowedPath(permissions: string[]): string {
-  const { panels } = require("@/data/panels"); // یا import کنید
   for (const panel of panels) {
     if (permissions.includes(panel.permission)) {
       for (const item of panel.items) {
         if (
           Array.isArray(item.permission)
-            ? item.permission.some(p => permissions.includes(p))
+            ? item.permission.some((p: string) => permissions.includes(p))
             : permissions.includes(item.permission)
         ) {
           return item.href;
