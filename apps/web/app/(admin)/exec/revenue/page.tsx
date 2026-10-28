@@ -363,9 +363,11 @@ function ProductRevenueSection() {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={({ product, share }) =>
-                  `${product} ${share?.toFixed(0)}%`
-                }
+                label={(props: any) => {
+                  const product = props.payload?.product ?? props.name ?? "";
+                  const share = props.payload?.share ?? (props.percent ?? 0) * 100;
+                  return `${product} ${Number(share ?? 0).toFixed(0)}%`;
+                }}
               >
                 {data.map((_, i) => (
                   <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
