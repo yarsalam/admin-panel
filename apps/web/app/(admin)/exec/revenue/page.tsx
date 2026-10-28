@@ -190,13 +190,14 @@ function ForecastChart({ data }: { data: any[] }) {
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any, name: string) => {
+            formatter={(v: any, name: string | number | undefined) => {
               const labels: Record<string, string> = {
                 revenue: "پیش‌بینی",
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [`${fmt(Number(v))} تومان`, labels[name] ?? name];
+              const key = String(name ?? "");
+              return [`${fmt(Number(v))} تومان`, labels[key] ?? key];
             }}
           />
           <Area
