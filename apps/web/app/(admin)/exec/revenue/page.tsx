@@ -190,13 +190,14 @@ function ForecastChart({ data }: { data: any[] }) {
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any, name: string) => {
+            formatter={(v: any, name: string | number | undefined) => {
               const labels: Record<string, string> = {
                 revenue: "پیش‌بینی",
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [`${fmt(Number(v))} تومان`, labels[name] ?? name];
+              const key = String(name ?? "");
+              return [`${fmt(Number(v))} تومان`, labels[key] ?? key];
             }}
           />
           <Area
@@ -271,7 +272,10 @@ function ForecastAlerts({
   return (
     <div className="space-y-2">
       {alerts.map((a, i) => {
-        const c = cfg[a.type] ?? cfg.info;
+        const c = cfg[a.type] ?? {
+          color: "border-blue-400 bg-blue-50 dark:bg-blue-900/20",
+          icon: "ℹ️",
+        };
         return (
           <div
             key={i}
@@ -359,9 +363,11 @@ function ProductRevenueSection() {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={({ product, share }) =>
-                  `${product} ${share?.toFixed(0)}%`
-                }
+                label={(props: any) => {
+                  const product = props.payload?.product ?? props.name ?? "";
+                  const share = props.payload?.share ?? (props.percent ?? 0) * 100;
+                  return `${product} ${Number(share ?? 0).toFixed(0)}%`;
+                }}
               >
                 {data.map((_, i) => (
                   <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -833,7 +839,8 @@ function AttributionSection() {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {sorted.map((row: LtvSourceRow) => {
-                const ratio = row.cac > 0 ? row.ltv / row.cac : 0;
+                const cac = row.cac ?? 0;
+                const ratio = cac > 0 ? row.ltv / cac : 0;
                 const ratioColor =
                   ratio >= 3
                     ? "text-emerald-600"
@@ -856,7 +863,7 @@ function AttributionSection() {
                       {fmt(row.ltv)} تومان
                     </td>
                     <td className="px-4 py-2 text-rose-600">
-                      {fmt(row.cac)} تومان
+                      {fmt(cac)} تومان
                     </td>
                     <td className={`px-4 py-2 font-bold ${ratioColor}`}>
                       {ratio > 0 ? `${ratio.toFixed(1)}×` : "—"}

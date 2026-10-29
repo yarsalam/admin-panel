@@ -15,10 +15,17 @@ export interface BusinessScoreTrend {
   direction: "up" | "down" | "stable";
 }
 
+export type BusinessScoreDataStatus = "available" | "insufficient_data";
+
 export interface BusinessScore {
+  /**
+   * Required fail-closed contract: never interpret a legacy or empty response
+   * as a valid score until the API explicitly marks its data as available.
+   */
+  dataStatus: BusinessScoreDataStatus;
   total: number;
   breakdown: BusinessScoreBreakdown;
-  trend: BusinessScoreTrend;
+  trend: BusinessScoreTrend | null;
   weights: BusinessScoreBreakdown;
 }
 

@@ -1,5 +1,5 @@
 "use client";
-import { useUserImages } from "@/lib/api/safety/mutations/useUser360";
+import { useUserImages } from "@/lib/api/safety/queries/useUser360";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function ImageGallery({ userId }: { userId: number }) {

@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +15,7 @@ import { setPasswordSchema } from "@/schemas/auth";
 
 type Form = z.infer<typeof setPasswordSchema>;
 
-export default function SetPasswordPage() {
+function SetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
@@ -72,5 +73,16 @@ export default function SetPasswordPage() {
         />
       </form>
     </FormCard>
+  );
+}
+
+
+export default function SetPasswordPage() {
+  return (
+    <Suspense
+      fallback={<div className="p-8 text-center">در حال بارگذاری...</div>}
+    >
+      <SetPasswordContent />
+    </Suspense>
   );
 }
