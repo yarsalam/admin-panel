@@ -9,7 +9,7 @@ export const registerSchema = z.object({
   email: z.string().email("ایمیل معتبر وارد کنید"),
   password: z.string().min(8, "حداقل 6 کاراکتر"),
   role: z.enum(["superadmin", "support", "marketing", "product"], {
-    errorMap: () => ({ message: "نقش نامعتبر است" }),
+    message: "نقش نامعتبر است",
   }),
   permissions: z.array(z.string()).optional(),
 });

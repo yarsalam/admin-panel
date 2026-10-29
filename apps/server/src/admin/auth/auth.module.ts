@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -16,7 +16,7 @@ import { SeederService } from './seeder.service';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET') || 'super-secret',
+        secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: { expiresIn: '24h' },
       }),
       inject: [ConfigService],
@@ -26,10 +26,4 @@ import { SeederService } from './seeder.service';
   providers: [AdminAuthService, JwtStrategy, SeederService],
   exports: [JwtModule],
 })
-export class AdminAuthModule implements OnModuleInit {
-  constructor(private adminAuthService: AdminAuthService) {}
-
-  onModuleInit() {
-    this.adminAuthService.createInitialAdmin();
-  }
-}
+export class AdminAuthModule {}
