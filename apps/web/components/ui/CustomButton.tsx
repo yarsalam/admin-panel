@@ -13,7 +13,7 @@ interface Props {
 
 export default function CustomButton({
   label,
-  type = "submit",
+  type = "button",
   onClick,
   gradient,
   loading,
