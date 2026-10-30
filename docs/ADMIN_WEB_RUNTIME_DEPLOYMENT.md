@@ -24,7 +24,7 @@ The only Compose file needed for the web container is `docker-compose.runtime.ym
 - `ADMIN_WEB_IMAGE_TAG=sha-<commit>`
 - `NEXT_PUBLIC_API_URL=<the same HTTPS URL used at build time>`
 
-Do not store `.env.production` in Git or inside the image.
+Do not store `.env` in Git or inside the image.
 
 The Compose project name is fixed as `yarsalam-admin-prod-20261026` to match the existing production container's project label. The host binding remains `127.0.0.1:3000:3000` for the host reverse proxy. The file defines no database/backend services and has no Build Context.
 
@@ -33,7 +33,7 @@ After the image has been published, the limited cutover pattern (run only from t
 ```bash
 docker compose --env-file .env -f docker-compose.runtime.yml pull admin-web
 
-docker compose --env-file .env.production -f docker-compose.runtime.yml \
+docker compose --env-file .env -f docker-compose.runtime.yml \
   up -d --no-deps --force-recreate admin-web
 ```
 
