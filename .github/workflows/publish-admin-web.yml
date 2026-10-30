@@ -1,0 +1,23 @@
+name: Publish admin web runtime image (registration)
+
+on:
+  workflow_dispatch:
+    inputs:
+      next_public_api_url:
+        description: "Exact production NEXT_PUBLIC_API_URL used by the current admin frontend"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  registration_notice:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain how to run the feature-branch publisher
+        run: |
+          echo "This is a registration stub only; it does not build, push or deploy."
+          echo "After reviewing the runtime-image PR, select branch:"
+          echo "feat/admin-runtime-only-image"
+          echo "That branch contains the standalone build and immutable GHCR publisher."
