@@ -1,15 +1,57 @@
+# VCS, workflows and repository metadata
 .git
+.gitignore
 .github
+**/.git
+
+# Dependencies and generated build artefacts
 node_modules
 **/node_modules
 .next
 **/.next
 dist
 **/dist
-coverage
+build
+**/build
 .turbo
+coverage
+**/coverage
+*.tsbuildinfo
+
+# Test suites, docs and developer-only files
+test
+tests
+**/test
+**/tests
+**/__tests__
+**/*.spec.ts
+**/*.spec.tsx
+**/*.test.ts
+**/*.test.tsx
+docs
+**/docs
+*.md
+**/*.md
+*.mdx
+**/*.mdx
+*.log
+**/*.log
+*.ipynb
+**/*.ipynb
+
+# Local tooling and environment
 .env
 .env.*
 !.env.example
-*.log
+*.pem
+*.key
+*.bak
+*.swp
+*.tmp
 .DS_Store
+.vscode
+.idea
+
+# Python and other independently built services
+python-ai
+whatsapp_listener
