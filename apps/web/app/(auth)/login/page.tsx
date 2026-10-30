@@ -221,6 +221,7 @@ export default function LoginPage() {
           </Link>
         </div>
         <CustomButton
+          type="submit"
           label="ورود"
           gradient
           loading={loginMutation.isPending}
