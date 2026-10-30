@@ -1,0 +1,16 @@
+name: Admin web runtime image validation (registration)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registration_notice:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain how to run the feature-branch validator
+        run: |
+          echo "This is a registration stub only; it does not build, push or deploy."
+          echo "Select branch feat/admin-runtime-only-image to run the full standalone image build and /login smoke test."
