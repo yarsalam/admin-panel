@@ -63,6 +63,7 @@ export default function CampaignForm({ onClose }: { onClose: () => void }) {
               انصراف
             </button>
             <CustomButton
+              type="submit"
               label="ایجاد"
               gradient
               loading={createMutation.isPending}
