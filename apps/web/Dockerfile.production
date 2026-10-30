@@ -1,28 +1,62 @@
-FROM node:22-bookworm-slim
+# Build-only stage: the repository and development dependencies never reach
+# the final runtime image.
+FROM node:22-bookworm-slim AS base
 
 ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+ENV PATH="${PNPM_HOME}:${PATH}"
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+FROM base AS deps
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/server/package.json apps/server/package.json
 COPY packages packages
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --filter web...
+
+FROM deps AS builder
 
 COPY . .
 
 ARG NEXT_PUBLIC_API_URL
+RUN test -n "${NEXT_PUBLIC_API_URL}" || (echo "NEXT_PUBLIC_API_URL build arg is required" >&2 && exit 1)
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN pnpm --filter web build
+# Next.js 16 supports an explicit Webpack build. This avoids the known
+# Turbopack ICO decoder issue without modifying the favicon asset.
+RUN pnpm --filter web exec next build --webpack
+
+# Place public assets and Next static chunks beside the standalone server.
+RUN set -eux; \
+    STANDALONE="apps/web/.next/standalone"; \
+    test -f "${STANDALONE}/apps/web/server.js"; \
+    mkdir -p "${STANDALONE}/apps/web/.next"; \
+    cp -a apps/web/.next/static "${STANDALONE}/apps/web/.next/static"; \
+    if [ -d apps/web/public ]; then \
+      cp -a apps/web/public "${STANDALONE}/apps/web/public"; \
+    fi
+
+FROM node:22-bookworm-slim AS runner
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app
+
+RUN mkdir -p /app && chown node:node /app
+
+COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
+
+USER node
+
 EXPOSE 3000
 
-CMD ["pnpm", "--filter", "web", "start"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/login').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+
+CMD ["node", "apps/web/server.js"]
