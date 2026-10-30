@@ -20,7 +20,7 @@ Use the exact image tag printed by GitHub Actions. There is no `latest` producti
 
 ## VPS runtime configuration
 
-The only Compose file needed for the web container is `docker-compose.runtime.yml`, alongside the already-required private `.env.production`. The latter must include:
+The only Compose file needed for the web container is `docker-compose.runtime.yml`, alongside the already-required private `.env`. The latter must include:
 - `ADMIN_WEB_IMAGE_TAG=sha-<commit>`
 - `NEXT_PUBLIC_API_URL=<the same HTTPS URL used at build time>`
 
@@ -31,7 +31,7 @@ The Compose project name is fixed as `yarsalam-admin-prod-20261026` to match the
 After the image has been published, the limited cutover pattern (run only from the existing admin production directory) is:
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.runtime.yml pull admin-web
+docker compose --env-file .env -f docker-compose.runtime.yml pull admin-web
 
 docker compose --env-file .env.production -f docker-compose.runtime.yml \
   up -d --no-deps --force-recreate admin-web
