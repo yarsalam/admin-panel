@@ -5,6 +5,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Card, MiniStat } from "@/components/ui/shared";
 import ServiceHealthGrid from "@/components/ServiceHealthGrid";
+import AiPackControlPanel from "@/components/AiPackControlPanel";
 import {
   useSystemHealthOverview,
   useServicesStatus,
@@ -138,6 +139,8 @@ function SystemHealthPage() {
           </div>
         )}
       </div>
+
+      <AiPackControlPanel />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {overviewLoading || !overview?.system ? (

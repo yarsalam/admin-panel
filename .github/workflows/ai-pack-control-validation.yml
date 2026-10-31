@@ -1,0 +1,136 @@
+name: Admin AI Pack control runtime validation
+
+on:
+  pull_request:
+    paths:
+      - "apps/server/**"
+      - "apps/web/**"
+      - "packages/**"
+      - "docker-compose.backend.runtime.yml"
+      - ".github/workflows/ai-pack-control-validation.yml"
+      - ".github/workflows/publish-admin-backend.yml"
+      - ".github/workflows/publish-admin-ai-pack-control-runtime.yml"
+      - "scripts/deploy_admin_ai_pack_control_bundle.sh"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+  push:
+    branches:
+      - feat/admin-ai-pack-control-center
+    paths:
+      - "apps/server/**"
+      - "apps/web/**"
+      - "packages/**"
+      - "docker-compose.backend.runtime.yml"
+      - ".github/workflows/ai-pack-control-validation.yml"
+      - ".github/workflows/publish-admin-backend.yml"
+      - ".github/workflows/publish-admin-ai-pack-control-runtime.yml"
+      - "scripts/deploy_admin_ai_pack_control_bundle.sh"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build NestJS backend
+        run: pnpm --filter server build
+      - name: Test restricted AI Pack API client
+        run: pnpm --filter server exec jest --runInBand infrastructure/services/ai-pack-control.service.spec.ts
+      - name: Build and inspect source-free backend runtime image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --file apps/server/Dockerfile.runtime --tag admin-panel-backend:ci .
+          docker run --rm --entrypoint sh admin-panel-backend:ci -ec '
+            test -f /app/apps/server/dist/main.js
+            test ! -e /app/apps/server/src/main.ts
+            ! find /app/apps/server/src -type f -name "*.ts" | grep -q .
+            node -e "require.resolve(\"@nestjs/core\"); require.resolve(\"@nestjs/axios\"); require.resolve(\"typeorm\")"
+          '
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build standalone admin web with the production API URL
+        env:
+          NEXT_PUBLIC_API_URL: https://novertex.ir/api
+        run: pnpm --filter web exec next build --webpack
+
+  backend-runtime-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate one-shot production bundle script syntax
+        run: bash -n scripts/deploy_admin_ai_pack_control_bundle.sh
+      - name: Validate backend-only runtime Compose and environment isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          env_file="$(mktemp)"
+          output="$(mktemp)"
+          trap 'rm -f "$env_file" "$output"' EXIT
+          chmod 600 "$env_file" "$output"
+          cat > "$env_file" <<'ENV'
+          ADMIN_BACKEND_IMAGE_TAG=sha-ci-validation
+          ADMIN_WEB_ORIGINS=https://admin.example.invalid
+          ADMIN_DB_USER=admin_app
+          ADMIN_DB_PASSWORD=ci-placeholder
+          JWT_SECRET=ci-placeholder-secret
+          USER_API_BASE_URL=http://backend:5000
+          USER_API_KEY=ci-placeholder-key
+          AI_PACK_CONTROL_URL=http://172.18.0.1:9115
+          AI_PACK_CONTROL_TOKEN=ci-placeholder-token
+          ENV
+          docker compose --project-directory "$PWD" --env-file "$env_file" -f docker-compose.backend.runtime.yml config --format json > "$output"
+          python - "$output" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1]))
+          if data.get("name") != "yarsalam-admin-prod-20261026":
+              raise SystemExit("wrong compose project name")
+          services=data.get("services",{})
+          if set(services) != {"admin-backend"}:
+              raise SystemExit("runtime compose must target admin-backend only")
+          service=services["admin-backend"]
+          if service.get("build") or service.get("env_file") or service.get("volumes"):
+              raise SystemExit("backend runtime must have no build, env_file, or source volume")
+          expected={"NODE_ENV","PORT","DB_SYNC","ADMIN_WEB_ORIGINS","DB_HOST","DB_PORT","DB_USER","DB_PASS","DB_NAME","JWT_SECRET","REDIS_HOST","REDIS_PORT","USER_API_BASE_URL","USER_API_KEY","AI_PACK_CONTROL_URL","AI_PACK_CONTROL_TOKEN","NODE_OPTIONS"}
+          if set(service.get("environment",{})) != expected:
+              raise SystemExit("backend runtime environment keys do not match allowlist")
+          ports=service.get("ports",[])
+          if not any(p.get("host_ip")=="127.0.0.1" and p.get("published")=="4000" and p.get("target")==4000 for p in ports):
+              raise SystemExit("admin-backend must bind only to 127.0.0.1:4000")
+          network=service.get("networks",{}).get("shared_network",{})
+          if "admin-backend" not in network.get("aliases",[]):
+              raise SystemExit("admin-backend alias missing on shared network")
+          external=data.get("networks",{}).get("shared_network",{})
+          if not external.get("external") or external.get("name")!="yarsalam_network":
+              raise SystemExit("external yarsalam_network is required")
+          if "default" in data.get("networks",{}):
+              raise SystemExit("project default network must not be created")
+          print("PASS: one backend service, fixed environment allowlist, loopback only, external shared network, no source/build/private env injection")
+          PY
