@@ -65,6 +65,7 @@ export default function SetPasswordPage() {
           placeholder="دوباره وارد کنید"
         />
         <CustomButton
+          type="submit"
           label="تنظیم رمز"
           gradient
           loading={setPasswordMutation.isPending}
