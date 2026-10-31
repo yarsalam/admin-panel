@@ -1,5 +1,20 @@
 # Admin Web — runtime-only image deployment
 
+## یادآوری وضعیت کل پروژه — دو مسئلهٔ اصلی باز
+
+این بخش را در شروع چت بعدی بخوان:
+
+1. **ورود پنل مدیریت کار نمی‌کند:** علت کدی `CustomButton` با پیش‌فرض `type="button"` بود. اصلاح فرم‌ها در PR #30 مخزن admin-panel ادغام شده است (commit `734ef06b72bdd37899570defe339b4406efc40dc`). بااین‌حال این تغییر هنوز روی VPS Deploy نشده؛ پس مشکل Production تا تعویض Image سرویس `admin-web` و تست ورود واقعی باز است. PR #31 همین Image standalone/runtime-only را فراهم می‌کند. CI run #4 با ID `41120657283` Build، اجرای کانتینر و پاسخ HTTP 200 از `/login` را تأیید کرده، اما Image Push/Deploy نشده است.
+2. **`ai_assistant` در Matching:** Image قبلی به‌دلیل نبود `pandas` crash می‌کرد. PR #4 مخزن ai-packs اصلاح `pandas==2.2.3` را اعمال کرده و CI run #83 موفق شده است؛ اما Image هنوز در GHCR منتشر و روی VPS جایگزین نشده است. اقدام بعدی فقط انتشار و تعویض Image همین سرویس است؛ نه SEO، نه Safety، نه Revenue و نه چهار سرویس سالم Matching را دوباره Build یا تعویض نکن.
+
+## سه تصمیم قطعی معماری
+
+1. سورس، تست‌ها، مستندات و فایل‌های توسعه فقط در GitHub نگهداری می‌شوند.
+2. VPS فقط Imageهای Runtime نهایی، فایل‌های ضروری اجرای Production مثل Compose و تنظیمات، Secrets خصوصی و داده‌های پایدار/volumeهای لازم را نگه می‌دارد.
+3. هیچ Build سورسی روی VPS انجام نمی‌شود؛ Build خارج از VPS (GitHub Actions یا محیط Build مستقل) انجام می‌شود و فقط Image نهایی منتقل یا از Registry دریافت می‌شود.
+
+این سه تصمیم ثابت‌اند و هر دستور یا پیشنهاد خلاف آن‌ها نباید اجرا شود.
+
 ## Artifact design
 
 - Source, tests, documentation, Dockerfiles and Git metadata stay in GitHub.
