@@ -1,0 +1,125 @@
+name: Publish admin AI Pack control runtime images
+
+on:
+  workflow_dispatch:
+    inputs:
+      next_public_api_url:
+        description: "Production API base URL compiled into the admin web image"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-admin-ai-pack-control-runtime
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Checkout exact selected commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Validate production API URL
+        env:
+          API_URL: ${{ inputs.next_public_api_url }}
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlparse
+          value = os.environ["API_URL"].strip()
+          parsed = urlparse(value)
+          if parsed.scheme != "https" or not parsed.netloc:
+              raise SystemExit("NEXT_PUBLIC_API_URL must be an absolute HTTPS URL")
+          print("Production API URL format: valid")
+          PY
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build source-free Admin backend image (no push yet)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/server/Dockerfile.runtime
+          load: true
+          push: false
+          tags: ghcr.io/yarsalam/admin-panel-backend:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/yarsalam/admin-panel
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Inspect backend runtime image and reject TypeScript source
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint sh ghcr.io/yarsalam/admin-panel-backend:sha-${GITHUB_SHA} -ec '
+            test -f /app/apps/server/dist/main.js
+            test ! -e /app/apps/server/src/main.ts
+            ! find /app/apps/server/src -type f -name "*.ts" | grep -q .
+            node -e "require.resolve(\"@nestjs/core\"); require.resolve(\"@nestjs/axios\"); require.resolve(\"typeorm\")"
+          '
+
+      - name: Build standalone Admin web image (no push yet)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile.production
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ inputs.next_public_api_url }}
+          load: true
+          push: false
+          tags: ghcr.io/yarsalam/admin-panel-web:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/yarsalam/admin-panel
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Smoke-test Admin web login route
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/yarsalam/admin-panel-web:sha-${GITHUB_SHA}"
+          docker run -d --name admin-ai-pack-web-publish-check -p 127.0.0.1:3030:3000 "$IMAGE"
+          cleanup() { docker rm -f admin-ai-pack-web-publish-check >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for attempt in $(seq 1 45); do
+            if curl --silent --show-error --fail http://127.0.0.1:3030/login >/dev/null; then
+              echo "Standalone Admin /login returned HTTP 200"
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs admin-ai-pack-web-publish-check
+          exit 1
+
+      - name: Verify web image excludes repository source and docs
+        run: |
+          docker run --rm --entrypoint sh ghcr.io/yarsalam/admin-panel-web:sha-${GITHUB_SHA} -ec '
+            test -f /app/apps/web/server.js
+            test -d /app/apps/web/.next
+            test ! -e /app/.git
+            test ! -e /app/.github
+            test ! -e /app/docs
+          '
+
+      - name: Publish both immutable runtime images after all checks pass
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker push "ghcr.io/yarsalam/admin-panel-backend:sha-${GITHUB_SHA}"
+          docker push "ghcr.io/yarsalam/admin-panel-web:sha-${GITHUB_SHA}"
+          echo "ADMIN_BACKEND_IMAGE_TAG=sha-${GITHUB_SHA}"
+          echo "ADMIN_WEB_IMAGE_TAG=sha-${GITHUB_SHA}"
+          echo "Both images use the same immutable source commit."
+          echo "No VPS resource was changed."
