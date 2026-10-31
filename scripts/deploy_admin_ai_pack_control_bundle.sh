@@ -64,7 +64,9 @@ PY
 }
 
 set_env_values() {
-  python3 - "$ENV_FILE" "$@" <<'PY'
+  local env_file="$1"
+  shift
+  python3 - "$env_file" "$@" <<'PY'
 import os, sys, tempfile
 from pathlib import Path
 path = Path(sys.argv[1])
