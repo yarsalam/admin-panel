@@ -48,8 +48,11 @@ jobs:
         run: pnpm --filter server build
       - name: Test restricted AI Pack API client
         run: pnpm --filter server exec jest --runInBand infrastructure/services/ai-pack-control.service.spec.ts
-      - name: Build backend runtime image
-        run: docker build --file apps/server/Dockerfile.runtime --tag admin-panel-backend:ci .
+      - name: Build and inspect source-free backend runtime image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --file apps/server/Dockerfile.runtime --tag admin-panel-backend:ci .
           docker run --rm --entrypoint sh admin-panel-backend:ci -ec '
             test -f /app/apps/server/dist/main.js
             test ! -e /app/apps/server/src/main.ts
