@@ -72,7 +72,7 @@ jobs:
       - name: Build standalone admin web with the production API URL
         env:
           NEXT_PUBLIC_API_URL: https://novertex.ir/api
-        run: pnpm --filter web build
+        run: pnpm --filter web exec next build --webpack
 
   backend-runtime-compose:
     runs-on: ubuntu-latest
