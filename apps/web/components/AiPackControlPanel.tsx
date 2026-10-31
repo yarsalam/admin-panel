@@ -89,8 +89,10 @@ function TestSummary({ job }: { job: AiPackJob }) {
   }
   const tests = job.result?.test?.tests ?? job.result?.tests;
   if (Array.isArray(tests)) {
+    const egress = job.result?.seo_external_egress;
+    const readiness = job.result?.revenue_model_readiness;
     return (
-      <div className="space-y-1">
+      <div className="space-y-2">
         {tests.map((test: any, index: number) => (
           <div key={index} className="flex justify-between gap-3 text-sm">
             <span>{test.test}</span>
@@ -98,6 +100,18 @@ function TestSummary({ job }: { job: AiPackJob }) {
               {test.status === "PASS" ? "موفق" : "ناموفق"}
             </span>
           </div>
+        ))}
+        {egress && (
+          <p className="text-xs text-sky-700 dark:text-sky-300">
+            خروج اینترنت SEO: {egress === "external_url_fetch_passed"
+              ? "دسترسی به URL خارجی موفق بود"
+              : "URL خارجی در دسترس نبود؛ VPN، فایروال یا DNS خروجی باید بررسی شود"}
+          </p>
+        )}
+        {readiness && Object.entries(readiness).map(([name, value]: [string, any]) => (
+          <p key={name} className="text-xs text-gray-500">
+            {name}: model_trained={String(value.model_trained ?? "unknown")}, cv_score={String(value.cv_score ?? "unknown")}
+          </p>
         ))}
       </div>
     );
