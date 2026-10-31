@@ -64,7 +64,16 @@ jobs:
           ports = service.get("ports", [])
           if not any(p.get("published") == "3000" and p.get("target") == 3000 and p.get("host_ip") == "127.0.0.1" for p in ports):
               raise SystemExit("admin-web must bind only to 127.0.0.1:3000")
-          print("Runtime Compose guard passed: single service, no build, no private env_file, loopback-only port.")
+          networks = service.get("networks", {})
+          shared = networks.get("shared_network", {})
+          if "admin-web" not in shared.get("aliases", []):
+              raise SystemExit("admin-web must have the admin-web alias on shared_network")
+          external = config.get("networks", {}).get("shared_network", {})
+          if not external.get("external") or external.get("name") != "yarsalam_network":
+              raise SystemExit("shared_network must reuse the external yarsalam_network")
+          if "default" in config.get("networks", {}):
+              raise SystemExit("runtime Compose must not create a separate default network")
+          print("Runtime Compose guard passed: single service, no build/private env_file, loopback-only, attached to shared yarsalam_network with admin-web alias.")
           PY
 
       - name: Set up Docker Buildx
