@@ -61,3 +61,22 @@ Do not add `--remove-orphans`, do not use `down`, and do not change the backend,
 - The production container was observed under Compose project `yarsalam-admin-prod-20261026`; this runtime Compose file retains that project identity.
 - A previous TypeScript/lint/build run used PR #29's branch and must not be treated as the validation result for the merged production branch.
 - The previous Turbopack favicon decode failure is avoided by calling the documented `next build --webpack` command; the icon itself is not modified.
+
+
+## Production discovery update — 2026-10-31
+
+A read-only VPS check confirmed:
+
+- Compose project: `yarsalam-admin-prod-20261026`.
+- Existing admin runtime directory: `/home/deploy/yarsalam-admin-prod-20261026`.
+- Existing Compose files: `docker-compose.yml` and `docker-compose.production.yml`.
+- Existing frontend container responds to `GET /login` with HTTP 200. This proves route availability only, not successful authentication.
+- Current configured public API URL is `http://novertex.ir/api`. A read-only curl followed the HTTP redirect to `https://novertex.ir/api/`; TLS verification succeeded (`ssl_verify_result=0`). The root `/api/` returned 404, which alone does not show the API is unavailable because it may not expose a handler at its root.
+- The frontend login mutation calls `POST /admin/auth/login` relative to `NEXT_PUBLIC_API_URL`. Before building the new frontend image, verify that the corresponding HTTPS route is reachable without redirect and returns the expected validation response to an empty JSON body (for example HTTP 400/422), not 404.
+- The current Matching `ai_assistant` image already contains `pandas==2.2.3`; its app imports pass and its health endpoint returns HTTP 200. Do not rebuild or replace it as part of this admin-only release.
+
+### Important runtime environment isolation
+
+The private admin `.env` contains backend/database credentials. It must be passed to Docker Compose only for variable interpolation (for example `docker compose --env-file .env ...`), **not** injected into the `admin-web` container through `env_file: .env`. The standalone web container receives only the explicit non-secret runtime variables declared under `environment`. The runtime Compose validation workflow enforces this rule.
+
+For the next admin image build, use `https://novertex.ir/api` only after the auth-route probe above confirms the HTTPS route. Update `NEXT_PUBLIC_API_URL` in the private VPS `.env` as part of the backed-up, single-service deployment operation, so the built client configuration and runtime Compose configuration agree exactly.
