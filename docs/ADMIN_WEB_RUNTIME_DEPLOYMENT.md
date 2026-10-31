@@ -101,3 +101,32 @@ ADMIN_AUTH_ROUTE_VERIFIED=1 ./01-publish-admin-web-only.sh
 ```
 
 The script pins the workflow run to the current `feat/production-deployment-memory` head and requires interactive confirmation text `PUBLISH-ADMIN`. It publishes only `ghcr.io/yarsalam/admin-panel-web:sha-<full-commit>`; it does not alter the VPS. After a successful push, verify the output tag/digest, run the deploy script in PLAN mode, inspect its exact plan, and treat `--apply` as a separate production action requiring explicit operator approval.
+
+
+## Production incident — 502 after admin-web cutover (2026-10-31)
+
+The first admin-only runtime Compose omitted the pre-existing shared proxy network. The deployment therefore created a project-local default network `yarsalam-admin-prod-20261026_default`, leaving the web container unreachable from `yarsalam-admin-http-proxy`.
+
+Observed:
+- Local `curl http://127.0.0.1:3000/login` from the VPS: HTTP 200.
+- Public `https://novertex.ir/login`: HTTP 502.
+- Nginx error: `connect() failed (113: Host is unreachable)`, stale upstream `172.18.0.6:3000`.
+- Proxy container is attached to external Docker network `yarsalam_network`.
+- New web container was attached only to `yarsalam-admin-prod-20261026_default` at `172.22.0.2`.
+- `yarsalam_network` still contains admin backend at `172.18.0.5`, proxy at `172.18.0.7`, and other live services. Do not recreate or restart these services.
+
+Corrective change:
+- Runtime Compose must attach the single `admin-web` service to external network `yarsalam_network`, with explicit network alias `admin-web` (this is the hostname used in Nginx `proxy_pass`).
+- Do not define/use a project-local default network for this runtime-only file.
+- Keep the project name, loopback port, image tag, explicit non-secret environment and no-env_file guard unchanged.
+- CI now validates the external network name, service alias and absence of the project-local default network.
+
+PR for this correction is `fix/admin-web-proxy-network` targeting `feat/production-deployment-memory`. This PR changes GitHub source/configuration only. It does not alter the VPS.
+
+Immediate repair of the already-running container can be done without recreating it:
+```bash
+docker network connect --alias admin-web yarsalam_network yarsalam-admin-prod-20261026-admin-web-1
+```
+Then verify proxy-to-web access from inside the proxy container and run `nginx -t`. Only after the alias resolves and configuration test passes, reload Nginx gracefully (`nginx -s reload`) so its upstream is re-resolved. Do not restart/recreate the Nginx container. If Nginx reload does not succeed, stop and inspect logs; do not make unrelated changes.
+
+After CI passes and the corrective Compose file is approved/merged, future runtime updates must use the corrected file so the shared network attachment persists across container recreation.
