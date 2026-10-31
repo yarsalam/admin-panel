@@ -122,3 +122,22 @@ https://github.com/yarsalam/admin-panel/pull/34
 - CI run #8, ID `41185044552`: SUCCESS, including runtime Compose guard, standalone build/smoke, and runtime-image content checks.
 - Runtime Compose attaches `admin-web` to external `yarsalam_network` using alias `admin-web` and prevents a project-local default network.
 - Copy the corrected `docker-compose.runtime.yml` into the existing VPS runtime directory and validate its rendered config before any future admin-web recreation. Do not recreate the current healthy container just to apply the Compose file; its manual network attachment is already working.
+
+
+## Admin AI Pack Control Center — 2026-10-31
+
+The feature branch `feat/admin-ai-pack-control-center` adds a real Pack-level control UI to `/exec/system-health` and a superadmin-only backend API. Full design and rollout details are in `docs/AI_PACK_CONTROL_CENTER.md`.
+
+Implementation:
+- The Admin API proxies only to a restricted host-side controller. The controller is not the Docker socket and does not accept arbitrary commands or project names.
+- Four fixed Pack cards expose Start/Test/Stop, Progressive Test and confirmed Stop All. Safety remains NOT_INSTALLED if absent.
+- The API routes are protected by JWT + `RolesGuard` + `@Roles('superadmin')`.
+- Only admin-backend receives `AI_PACK_CONTROL_URL` and `AI_PACK_CONTROL_TOKEN`; these are not present in admin-web or browser code.
+- A one-shot deployment script installs the ai-packs host agent, runs the progressive smoke/RAM tests, then deploys only admin-backend and admin-web with immutable images and rollback aliases. No database, Redis, Qdrant, mobApp, Nginx or volume operation is included.
+
+Validation:
+- Latest Admin AI Pack control CI run at this update: 41205427821 — SUCCESS (NestJS build, six control-service tests, source-free backend image build/inspection, Next.js Webpack build, runtime Compose guard).
+- Admin runtime publisher `.github/workflows/publish-admin-ai-pack-control-runtime.yml` is manual and publishes backend/web together using one immutable SHA tag after both images pass checks.
+- The source files are on the feature branch only. The PR is not yet merged and no Admin image has been published/deployed for this feature.
+
+Do not deploy from this branch until PR review/merge and manual image publication. The existing production admin-web and admin-backend services remain unchanged.
