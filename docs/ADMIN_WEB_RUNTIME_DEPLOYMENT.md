@@ -101,3 +101,23 @@ ADMIN_AUTH_ROUTE_VERIFIED=1 ./01-publish-admin-web-only.sh
 ```
 
 The script pins the workflow run to the current `feat/production-deployment-memory` head and requires interactive confirmation text `PUBLISH-ADMIN`. It publishes only `ghcr.io/yarsalam/admin-panel-web:sha-<full-commit>`; it does not alter the VPS. After a successful push, verify the output tag/digest, run the deploy script in PLAN mode, inspect its exact plan, and treat `--apply` as a separate production action requiring explicit operator approval.
+
+
+## 502 recovery completed — 2026-10-31
+
+The immediate Production recovery was successfully completed without image pull/build or container recreation:
+
+- Existing healthy container `yarsalam-admin-prod-20261026-admin-web-1` was attached to `yarsalam_network` with network alias `admin-web`.
+- Its shared-network IP is now `172.18.0.6`.
+- Proxy-to-web reachability check: PASS.
+- `nginx -t`: PASS.
+- Graceful `nginx -s reload`: PASS.
+- Public `https://novertex.ir/login`: HTTP 200.
+- No application or proxy container was recreated/restarted; no Image or Volume changed.
+
+The permanent Compose correction is in open PR #34:
+https://github.com/yarsalam/admin-panel/pull/34
+- Head: `5315f5c931cc7762f39be3a7e86b7014ea34a01f`
+- CI run #8, ID `41185044552`: SUCCESS, including runtime Compose guard, standalone build/smoke, and runtime-image content checks.
+- It attaches `admin-web` to external `yarsalam_network` using alias `admin-web` and prevents a project-local default network.
+- PR #34 has not yet been merged. After approval/merge, the corrected `docker-compose.runtime.yml` must be copied into the existing VPS runtime directory before any future admin-web recreation. Do not recreate the current healthy container just to apply the Compose file; its manual network attachment is already working and should remain until a planned, approved update.
