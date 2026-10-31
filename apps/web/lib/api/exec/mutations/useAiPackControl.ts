@@ -65,7 +65,6 @@ export function useAiPackControlStatus() {
 }
 
 export function useAiPackJob(jobId: string | null) {
-  const queryClient = useQueryClient();
   return useQuery<AiPackJob>({
     queryKey: ["ai-pack-control", "job", jobId],
     queryFn: () => apiClient.get("/infrastructure/ai-packs/jobs/" + jobId).then((r) => r.data),
