@@ -32,8 +32,7 @@ COPY --from=builder /app/apps/server/node_modules /app/apps/server/node_modules
 COPY --from=builder /app/apps/server/dist ./dist
 
 RUN rm -rf ./src && cp -a ./dist ./src && \
-    find ./dist ./src -type f \( -name '*.map' -o -name '*.d.ts' \) -delete && \
-    find ./src -type f ! -name '*.js' -delete
+    find ./dist ./src -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.ts' \) -delete
 
 USER node
 EXPOSE 4000
