@@ -9,6 +9,8 @@ on:
       - "docker-compose.backend.runtime.yml"
       - ".github/workflows/ai-pack-control-validation.yml"
       - ".github/workflows/publish-admin-backend.yml"
+      - ".github/workflows/publish-admin-ai-pack-control-runtime.yml"
+      - "scripts/deploy_admin_ai_pack_control_bundle.sh"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
@@ -23,6 +25,8 @@ on:
       - "docker-compose.backend.runtime.yml"
       - ".github/workflows/ai-pack-control-validation.yml"
       - ".github/workflows/publish-admin-backend.yml"
+      - ".github/workflows/publish-admin-ai-pack-control-runtime.yml"
+      - "scripts/deploy_admin_ai_pack_control_bundle.sh"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
@@ -81,6 +85,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate one-shot production bundle script syntax
+        run: bash -n scripts/deploy_admin_ai_pack_control_bundle.sh
       - name: Validate backend-only runtime Compose and environment isolation
         shell: bash
         run: |
