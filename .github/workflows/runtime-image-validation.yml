@@ -1,0 +1,70 @@
+name: Admin web runtime image validation
+
+on:
+  pull_request:
+    paths:
+      - ".dockerignore"
+      - "apps/web/**"
+      - "apps/server/package.json"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - "docker-compose.runtime.yml"
+      - ".github/workflows/runtime-image-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build standalone runtime image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile.production
+          load: true
+          push: false
+          tags: admin-panel-web:ci-${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://ci.invalid
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify runtime server and login route
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name admin-panel-web-ci -p 127.0.0.1:3030:3000 admin-panel-web:ci-${GITHUB_SHA}
+          cleanup() { docker rm -f admin-panel-web-ci >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for attempt in $(seq 1 45); do
+            if curl --silent --show-error --fail http://127.0.0.1:3030/login >/dev/null; then
+              echo "Standalone admin web /login returned HTTP 200"
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs admin-panel-web-ci
+          exit 1
+
+      - name: Assert runtime image has no repository metadata or docs
+        run: |
+          docker run --rm --entrypoint sh admin-panel-web:ci-${GITHUB_SHA} -ec '
+            test -f /app/apps/web/server.js
+            test -d /app/apps/web/.next
+            test ! -e /app/.git
+            test ! -e /app/.github
+            test ! -e /app/docs
+          '
