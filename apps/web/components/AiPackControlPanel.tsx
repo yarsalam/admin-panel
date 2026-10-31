@@ -138,7 +138,7 @@ export default function AiPackControlPanel() {
     }
   }, [job?.state, refreshStatus]);
 
-  const operationActive = action.isPending || Boolean(job && (job.state === "queued" || job.state === "running"));
+  const operationActive = action.isPending || Boolean(status?.operation_running) || Boolean(job && (job.state === "queued" || job.state === "running"));
   const totalRam = status?.memory?.total_mb;
   const availableRam = status?.memory?.available_mb;
   const usedPercent = totalRam && typeof availableRam === "number"
