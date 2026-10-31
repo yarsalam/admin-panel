@@ -81,3 +81,13 @@ Code and CI validation are on `feat/admin-ai-pack-control-center`. No changes ha
 ## Operational prohibitions
 
 Never mount `/var/run/docker.sock` into Admin web/backend. Never run `docker compose down`, `down -v`, `--remove-orphans`, any prune, or project-wide `up` as part of this feature. Do not automatically stop a pre-existing Pack to satisfy the memory guard. Do not change mobApp, MySQL, Redis, Qdrant, Nginx, or Admin DB services.
+
+
+## Merge status update — 2026-10-31
+
+- PR #35 `Add Admin AI Pack Control Center and progressive RAM testing` is merged into `feat/production-deployment-memory` at `fe119522ff36f1de2741fcc6a454253184020efe`.
+- Final pre-merge AI Pack Control Center CI run `41206176182`: SUCCESS. It validates NestJS build, six control-service tests, source-free backend runtime image, Next.js Webpack build, runtime Compose guard and deploy-script syntax.
+- Production Docker validation after merge: run `41230216455` SUCCESS (admin web/backend image builds and production Compose validation). It builds only in GitHub Actions and does not publish/push to GHCR.
+- AI pack host-controller installer/test script exact merged ref: `cd7c2bda98d8ed5101832ce7d166f76863601334`.
+- No Admin runtime images have been published for this feature and no container on VPS has been changed. The next controlled action is to manually dispatch `publish-admin-ai-pack-control-runtime.yml` with `https://novertex.ir/api`, then run `scripts/deploy_admin_ai_pack_control_bundle.sh` on the VPS with the exact merged refs.
+- Exact merged Admin ref and required image tag: `fe119522ff36f1de2741fcc6a454253184020efe` / `sha-fe119522ff36f1de2741fcc6a454253184020efe`.
