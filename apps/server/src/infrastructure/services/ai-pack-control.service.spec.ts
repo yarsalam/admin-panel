@@ -1,4 +1,4 @@
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AiPackControlService } from './ai-pack-control.service';
 
 describe('AiPackControlService', () => {
