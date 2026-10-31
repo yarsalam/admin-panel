@@ -5,6 +5,7 @@
 این بخش را در شروع چت بعدی بخوان:
 
 1. **ورود پنل مدیریت کار نمی‌کند:** علت کدی `CustomButton` با پیش‌فرض `type="button"` بود. اصلاح فرم‌ها در PR #30 مخزن admin-panel ادغام شده است (commit `734ef06b72bdd37899570defe339b4406efc40dc`). بااین‌حال این تغییر هنوز روی VPS Deploy نشده؛ پس مشکل Production تا تعویض Image سرویس `admin-web` و تست ورود واقعی باز است. PR #31 همین Image standalone/runtime-only را فراهم می‌کند. CI run #4 با ID `41120657283` Build، اجرای کانتینر و پاسخ HTTP 200 از `/login` را تأیید کرده، اما Image Push/Deploy نشده است.
+- توجه: پس از run #4، commit `31989503311b4fab6867464d6ab432da76d87039` فقط directive مربوط به Client Component را برای `RiskPanel` صریح کرد؛ CI باید روی آخرین head دوباره تأیید شود.
 2. **`ai_assistant` در Matching:** Image قبلی به‌دلیل نبود `pandas` crash می‌کرد. PR #4 مخزن ai-packs اصلاح `pandas==2.2.3` را اعمال کرده و CI run #83 موفق شده است؛ اما Image هنوز در GHCR منتشر و روی VPS جایگزین نشده است. اقدام بعدی فقط انتشار و تعویض Image همین سرویس است؛ نه SEO، نه Safety، نه Revenue و نه چهار سرویس سالم Matching را دوباره Build یا تعویض نکن.
 
 ## سه تصمیم قطعی معماری
