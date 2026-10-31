@@ -181,7 +181,7 @@ export default function AiPackControlPanel() {
         {PACKS.map((pack) => {
           const item = status.packs?.[pack.id];
           const state = item?.state ?? "not_installed";
-          const badge = STATUS[state] ?? STATUS.partial;
+          const badge = STATUS[state] ?? { label: "وضعیت نامشخص", className: "bg-gray-500/10 text-gray-500" };
           const busy = operationActive;
           return (
             <div key={pack.id} className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
