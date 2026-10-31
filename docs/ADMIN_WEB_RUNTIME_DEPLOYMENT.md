@@ -80,3 +80,24 @@ A read-only VPS check confirmed:
 The private admin `.env` contains backend/database credentials. It must be passed to Docker Compose only for variable interpolation (for example `docker compose --env-file .env ...`), **not** injected into the `admin-web` container through `env_file: .env`. The standalone web container receives only the explicit non-secret runtime variables declared under `environment`. The runtime Compose validation workflow enforces this rule.
 
 For the next admin image build, use `https://novertex.ir/api` only after the auth-route probe above confirms the HTTPS route. Update `NEXT_PUBLIC_API_URL` in the private VPS `.env` as part of the backed-up, single-service deployment operation, so the built client configuration and runtime Compose configuration agree exactly.
+
+
+## Production follow-up — 2026-10-31 (verified after PR #33)
+
+- PR #33 is **merged** into `feat/production-deployment-memory`: `86245fa7a1a5e0cc2519da1e066499e5f977cafc`.
+- Its CI run `41182064502` succeeded, including the runtime Compose guard, standalone Image build/smoke test, and runtime-image content checks.
+- PR #31 is merged at `c3b8ce3ad8e96bd755223f6911f2b5526d62b548`; PR #30 login submit fix remains part of the same production branch.
+- The current branch has the real manual publisher at `.github/workflows/publish-admin-web.yml`. The default-branch copy is only a registration stub. Dispatch against `feat/production-deployment-memory`, not `main`.
+- The API route probe was run against `https://novertex.ir/api/admin/auth/login`: HTTP 401, zero redirects, TLS verification result 0. This is the expected response for the reserved fake `.invalid` identity and confirms that the auth route reached the backend.
+- A fresh read-only probe of the live Matching `ai_assistant` container confirms `pandas==2.2.3`, application imports, and its health endpoint (HTTP 200). Its current image is `ghcr.io/yarsalam/ai-packs/matching-pack-ai-assistant:sha-b76cca762cb850ed8d75303e2613dce8e311dd7e`. Do not republish or replace Matching as part of this admin release.
+- The new runtime Compose definition intentionally omits `env_file: .env`; use `.env` only as Compose interpolation input. This prevents database/backend secrets from being injected into the web container.
+
+### Current next operation
+
+Only the admin Image remains to publish. Run the workstation publisher script from the admin runtime package after verifying `gh auth status`:
+
+```bash
+ADMIN_AUTH_ROUTE_VERIFIED=1 ./01-publish-admin-web-only.sh
+```
+
+The script pins the workflow run to the current `feat/production-deployment-memory` head and requires interactive confirmation text `PUBLISH-ADMIN`. It publishes only `ghcr.io/yarsalam/admin-panel-web:sha-<full-commit>`; it does not alter the VPS. After a successful push, verify the output tag/digest, run the deploy script in PLAN mode, inspect its exact plan, and treat `--apply` as a separate production action requiring explicit operator approval.
