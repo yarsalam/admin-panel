@@ -117,7 +117,7 @@ The immediate Production recovery was successfully completed without image pull/
 
 The permanent Compose correction is in PR #34:
 https://github.com/yarsalam/admin-panel/pull/34
-- PR #34 merged into `feat/production-deployment-memory` at `42750ffeb04353084cf83cc4cbf012d06d1e6b17`.
+- PR #34 merged into `feat/production-deployment-memory` at `775ac7533179bf79302db26b4c8ce8b238fa2816`.
 - Head tested: `5315f5c931cc7762f39be3a7e86b7014ea34a01f`.
 - CI run #8, ID `41185044552`: SUCCESS, including runtime Compose guard, standalone build/smoke, and runtime-image content checks.
 - Runtime Compose attaches `admin-web` to external `yarsalam_network` using alias `admin-web` and prevents a project-local default network.
