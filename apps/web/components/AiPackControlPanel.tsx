@@ -43,19 +43,44 @@ function TestSummary({ job }: { job: AiPackJob }) {
   const packs = Array.isArray(job.result?.packs) ? job.result.packs : null;
   if (packs) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {packs.map((item: any) => (
-          <div key={item.pack} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="font-medium">{item.pack}</span>
-            <span className="text-gray-500">
-              {item.state === "skipped_not_installed" ? "نصب نشده" :
-               item.state === "not_started" ? "شروع نشد" :
-               item.test?.ok ? "تست موفق" : "تست ناموفق"}
-            </span>
-            {typeof item.minimum_available_during_operation_mb === "number" && (
-              <span className="text-xs text-gray-500">
-                حداقل RAM آزاد: {item.minimum_available_during_operation_mb} MB
+          <div key={item.pack} className="space-y-1 border-b border-gray-200/60 dark:border-gray-700/60 pb-2 last:border-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="font-medium">{item.pack}</span>
+              <span className="text-gray-500">
+                {item.state === "skipped_not_installed" ? "نصب نشده" :
+                 item.state === "not_started" ? "شروع نشد" :
+                 item.test?.ok ? "تست موفق" : "تست ناموفق"}
               </span>
+              {typeof item.minimum_available_during_operation_mb === "number" && (
+                <span className="text-xs text-gray-500">
+                  حداقل RAM آزاد: {item.minimum_available_during_operation_mb} MB
+                </span>
+              )}
+            </div>
+            {item.test?.seo_external_egress && (
+              <p className="text-xs text-sky-700 dark:text-sky-300">
+                خروج اینترنت SEO: {item.test.seo_external_egress === "external_url_fetch_passed"
+                  ? "دسترسی به URL خارجی موفق بود"
+                  : "URL خارجی در دسترس نبود؛ VPN، فایروال یا DNS خروجی باید بررسی شود"}
+              </p>
+            )}
+            {Array.isArray(item.test?.tests) && item.test.tests.map((test: any, index: number) => (
+              <div key={index} className="flex justify-between gap-3 text-xs">
+                <span>{test.test}</span>
+                <span className={test.status === "PASS" ? "text-emerald-600" : "text-red-500"}>
+                  {test.status === "PASS" ? "موفق" : "ناموفق"}
+                </span>
+              </div>
+            ))}
+            {item.test?.revenue_model_readiness && Object.entries(item.test.revenue_model_readiness).map(([name, readiness]: [string, any]) => (
+              <p key={name} className="text-xs text-gray-500">
+                {name}: model_trained={String(readiness.model_trained ?? "unknown")}, cv_score={String(readiness.cv_score ?? "unknown")}
+              </p>
+            ))}
+            {typeof item.memory_after?.available_mb === "number" && (
+              <p className="text-xs text-gray-500">RAM آزاد بعد از تست: {item.memory_after.available_mb} MB</p>
             )}
           </div>
         ))}
