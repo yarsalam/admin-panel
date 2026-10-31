@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AiPackId,
   AiPackJob,
@@ -91,12 +91,13 @@ export default function AiPackControlPanel() {
   const jobQuery = useAiPackJob(jobId);
   const status = statusQuery.data;
   const job = jobQuery.data;
+  const refreshStatus = statusQuery.refetch;
 
   useEffect(() => {
     if (job?.state === "completed" || job?.state === "failed") {
-      statusQuery.refetch();
+      refreshStatus();
     }
-  }, [job?.state, statusQuery]);
+  }, [job?.state, refreshStatus]);
 
   const operationActive = action.isPending || Boolean(job && (job.state === "queued" || job.state === "running"));
   const totalRam = status?.memory?.total_mb;
