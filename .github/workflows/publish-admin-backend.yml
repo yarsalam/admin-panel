@@ -29,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/server/Dockerfile.production
+          file: apps/server/Dockerfile.runtime
           load: true
           push: false
           tags: ghcr.io/yarsalam/admin-panel-backend:sha-${{ github.sha }}
@@ -41,6 +41,8 @@ jobs:
           set -euo pipefail
           docker run --rm --entrypoint sh ghcr.io/yarsalam/admin-panel-backend:sha-$GITHUB_SHA -ec '
             test -f /app/apps/server/dist/main.js
+            test ! -e /app/apps/server/src/main.ts
+            ! find /app/apps/server/src -type f -name "*.ts" | grep -q .
             node -e "require.resolve(\"@nestjs/core\"); require.resolve(\"@nestjs/axios\"); require.resolve(\"typeorm\")"
           '
       - name: Publish immutable image
