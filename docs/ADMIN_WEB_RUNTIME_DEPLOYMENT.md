@@ -115,9 +115,10 @@ The immediate Production recovery was successfully completed without image pull/
 - Public `https://novertex.ir/login`: HTTP 200.
 - No application or proxy container was recreated/restarted; no Image or Volume changed.
 
-The permanent Compose correction is in open PR #34:
+The permanent Compose correction is in PR #34:
 https://github.com/yarsalam/admin-panel/pull/34
-- Head: `5315f5c931cc7762f39be3a7e86b7014ea34a01f`
+- PR #34 merged into `feat/production-deployment-memory` at `42750ffeb04353084cf83cc4cbf012d06d1e6b17`.
+- Head tested: `5315f5c931cc7762f39be3a7e86b7014ea34a01f`.
 - CI run #8, ID `41185044552`: SUCCESS, including runtime Compose guard, standalone build/smoke, and runtime-image content checks.
-- It attaches `admin-web` to external `yarsalam_network` using alias `admin-web` and prevents a project-local default network.
-- PR #34 has not yet been merged. After approval/merge, the corrected `docker-compose.runtime.yml` must be copied into the existing VPS runtime directory before any future admin-web recreation. Do not recreate the current healthy container just to apply the Compose file; its manual network attachment is already working and should remain until a planned, approved update.
+- Runtime Compose attaches `admin-web` to external `yarsalam_network` using alias `admin-web` and prevents a project-local default network.
+- Copy the corrected `docker-compose.runtime.yml` into the existing VPS runtime directory and validate its rendered config before any future admin-web recreation. Do not recreate the current healthy container just to apply the Compose file; its manual network attachment is already working.
