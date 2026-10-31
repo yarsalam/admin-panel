@@ -4,8 +4,8 @@ services:
   admin-web:
     image: ghcr.io/yarsalam/admin-panel-web:${ADMIN_WEB_IMAGE_TAG:?Set ADMIN_WEB_IMAGE_TAG to an immutable GHCR tag}
     restart: unless-stopped
-    env_file:
-      - .env
+    # Do not use env_file: .env here. That file also contains backend/database
+    # credentials; the web runtime needs only this explicit public API setting.
     environment:
       NODE_ENV: production
       PORT: "3000"
