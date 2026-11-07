@@ -473,6 +473,9 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       کاربران پرداخت‌کننده
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      تعداد خرید
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                       ARPPU
                     </th>
                   </tr>
@@ -491,6 +494,9 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.payingUsers)}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.paymentCount)}
                       </td>
                       <td className="px-4 py-2 text-indigo-600 font-semibold">
                         {fmtMoney(r.arppu, currency)}
