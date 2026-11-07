@@ -61,7 +61,9 @@ export interface MrrData {
   recurringRevenueAvailable: boolean;
   grossRevenue30d: number;
   walletDeposits30d?: number;
+  walletDebits30d?: number;
   grossSales30d?: number;
+  fulfilledPurchaseCount30d?: number;
   depositCurrency?: RevenueCurrency;
   depositUnit?: string;
   activeVipUsers: number;
@@ -74,6 +76,9 @@ export interface ProductRevenueRow {
   share: number;
   transactionCount: number;
   payingUsers?: number;
+  fulfilledRevenue?: number;
+  fulfilledPurchaseCount?: number;
+  fulfilledPayingUsers?: number;
 }
 
 export interface GenderRevenueData {
@@ -84,10 +89,10 @@ export interface GenderRevenueData {
   genderBasis: string;
   depositCurrency: RevenueCurrency;
   depositUnit: string;
-  male: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; depositRevenue: number; depositingUsers: number; depositCount: number };
-  female: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; depositRevenue: number; depositingUsers: number; depositCount: number };
-  unknown: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; depositRevenue: number; depositingUsers: number; depositCount: number };
-  total: { revenue: number; payingUsers: number; paymentCount: number; depositRevenue: number; depositingUsers: number; depositCount: number };
+  male: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; fulfilledRevenue: number; fulfilledPurchaseCount: number; fulfilledPayingUsers: number; depositRevenue: number; depositingUsers: number; depositCount: number };
+  female: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; fulfilledRevenue: number; fulfilledPurchaseCount: number; fulfilledPayingUsers: number; depositRevenue: number; depositingUsers: number; depositCount: number };
+  unknown: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; fulfilledRevenue: number; fulfilledPurchaseCount: number; fulfilledPayingUsers: number; depositRevenue: number; depositingUsers: number; depositCount: number };
+  total: { revenue: number; payingUsers: number; paymentCount: number; fulfilledRevenue: number; fulfilledPurchaseCount: number; fulfilledPayingUsers: number; depositRevenue: number; depositingUsers: number; depositCount: number };
 }
 
 export interface ArppuData {
@@ -105,6 +110,9 @@ export interface ArppuData {
   depositRevenue: number;
   depositCount: number;
   depositingUsers: number;
+  fulfilledRevenue?: number;
+  fulfilledPurchaseCount?: number;
+  fulfilledPayingUsers?: number;
 }
 
 export interface CohortRow {
