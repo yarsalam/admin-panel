@@ -292,51 +292,34 @@ function MrrSection() {
   const { data, isLoading } = useMrr();
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
-  const mrrTrend = data.mrrGrowth >= 0 ? "up" : "down";
+
+  if (!data.recurringRevenueAvailable) {
+    return (
+      <div>
+        <SectionTitle>درآمد اشتراکی و VIP</SectionTitle>
+        <Card className="p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MiniStat label="درآمد پرداخت‌شده ۳۰ روز اخیر" value={fmtToman(data.grossRevenue30d)} />
+            <MiniStat label="کاربران دارای VIP فعال" value={fmt(data.activeVipUsers)} />
+          </div>
+          <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
+            MRR و ARR فعلاً قابل محاسبه معتبر نیستند: جدول پرداخت به دوره اشتراک و تمدید آن متصل نیست. درآمد واقعی ۳۰ روزه و تعداد VIP فعال جداگانه نمایش داده شده‌اند؛ مبلغ تکرارشونده حدس زده نمی‌شود.
+          </GlobalText>
+        </Card>
+      </div>
+    );
+  }
+
+  const mrrTrend = (data.mrrGrowth ?? 0) >= 0 ? "up" : "down";
   return (
     <div>
       <SectionTitle>MRR / ARR</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <KPICard title="MRR" value={data.mrr} format="currency" />
-        <KPICard title="ARR" value={data.arr} format="currency" />
-        <KPICard
-          title="رشد MRR"
-          value={data.mrrGrowth}
-          format="percent"
-          trend={mrrTrend}
-        />
-        <MiniStat
-          label="ماه‌های ردیابی"
-          value={String(data.mrrHistory?.length ?? 0)}
-        />
+        <KPICard title="MRR" value={(data.mrr ?? 0) / 10} format="currency" />
+        <KPICard title="ARR" value={(data.arr ?? 0) / 10} format="currency" />
+        <KPICard title="رشد MRR" value={data.mrrGrowth ?? 0} format="percent" trend={mrrTrend} />
+        <MiniStat label="ماه‌های ردیابی" value={String(data.mrrHistory?.length ?? 0)} />
       </div>
-      {data.mrrHistory?.length > 0 && (
-        <Card className="p-5">
-          <GlobalText as="h3" className="font-bold mb-4">
-            روند MRR
-          </GlobalText>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={data.mrrHistory}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                className="stroke-gray-200 dark:stroke-gray-700"
-              />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
-              <Tooltip
-                formatter={(v: any) => [`${fmt(Number(v))} تومان`, "MRR"]}
-              />
-              <Line
-                type="monotone"
-                dataKey="mrr"
-                stroke="#6366f1"
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-      )}
     </div>
   );
 }
@@ -983,10 +966,10 @@ function AnomalyCard({ anomaly }: { anomaly: any }) {
         <div className="text-left shrink-0">
           <div className="text-xs text-gray-500">واقعی</div>
           <div className="text-sm font-bold">
-            {anomaly.actual?.toLocaleString()}
+            {fmtToman(anomaly.actual)}
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            منتظره: {anomaly.expected?.toLocaleString()}
+            منتظره: {fmtToman(anomaly.expected)}
           </div>
         </div>
       </div>
@@ -1009,7 +992,7 @@ function DecisionCard({ decision }: { decision: any }) {
           {fmtToman(decision.impact)}
         </span>
       </div>
-      {decision.roi > 0 && (
+      {Number.isFinite(decision.roi) && decision.roi > 0 && (
         <div className="flex items-center justify-between mt-1">
           <span className="text-xs text-gray-400">ROI</span>
           <span className="text-sm font-bold text-blue-600">
