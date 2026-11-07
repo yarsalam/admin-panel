@@ -323,11 +323,15 @@ function MrrSection({ currency }: { currency: string }) {
       <div>
         <SectionTitle>درآمد اشتراکی و VIP</SectionTitle>
         <Card className="p-4 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <MiniStat label="واریزی شارژ کیف پول — ۳۰ روز" value={fmtMoney(data.walletDeposits30d ?? data.grossRevenue30d, currency)} />
-            <MiniStat label="خرید واقعی بسته‌ها — ۳۰ روز" value={fmtMoney(data.grossSales30d ?? 0, "IRT")} />
-            <MiniStat label="کاربران دارای VIP فعال" value={fmt(data.activeVipUsers)} />
+            <MiniStat label="برداشت برای checkout — ۳۰ روز" value={fmtMoney(data.walletDebits30d ?? 0, "IRT")} />
+            <MiniStat label="فروش تکمیل‌شده — ۳۰ روز" value={fmtMoney(data.grossSales30d ?? 0, "IRT")} />
+            <MiniStat label="VIP فعال" value={fmt(data.activeVipUsers)} />
           </div>
+          <GlobalText className="text-xs text-gray-500">
+            فروش تکمیل‌شده از رخدادهای خریدی محاسبه می‌شود که پس از اعطای موفق بسته ثبت شده‌اند؛ سابقه‌های قدیمی فاقد مبلغ در این شاخص backfill نمی‌شوند.
+          </GlobalText>
           <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
             MRR و ARR فعلاً قابل محاسبه معتبر نیستند: پرداخت‌های ثبت‌شده شارژ کیف پول‌اند و خرید بسته بعداً از موجودی کیف پول انجام می‌شود. واریزی، خرید واقعی و تعداد VIP فعال جداگانه گزارش می‌شوند؛ مبلغ تکرارشونده حدس زده نمی‌شود.
           </GlobalText>
@@ -392,13 +396,19 @@ function ProductRevenueSection({ currency }: { currency: string }) {
                     محصول
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                    درآمد
+                    برداشت checkout (تومان)
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                    فروش تکمیل‌شده (تومان)
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                     سهم
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                    تراکنش
+                    برداشت‌ها
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                    خریدهای تکمیل‌شده
                   </th>
                 </tr>
               </thead>
@@ -420,11 +430,17 @@ function ProductRevenueSection({ currency }: { currency: string }) {
                     <td className="px-4 py-2 font-bold text-emerald-600">
                       {fmtMoney(row.revenue, "IRT")}
                     </td>
+                    <td className="px-4 py-2 font-semibold text-indigo-600">
+                      {fmtMoney(row.fulfilledRevenue ?? 0, "IRT")}
+                    </td>
                     <td className="px-4 py-2 text-gray-600">
                       {row.share?.toFixed(1)}%
                     </td>
                     <td className="px-4 py-2 text-gray-500">
                       {fmt(row.transactionCount)}
+                    </td>
+                    <td className="px-4 py-2 text-gray-500">
+                      {fmt(row.fulfilledPurchaseCount ?? 0)}
                     </td>
                   </tr>
                 ))}
@@ -480,13 +496,22 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       تعداد شارژ
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      کاربران خریدار
+                      فروش تکمیل‌شده (تومان)
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      تعداد خرید
+                      خریداران با اعطای موفق
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      ARPPU خرید (تومان)
+                      کاربران checkout
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      تعداد برداشت checkout
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      تعداد خرید تکمیل‌شده
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      میانگین برداشت checkout (تومان)
                     </th>
                   </tr>
                 </thead>
@@ -508,11 +533,20 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.depositCount)}
                       </td>
+                      <td className="px-4 py-2 font-semibold text-indigo-600">
+                        {fmtMoney(r.fulfilledRevenue ?? 0, "IRT")}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.fulfilledPayingUsers ?? 0)}
+                      </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.payingUsers)}
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.paymentCount)}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.fulfilledPurchaseCount ?? 0)}
                       </td>
                       <td className="px-4 py-2 text-indigo-600 font-semibold">
                         {fmtMoney(r.arppu, "IRT")}
@@ -626,7 +660,7 @@ function FunnelSection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>قیف تبدیل تا خرید واقعی بسته</SectionTitle>
+      <SectionTitle>قیف تبدیل تا برداشت checkout برای خرید بسته</SectionTitle>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -780,7 +814,7 @@ function ConcentrationSection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>تمرکز خرید واقعی بسته‌ها</SectionTitle>
+      <SectionTitle>تمرکز مبلغ برداشت checkout برای بسته‌ها</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
         چه سهمی از خریدهای واقعی از چه سهمی از خریداران می‌آید
       </GlobalText>
