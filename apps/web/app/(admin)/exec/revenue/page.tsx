@@ -62,14 +62,14 @@ interface DailyPoint {
   amount: number;
 }
 
-const useMonthlyTrend = (currency: string) =>
+const useMonthlyTrend = (currency: RevenueCurrency) =>
   useQuery<MonthlyPoint[]>({
     queryKey: ["revenue", "monthly", currency],
     queryFn: () => apiClient.get(`/exec/revenue/monthly?currency=${currency}`).then((r) => r.data),
     staleTime: 15 * 60 * 1000,
   });
 
-const useHistorical = (currency: string) =>
+const useHistorical = (currency: RevenueCurrency) =>
   useQuery<DailyPoint[]>({
     queryKey: ["revenue", "historical", currency],
     queryFn: () =>
@@ -88,27 +88,27 @@ const PIE_COLORS = [
 ];
 
 const fmt = (v: number) => v?.toLocaleString() ?? "—";
-const fmtMoney = (v: number | null | undefined, currency: string) => {
+const fmtMoney = (v: number | null | undefined, currency: RevenueCurrency) => {
   if (v == null || !Number.isFinite(v)) return "—";
   if (currency === "IRT") return `${Math.round(v / 10).toLocaleString("fa-IR")} تومان`;
   if (currency === "USDT") return `${(v / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
   if (currency === "BTC") return `${(v / 100_000_000).toFixed(8)} BTC`;
   return `${Math.round(v).toLocaleString("en-US")} واحد خام USD (واحد پایه تأیید نشده)`;
 };
-const displayAmount = (v: number | null | undefined, currency: string) => {
+const displayAmount = (v: number | null | undefined, currency: RevenueCurrency) => {
   if (v == null || !Number.isFinite(v)) return 0;
   if (currency === "IRT") return v / 10;
   if (currency === "USDT") return v / 100;
   if (currency === "BTC") return v / 100_000_000;
   return v;
 };
-const currencyLabel = (currency: string) => {
+const currencyLabel = (currency: RevenueCurrency) => {
   if (currency === "IRT") return "تومان";
   if (currency === "USDT") return "USDT";
   if (currency === "BTC") return "BTC";
   return "واحد خام USD";
 };
-const fmtAxis = (v: number, currency: string) => {
+const fmtAxis = (v: number, currency: RevenueCurrency) => {
   if (currency === "IRT") return `${(v / 10 / 1_000_000).toFixed(1)}M`;
   if (currency === "USDT") return `${(v / 100 / 1_000_000).toFixed(1)}M`;
   if (currency === "BTC") return `${(v / 100_000_000 / 1_000_000).toFixed(3)}M`;
@@ -126,7 +126,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 // ─── ۱. نمودار ماهانه ────────────────────────────────────────────────────────
-function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: string }) {
+function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: RevenueCurrency }) {
   if (!data?.length) return null;
   return (
     <Card className="p-5">
@@ -152,7 +152,7 @@ function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: stri
 }
 
 // ─── ۲. نمودار روزانه ────────────────────────────────────────────────────────
-function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }) {
+function DailyChart({ data, currency }: { data: DailyPoint[]; currency: RevenueCurrency }) {
   if (!data?.length) return null;
   const chartData = data.map((d) => ({
     ...d,
@@ -193,7 +193,7 @@ function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }
 }
 
 // ─── ۳. Forecast ─────────────────────────────────────────────────────────────
-function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
+function ForecastChart({ data, currency }: { data: ForecastPoint[]; currency: RevenueCurrency }) {
   if (!data?.length) return null;
   const chartData = data.map((d) => ({
     date: new Date(d.date).toLocaleDateString("fa-IR", {
@@ -415,7 +415,7 @@ function ProductRevenueSection({ currency }: { currency: RevenueCurrency }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {data.map((row, i) => (
+                {data.map((row: ProductRevenueRow, i: number) => (
                   <tr
                     key={row.product}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
@@ -1030,7 +1030,7 @@ function ForecastAccuracySection({ currency }: { currency: RevenueCurrency }) {
 }
 
 // ─── Anomaly / Decision cards ─────────────────────────────────────────────────
-function AnomalyCard({ anomaly, currency }: { anomaly: any; currency: string }) {
+function AnomalyCard({ anomaly, currency }: { anomaly: Anomaly; currency: RevenueCurrency }) {
   const color =
     anomaly.severity === "high"
       ? "border-red-500 bg-red-50 dark:bg-red-900/20"
@@ -1060,7 +1060,7 @@ function AnomalyCard({ anomaly, currency }: { anomaly: any; currency: string }) 
   );
 }
 
-function DecisionCard({ decision, currency }: { decision: any; currency: string }) {
+function DecisionCard({ decision, currency }: { decision: StrategicDecision; currency: RevenueCurrency }) {
   return (
     <Card className="p-4">
       <GlobalText as="h4" className="font-bold text-sm mb-2">
