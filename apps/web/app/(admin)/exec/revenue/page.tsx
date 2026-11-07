@@ -173,7 +173,7 @@ function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "فروش"]}
+            formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "برداشت checkout"]}
           />
           <Area
             type="monotone"
@@ -361,7 +361,7 @@ function ProductRevenueSection({ currency }: { currency: string }) {
   if (!data?.length) return null;
   return (
     <div>
-      <SectionTitle>فروش واقعی بسته‌ها از کیف پول</SectionTitle>
+      <SectionTitle>برداشت checkout و فروش تکمیل‌شده به تفکیک بسته</SectionTitle>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-5">
           <ResponsiveContainer width="100%" height={280}>
@@ -471,9 +471,9 @@ function GenderArppuSection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>خرید واقعی به تفکیک جنسیت و ARPPU</SectionTitle>
+      <SectionTitle>برداشت checkout و فروش تکمیل‌شده به تفکیک جنسیت</SectionTitle>
       <GlobalText className="text-xs text-gray-500 -mt-2 mb-3">
-        مبالغ خرید از برداشت واقعی کیف پول برای بسته‌های فروشگاهی است (واحد ریال، نمایش تومان). شارژ کیف پول جداگانه در ارز انتخاب‌شده نشان داده می‌شود. جنسیت از پروفایل فعلی کاربر خوانده می‌شود، نه snapshot زمان خرید. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
+        مبلغ برداشت checkout نشان‌دهنده کسر واقعی کیف پول برای خرید بسته است؛ فروش تکمیل‌شده جداگانه پس از اعطای موفق بسته ثبت می‌شود. مبالغ خرید IRT و به تومان نمایش داده می‌شوند؛ واریز کیف پول در ارز انتخاب‌شده جداست. جنسیت از پروفایل فعلی کاربر خوانده می‌شود، نه snapshot زمان خرید. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
       </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* جنسیت */}
@@ -487,7 +487,7 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       جنسیت
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      مبلغ خرید (تومان)
+                      مبلغ برداشت checkout (تومان)
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                       شارژ کیف پول ({currency})
