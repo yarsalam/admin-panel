@@ -49,11 +49,19 @@ export interface LtvSourceRow {
 
 // ─── تایپ‌های جدید ────────────────────────────────────────────────────────────
 
+export type RevenueCurrency = "IRT" | "USDT" | "BTC" | "USD";
+
 export interface MrrData {
-  mrr: number;
-  arr: number;
-  mrrGrowth: number;
+  currency: RevenueCurrency;
+  unit: string;
+  mrr: number | null;
+  arr: number | null;
+  mrrGrowth: number | null;
   mrrHistory: { month: string; mrr: number }[];
+  recurringRevenueAvailable: boolean;
+  grossRevenue30d: number;
+  activeVipUsers: number;
+  limitation?: string;
 }
 
 export interface ProductRevenueRow {
@@ -61,15 +69,25 @@ export interface ProductRevenueRow {
   revenue: number;
   share: number;
   transactionCount: number;
+  payingUsers?: number;
 }
 
 export interface GenderRevenueData {
-  male: { revenue: number; payingUsers: number; arppu: number };
-  female: { revenue: number; payingUsers: number; arppu: number };
-  unknown: { revenue: number; payingUsers: number; arppu: number };
+  currency: RevenueCurrency;
+  unit: string;
+  periodDays: number;
+  male: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
+  female: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
+  unknown: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
+  total: { revenue: number; payingUsers: number; paymentCount: number };
 }
 
 export interface ArppuData {
+  currency: RevenueCurrency;
+  unit: string;
+  periodDays: number;
+  totalRevenue: number;
+  paymentCount: number;
   arppu: number;
   payingUsers: number;
   activeUsers: number;
@@ -79,10 +97,12 @@ export interface ArppuData {
 export interface CohortRow {
   cohort: string;
   users: number;
-  revenue30d: number;
-  revenue60d: number;
-  revenue90d: number;
-  revenue180d: number;
+  revenue30d: number | null;
+  revenue60d: number | null;
+  revenue90d: number | null;
+  revenue180d: number | null;
+  matureDays?: number[];
+  ageDays?: number;
 }
 
 export interface FunnelStep {
@@ -93,10 +113,16 @@ export interface FunnelStep {
 }
 
 export interface ChurnRevenueData {
-  lostRevenue: number;
-  recoveredRevenue: number;
-  expansionRevenue: number;
-  netRevenueRetention: number;
+  revenueMetricsAvailable: boolean;
+  lostRevenue: number | null;
+  recoveredRevenue: number | null;
+  expansionRevenue: number | null;
+  netRevenueRetention: number | null;
+  activeVipUsers?: number;
+  recentlyExpiredVipUsers?: number;
+  usersWithVipHistory?: number;
+  expiryRate?: number;
+  limitation?: string;
   history: {
     month: string;
     lost: number;
@@ -113,20 +139,25 @@ export interface ConcentrationData {
 }
 
 export interface ForecastAccuracyData {
-  mape: number;
-  rmse: number;
+  dataAvailable: boolean;
+  currency: RevenueCurrency;
+  mape: number | null;
+  rmse: number | null;
+  evaluationMethod?: string;
+  evaluationSamples?: number;
+  reason?: string;
   lastEvaluatedAt: string;
   history: { date: string; predicted: number; actual: number; error: number }[];
 }
 
 // ─── هوک‌های موجود (اصلاح‌شده) ───────────────────────────────────────────────
 
-export const useRevenueForecast = (days: number = 90) =>
+export const useRevenueForecast = (days: number = 90, currency: RevenueCurrency = "IRT") =>
   useQuery<RevenueForecast>({
-    queryKey: ["exec", "revenue", "forecast", days],
+    queryKey: ["exec", "revenue", "forecast", days, currency],
     queryFn: async () => {
       const { data } = await apiClient.get(
-        `/exec/revenue/forecast?days=${days}`,
+        `/exec/revenue/forecast?days=${days}&currency=${currency}`,
       );
       return {
         ...data,
@@ -148,32 +179,32 @@ export const useRevenueForecast = (days: number = 90) =>
     staleTime: 60 * 60 * 1000,
   });
 
-export const useAnomalies = () =>
+export const useAnomalies = (currency: RevenueCurrency = "IRT") =>
   useQuery<Anomaly[]>({
-    queryKey: ["exec", "revenue", "anomalies"],
+    queryKey: ["exec", "revenue", "anomalies", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/anomalies");
+      const { data } = await apiClient.get(`/exec/revenue/anomalies?currency=${currency}`);
       return data;
     },
     refetchInterval: 5 * 60 * 1000,
   });
 
-export const useStrategicDecisions = () =>
+export const useStrategicDecisions = (currency: RevenueCurrency = "IRT") =>
   useQuery<StrategicDecision[]>({
-    queryKey: ["exec", "revenue", "strategic-decisions"],
+    queryKey: ["exec", "revenue", "strategic-decisions", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/strategic-decisions");
-      return data;
+      const { data } = await apiClient.get(`/exec/revenue/strategic-decisions?currency=${currency}`);
+      return Array.isArray(data) ? data : (data?.decisions ?? []);
     },
     staleTime: 30 * 60 * 1000,
   });
 
 /** باگ‌فیکس: مسیر از /admin-api/revenue به /exec/revenue تصحیح شد */
-export const useLtvBySource = () =>
+export const useLtvBySource = (currency: RevenueCurrency = "IRT") =>
   useQuery<LtvSourceRow[]>({
-    queryKey: ["exec", "revenue", "ltv-by-source"],
+    queryKey: ["exec", "revenue", "ltv-by-source", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/ltv-by-source");
+      const { data } = await apiClient.get(`/exec/revenue/ltv-by-source?currency=${currency}`);
       return data;
     },
     staleTime: 30 * 60 * 1000,
@@ -181,91 +212,91 @@ export const useLtvBySource = () =>
 
 // ─── هوک‌های جدید ─────────────────────────────────────────────────────────────
 
-export const useMrr = () =>
+export const useMrr = (currency: RevenueCurrency = "IRT") =>
   useQuery<MrrData>({
-    queryKey: ["exec", "revenue", "mrr"],
+    queryKey: ["exec", "revenue", "mrr", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/mrr");
+      const { data } = await apiClient.get(`/exec/revenue/mrr?currency=${currency}`);
       return data;
     },
     staleTime: 60 * 60 * 1000,
   });
 
-export const useProductRevenue = () =>
+export const useProductRevenue = (currency: RevenueCurrency = "IRT") =>
   useQuery<ProductRevenueRow[]>({
-    queryKey: ["exec", "revenue", "by-product"],
+    queryKey: ["exec", "revenue", "by-product", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/by-product");
-      return data;
+      const { data } = await apiClient.get(`/exec/revenue/by-product?currency=${currency}`);
+      return Array.isArray(data) ? data : (data?.rows ?? []);
     },
     staleTime: 30 * 60 * 1000,
   });
 
-export const useGenderRevenue = () =>
+export const useGenderRevenue = (currency: RevenueCurrency = "IRT") =>
   useQuery<GenderRevenueData>({
-    queryKey: ["exec", "revenue", "by-gender"],
+    queryKey: ["exec", "revenue", "by-gender", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/by-gender");
+      const { data } = await apiClient.get(`/exec/revenue/by-gender?currency=${currency}`);
       return data;
     },
     staleTime: 30 * 60 * 1000,
   });
 
-export const useArppu = () =>
+export const useArppu = (currency: RevenueCurrency = "IRT") =>
   useQuery<ArppuData>({
-    queryKey: ["exec", "revenue", "arppu"],
+    queryKey: ["exec", "revenue", "arppu", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/arppu");
+      const { data } = await apiClient.get(`/exec/revenue/arppu?currency=${currency}`);
       return data;
     },
     staleTime: 30 * 60 * 1000,
   });
 
-export const useCohortRevenue = () =>
+export const useCohortRevenue = (currency: RevenueCurrency = "IRT") =>
   useQuery<CohortRow[]>({
-    queryKey: ["exec", "revenue", "cohort"],
+    queryKey: ["exec", "revenue", "cohort", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/cohort");
-      return data;
+      const { data } = await apiClient.get(`/exec/revenue/cohort?currency=${currency}`);
+      return Array.isArray(data) ? data : (data?.cohorts ?? []);
     },
     staleTime: 60 * 60 * 1000,
   });
 
-export const useRevenueFunnel = () =>
+export const useRevenueFunnel = (currency: RevenueCurrency = "IRT") =>
   useQuery<FunnelStep[]>({
-    queryKey: ["exec", "revenue", "funnel"],
+    queryKey: ["exec", "revenue", "funnel", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/funnel");
-      return data;
+      const { data } = await apiClient.get(`/exec/revenue/funnel?currency=${currency}`);
+      return Array.isArray(data) ? data : (data?.steps ?? []);
     },
     staleTime: 30 * 60 * 1000,
   });
 
-export const useChurnRevenue = () =>
+export const useChurnRevenue = (days = 30) =>
   useQuery<ChurnRevenueData>({
-    queryKey: ["exec", "revenue", "churn"],
+    queryKey: ["exec", "revenue", "churn", days],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/churn");
+      const { data } = await apiClient.get(`/exec/revenue/churn?days=${days}`);
       return data;
     },
     staleTime: 30 * 60 * 1000,
   });
 
-export const useRevenueConcentration = () =>
+export const useRevenueConcentration = (currency: RevenueCurrency = "IRT") =>
   useQuery<ConcentrationData>({
-    queryKey: ["exec", "revenue", "concentration"],
+    queryKey: ["exec", "revenue", "concentration", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/concentration");
+      const { data } = await apiClient.get(`/exec/revenue/concentration?currency=${currency}`);
       return data;
     },
     staleTime: 60 * 60 * 1000,
   });
 
-export const useForecastAccuracy = () =>
+export const useForecastAccuracy = (currency: RevenueCurrency = "IRT") =>
   useQuery<ForecastAccuracyData>({
-    queryKey: ["exec", "revenue", "forecast-accuracy"],
+    queryKey: ["exec", "revenue", "forecast-accuracy", currency],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/forecast-accuracy");
+      const { data } = await apiClient.get(`/exec/revenue/forecast-accuracy?currency=${currency}`);
       return data;
     },
     staleTime: 60 * 60 * 1000,
