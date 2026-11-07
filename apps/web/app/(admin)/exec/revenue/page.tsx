@@ -82,7 +82,8 @@ const PIE_COLORS = [
 ];
 
 const fmt = (v: number) => v?.toLocaleString() ?? "—";
-const fmtM = (v: number) => `${(v / 1_000_000).toFixed(1)}M`;
+const fmtM = (v: number) => `${(v / 10 / 1_000_000).toFixed(1)}M`;
+const fmtToman = (v: number | null | undefined) => v == null ? "—" : `${Math.round(v / 10).toLocaleString("fa-IR")} تومان`;
 
 // ─── کامپوننت‌های پایه ───────────────────────────────────────────────────────
 
@@ -111,7 +112,7 @@ function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [`${fmt(Number(v))} تومان`, "درآمد"]}
+            formatter={(v: any) => [fmtToman(Number(v)), "درآمد"]}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -196,7 +197,7 @@ function ForecastChart({ data }: { data: any[] }) {
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [`${fmt(Number(v))} تومان`, labels[name] ?? name];
+              return [fmtToman(Number(v)), labels[name] ?? name];
             }}
           />
           <Area
@@ -408,7 +409,7 @@ function ProductRevenueSection() {
                       {row.product}
                     </td>
                     <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmt(row.revenue)} تومان
+                      {fmtToman(row.revenue)}
                     </td>
                     <td className="px-4 py-2 text-gray-600">
                       {row.share?.toFixed(1)}%
@@ -478,13 +479,13 @@ function GenderArppuSection() {
                         {r.icon} {r.label}
                       </td>
                       <td className="px-4 py-2 font-bold text-emerald-600">
-                        {fmt(r.revenue)} تومان
+                        {fmtToman(r.revenue)}
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.payingUsers)}
                       </td>
                       <td className="px-4 py-2 text-indigo-600 font-semibold">
-                        {fmt(r.arppu)} تومان
+                        {fmtToman(r.arppu)}
                       </td>
                     </tr>
                   ))}
@@ -566,16 +567,16 @@ function CohortSection() {
                   <td className="px-4 py-2 font-medium">{row.cohort}</td>
                   <td className="px-4 py-2 text-gray-600">{fmt(row.users)}</td>
                   <td className="px-4 py-2 text-emerald-600">
-                    {fmt(row.revenue30d)}
+                    {fmtToman(row.revenue30d)}
                   </td>
                   <td className="px-4 py-2 text-emerald-700">
-                    {fmt(row.revenue60d)}
+                    {fmtToman(row.revenue60d)}
                   </td>
                   <td className="px-4 py-2 text-emerald-800">
-                    {fmt(row.revenue90d)}
+                    {fmtToman(row.revenue90d)}
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-900 dark:text-emerald-400">
-                    {fmt(row.revenue180d)}
+                    {fmtToman(row.revenue180d)}
                   </td>
                 </tr>
               ))}
@@ -644,7 +645,7 @@ function FunnelSection() {
                     </div>
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-600">
-                    {step.revenue > 0 ? `${fmt(step.revenue)} تومان` : "—"}
+                    {step.revenue > 0 ? fmtToman(step.revenue) : "—"}
                   </td>
                 </tr>
               ))}
@@ -662,38 +663,36 @@ function ChurnSection() {
   if (isLoading) return <SectionSkeleton h="h-40" />;
   if (!data) return null;
 
+  if (!data.revenueMetricsAvailable) {
+    return (
+      <div>
+        <SectionTitle>وضعیت تمدید و انقضای VIP</SectionTitle>
+        <Card className="p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MiniStat label="VIP فعال" value={fmt(data.activeVipUsers ?? 0)} />
+            <MiniStat label="VIP منقضی‌شده در ۳۰ روز" value={fmt(data.recentlyExpiredVipUsers ?? 0)} />
+            <MiniStat label="کاربران با سابقه VIP" value={fmt(data.usersWithVipHistory ?? 0)} />
+          </div>
+          <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
+            درآمد ازدست‌رفته و NRR تا زمان اتصال هر دوره VIP به پرداخت اصلی، مبلغ، ارز و تمدید واقعی قابل محاسبه نیستند. نرخ انقضا در این بخش تعداد کاربران را نشان می‌دهد، نه مبلغ درآمد.
+          </GlobalText>
+        </Card>
+      </div>
+    );
+  }
   const nrrColor =
-    data.netRevenueRetention >= 100 ? "text-emerald-600" : "text-red-600";
+    (data.netRevenueRetention ?? 0) >= 100 ? "text-emerald-600" : "text-red-600";
 
   return (
     <div>
       <SectionTitle>Churn Revenue</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <KPICard
-          title="درآمد از دست رفته"
-          value={data.lostRevenue}
-          format="currency"
-          trend="down"
-        />
-        <KPICard
-          title="درآمد بازیابی‌شده"
-          value={data.recoveredRevenue}
-          format="currency"
-          trend="up"
-        />
-        <KPICard
-          title="Expansion Revenue"
-          value={data.expansionRevenue}
-          format="currency"
-          trend="up"
-        />
+        <KPICard title="درآمد از دست رفته" value={(data.lostRevenue ?? 0) / 10} format="currency" trend="down" />
+        <KPICard title="درآمد بازیابی‌شده" value={(data.recoveredRevenue ?? 0) / 10} format="currency" trend="up" />
+        <KPICard title="Expansion Revenue" value={(data.expansionRevenue ?? 0) / 10} format="currency" trend="up" />
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 flex flex-col justify-between">
-          <span className="text-xs text-gray-500">
-            NRR (Net Revenue Retention)
-          </span>
-          <span className={`text-2xl font-bold mt-2 ${nrrColor}`}>
-            {data.netRevenueRetention?.toFixed(1)}%
-          </span>
+          <span className="text-xs text-gray-500">NRR (Net Revenue Retention)</span>
+          <span className={`text-2xl font-bold mt-2 ${nrrColor}`}>{data.netRevenueRetention?.toFixed(1)}%</span>
         </div>
       </div>
       {data.history?.length > 0 && (
@@ -774,7 +773,7 @@ function ConcentrationSection() {
                     {r.share?.toFixed(1)}%
                   </div>
                   <div className="text-xs text-gray-500">
-                    {fmt(r.revenue)} تومان
+                    {fmtToman(r.revenue)}
                   </div>
                 </div>
               </div>
@@ -850,13 +849,13 @@ function AttributionSection() {
                       {fmt(row.userCount)}
                     </td>
                     <td className="px-4 py-2 text-gray-700">
-                      {fmt(row.totalRevenue)} تومان
+                      {fmtToman(row.totalRevenue)}
                     </td>
                     <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmt(row.ltv)} تومان
+                      {fmtToman(row.ltv)}
                     </td>
                     <td className="px-4 py-2 text-rose-600">
-                      {fmt(row.cac)} تومان
+                      {fmtToman(row.cac)}
                     </td>
                     <td className={`px-4 py-2 font-bold ${ratioColor}`}>
                       {ratio > 0 ? `${ratio.toFixed(1)}×` : "—"}
@@ -881,6 +880,21 @@ function ForecastAccuracySection() {
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
 
+  if (!data.dataAvailable || data.mape === null || data.rmse === null) {
+    return (
+      <div>
+        <SectionTitle>دقت پیش‌بینی درآمد</SectionTitle>
+        <Card className="p-4">
+          <GlobalText className="text-sm text-amber-700 dark:text-amber-400">
+            {data.reason ?? "برای محاسبه دقت، داده تاریخی کافی در دسترس نیست."}
+          </GlobalText>
+          <GlobalText className="text-xs text-gray-500 mt-2">
+            روش ارزیابی: {data.evaluationMethod ?? "آزمون بازگشتی میانگین متحرک ۷ روزه"}
+          </GlobalText>
+        </Card>
+      </div>
+    );
+  }
   const mapeColor =
     data.mape <= 10
       ? "text-emerald-600"
@@ -890,7 +904,7 @@ function ForecastAccuracySection() {
 
   return (
     <div>
-      <SectionTitle>دقت مدل پیش‌بینی</SectionTitle>
+      <SectionTitle>دقت پیش‌بینی درآمد</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="grid grid-cols-2 gap-4">
           <Card className="p-5 flex flex-col gap-1">
@@ -992,7 +1006,7 @@ function DecisionCard({ decision }: { decision: any }) {
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-400">تأثیر تخمینی</span>
         <span className="text-sm font-bold text-emerald-600">
-          {fmt(decision.impact)} تومان
+          {fmtToman(decision.impact)}
         </span>
       </div>
       {decision.roi > 0 && (
@@ -1046,12 +1060,12 @@ function RevenuesPage() {
           <>
             <KPICard
               title="درآمد کل (۱۲ ماه)"
-              value={totalRevenue}
+              value={totalRevenue / 10}
               format="currency"
             />
             <KPICard
               title="میانگین ماهانه"
-              value={avgMonthly}
+              value={avgMonthly / 10}
               format="currency"
             />
             <KPICard
