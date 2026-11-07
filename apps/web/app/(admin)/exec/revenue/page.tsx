@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { withPageProtection } from "@/components/withPageProtection";
 import {
   useRevenueForecast,
@@ -56,18 +57,18 @@ interface DailyPoint {
   amount: number;
 }
 
-const useMonthlyTrend = () =>
+const useMonthlyTrend = (currency: string) =>
   useQuery<MonthlyPoint[]>({
-    queryKey: ["revenue", "monthly"],
-    queryFn: () => apiClient.get("/exec/revenue/monthly").then((r) => r.data),
+    queryKey: ["revenue", "monthly", currency],
+    queryFn: () => apiClient.get(`/exec/revenue/monthly?currency=${currency}`).then((r) => r.data),
     staleTime: 15 * 60 * 1000,
   });
 
-const useHistorical = () =>
+const useHistorical = (currency: string) =>
   useQuery<DailyPoint[]>({
-    queryKey: ["revenue", "historical"],
+    queryKey: ["revenue", "historical", currency],
     queryFn: () =>
-      apiClient.get("/exec/revenue/historical").then((r) => r.data),
+      apiClient.get(`/exec/revenue/historical?currency=${currency}`).then((r) => r.data),
     staleTime: 15 * 60 * 1000,
   });
 
@@ -96,7 +97,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 // ─── ۱. نمودار ماهانه ────────────────────────────────────────────────────────
-function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
+function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: string }) {
   if (!data?.length) return null;
   return (
     <Card className="p-5">
@@ -122,7 +123,7 @@ function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
 }
 
 // ─── ۲. نمودار روزانه ────────────────────────────────────────────────────────
-function DailyChart({ data }: { data: DailyPoint[] }) {
+function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }) {
   if (!data?.length) return null;
   const chartData = data.map((d) => ({
     ...d,
@@ -163,7 +164,7 @@ function DailyChart({ data }: { data: DailyPoint[] }) {
 }
 
 // ─── ۳. Forecast ─────────────────────────────────────────────────────────────
-function ForecastChart({ data }: { data: any[] }) {
+function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
   if (!data?.length) return null;
   const chartData = data.map((d) => ({
     date: new Date(d.date).toLocaleDateString("fa-IR", {
@@ -288,8 +289,8 @@ function ForecastAlerts({
 }
 
 // ─── ۴. MRR / ARR ────────────────────────────────────────────────────────────
-function MrrSection() {
-  const { data, isLoading } = useMrr();
+function MrrSection({ currency }: { currency: string }) {
+  const { data, isLoading } = useMrr(currency);
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
 
@@ -325,8 +326,8 @@ function MrrSection() {
 }
 
 // ─── ۵. درآمد به تفکیک محصول ─────────────────────────────────────────────────
-function ProductRevenueSection() {
-  const { data, isLoading } = useProductRevenue();
+function ProductRevenueSection({ currency }: { currency: string }) {
+  const { data, isLoading } = useProductRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
   return (
@@ -412,9 +413,9 @@ function ProductRevenueSection() {
 }
 
 // ─── ۶. درآمد به تفکیک جنسیت + ARPPU ────────────────────────────────────────
-function GenderArppuSection() {
-  const { data: gender, isLoading: gLoading } = useGenderRevenue();
-  const { data: arppu, isLoading: aLoading } = useArppu();
+function GenderArppuSection({ currency }: { currency: string }) {
+  const { data: gender, isLoading: gLoading } = useGenderRevenue(currency);
+  const { data: arppu, isLoading: aLoading } = useArppu(currency);
 
   if (gLoading || aLoading) return <SectionSkeleton h="h-40" />;
   if (!gender && !arppu) return null;
@@ -505,8 +506,8 @@ function GenderArppuSection() {
 }
 
 // ─── ۷. Cohort Revenue ───────────────────────────────────────────────────────
-function CohortSection() {
-  const { data, isLoading } = useCohortRevenue();
+function CohortSection({ currency }: { currency: string }) {
+  const { data, isLoading } = useCohortRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
 
@@ -572,8 +573,8 @@ function CohortSection() {
 }
 
 // ─── ۸. Conversion Funnel ────────────────────────────────────────────────────
-function FunnelSection() {
-  const { data, isLoading } = useRevenueFunnel();
+function FunnelSection({ currency }: { currency: string }) {
+  const { data, isLoading } = useRevenueFunnel(currency);
   if (isLoading) return <SectionSkeleton h="h-48" />;
   if (!data?.length) return null;
 
@@ -720,8 +721,8 @@ function ChurnSection() {
 }
 
 // ─── ۱۰. Revenue Concentration ───────────────────────────────────────────────
-function ConcentrationSection() {
-  const { data, isLoading } = useRevenueConcentration();
+function ConcentrationSection({ currency }: { currency: string }) {
+  const { data, isLoading } = useRevenueConcentration(currency);
   if (isLoading) return <SectionSkeleton h="h-36" />;
   if (!data) return null;
 
@@ -780,8 +781,8 @@ function ConcentrationSection() {
 }
 
 // ─── ۱۱. Attribution Table ───────────────────────────────────────────────────
-function AttributionSection() {
-  const { data, isLoading } = useLtvBySource();
+function AttributionSection({ currency }: { currency: string }) {
+  const { data, isLoading } = useLtvBySource(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
 
@@ -858,8 +859,8 @@ function AttributionSection() {
 }
 
 // ─── ۱۲. Forecast Accuracy ───────────────────────────────────────────────────
-function ForecastAccuracySection() {
-  const { data, isLoading } = useForecastAccuracy();
+function ForecastAccuracySection({ currency }: { currency: string }) {
+  const { data, isLoading } = useForecastAccuracy(currency);
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
 
@@ -947,7 +948,7 @@ function ForecastAccuracySection() {
 }
 
 // ─── Anomaly / Decision cards ─────────────────────────────────────────────────
-function AnomalyCard({ anomaly }: { anomaly: any }) {
+function AnomalyCard({ anomaly, currency }: { anomaly: any; currency: string }) {
   const color =
     anomaly.severity === "high"
       ? "border-red-500 bg-red-50 dark:bg-red-900/20"
@@ -977,7 +978,7 @@ function AnomalyCard({ anomaly }: { anomaly: any }) {
   );
 }
 
-function DecisionCard({ decision }: { decision: any }) {
+function DecisionCard({ decision, currency }: { decision: any; currency: string }) {
   return (
     <Card className="p-4">
       <GlobalText as="h4" className="font-bold text-sm mb-2">
@@ -1006,11 +1007,12 @@ function DecisionCard({ decision }: { decision: any }) {
 
 // ─── صفحه اصلی ───────────────────────────────────────────────────────────────
 function RevenuesPage() {
-  const { data: monthly, isLoading: mLoading } = useMonthlyTrend();
-  const { data: daily, isLoading: dLoading } = useHistorical();
-  const { data: anomalies } = useAnomalies();
-  const { data: decisions } = useStrategicDecisions();
-  const { data: forecast, isLoading: fLoading } = useRevenueForecast(90);
+  const [currency, setCurrency] = useState("IRT");
+  const { data: monthly, isLoading: mLoading } = useMonthlyTrend(currency);
+  const { data: daily, isLoading: dLoading } = useHistorical(currency);
+  const { data: anomalies } = useAnomalies(currency);
+  const { data: decisions } = useStrategicDecisions(currency);
+  const { data: forecast, isLoading: fLoading } = useRevenueForecast(90, currency);
 
   const totalRevenue = monthly?.reduce((s, m) => s + m.amount, 0) ?? 0;
   const avgMonthly = monthly?.length
@@ -1072,7 +1074,7 @@ function RevenuesPage() {
       </div>
 
       {/* ── ۲. MRR / ARR ── */}
-      <MrrSection />
+      <MrrSection currency={currency} />
 
       {/* ── ۳. نمودارهای تاریخی ── */}
       <div>
@@ -1081,9 +1083,9 @@ function RevenuesPage() {
           {mLoading ? (
             <SectionSkeleton />
           ) : (
-            <MonthlyChart data={monthly ?? []} />
+            <MonthlyChart data={monthly ?? []} currency={currency} />
           )}
-          {dLoading ? <SectionSkeleton /> : <DailyChart data={daily ?? []} />}
+          {dLoading ? <SectionSkeleton /> : <DailyChart data={daily ?? []} currency={currency} />}
         </div>
       </div>
 
@@ -1095,7 +1097,7 @@ function RevenuesPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <ForecastChart data={forecastPoints} />
+              <ForecastChart data={forecastPoints} currency={currency} />
             </div>
             <div className="space-y-4">
               <PeakDaysCard peakDays={peakDays} />
@@ -1108,25 +1110,25 @@ function RevenuesPage() {
       </div>
 
       {/* ── ۵. محصول ── */}
-      <ProductRevenueSection />
+      <ProductRevenueSection currency={currency} />
 
       {/* ── ۶. جنسیت + ARPPU ── */}
-      <GenderArppuSection />
+      <GenderArppuSection currency={currency} />
 
       {/* ── ۷. Cohort ── */}
-      <CohortSection />
+      <CohortSection currency={currency} />
 
       {/* ── ۸. Funnel ── */}
-      <FunnelSection />
+      <FunnelSection currency={currency} />
 
       {/* ── ۹. Attribution ── */}
-      <AttributionSection />
+      <AttributionSection currency={currency} />
 
       {/* ── ۱۰. Churn ── */}
       <ChurnSection />
 
       {/* ── ۱۱. Concentration ── */}
-      <ConcentrationSection />
+      <ConcentrationSection currency={currency} />
 
       {/* ── ۱۲. Anomalies ── */}
       {anomalies && anomalies.length > 0 && (
@@ -1137,7 +1139,7 @@ function RevenuesPage() {
           </GlobalText>
           <div className="space-y-3">
             {anomalies.slice(0, 5).map((a) => (
-              <AnomalyCard key={a.id} anomaly={a} />
+              <AnomalyCard key={a.id} anomaly={a} currency={currency} />
             ))}
           </div>
         </div>
@@ -1149,14 +1151,14 @@ function RevenuesPage() {
           <SectionTitle>پیشنهادات استراتژیک</SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {decisions.map((d) => (
-              <DecisionCard key={d.id} decision={d} />
+              <DecisionCard key={d.id} decision={d} currency={currency} />
             ))}
           </div>
         </div>
       )}
 
       {/* ── ۱۴. Forecast Accuracy ── */}
-      <ForecastAccuracySection />
+      <ForecastAccuracySection currency={currency} />
     </div>
   );
 }
