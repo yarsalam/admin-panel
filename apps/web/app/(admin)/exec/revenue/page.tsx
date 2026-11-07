@@ -19,6 +19,7 @@ import {
   type CohortRow,
   type FunnelStep,
   type ProductRevenueRow,
+  type RevenueCurrency,
 } from "@/lib/api/exec/mutations/useRevenue";
 import SectionTitle from "@/components/ui/SectionTitle";
 import GlobalText from "@/components/ui/GlobalText";
@@ -222,7 +223,7 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [fmtMoney(Number(v), currency), labels[name] ?? name];
+              return `${labels[name] ?? name}: ${fmtMoney(Number(v), currency)}`;
             }}
           />
           <Area
@@ -297,7 +298,7 @@ function ForecastAlerts({
   return (
     <div className="space-y-2">
       {alerts.map((a, i) => {
-        const c = cfg[a.type] ?? cfg.info;
+        const c = cfg[a.type] ?? cfg.info!;
         return (
           <div
             key={i}
@@ -313,7 +314,7 @@ function ForecastAlerts({
 }
 
 // ─── ۴. MRR / ARR ────────────────────────────────────────────────────────────
-function MrrSection({ currency }: { currency: string }) {
+function MrrSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useMrr(currency);
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
@@ -355,7 +356,7 @@ function MrrSection({ currency }: { currency: string }) {
 }
 
 // ─── ۵. فروش واقعی بسته‌ها از کیف پول ─────────────────────────────────────────────────
-function ProductRevenueSection({ currency }: { currency: string }) {
+function ProductRevenueSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useProductRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
@@ -373,8 +374,8 @@ function ProductRevenueSection({ currency }: { currency: string }) {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={({ product, share }) =>
-                  `${product} ${share?.toFixed(0)}%`
+                label={(props: any) =>
+                  `${props.product ?? props.name ?? ""} ${Number(props.share ?? 0).toFixed(0)}%`
                 }
               >
                 {data.map((_, i) => (
@@ -454,7 +455,7 @@ function ProductRevenueSection({ currency }: { currency: string }) {
 }
 
 // ─── ۶. درآمد به تفکیک جنسیت + ARPPU ────────────────────────────────────────
-function GenderArppuSection({ currency }: { currency: string }) {
+function GenderArppuSection({ currency }: { currency: RevenueCurrency }) {
   const { data: gender, isLoading: gLoading } = useGenderRevenue(currency);
   const { data: arppu, isLoading: aLoading } = useArppu(currency);
 
@@ -586,7 +587,7 @@ function GenderArppuSection({ currency }: { currency: string }) {
 }
 
 // ─── ۷. Cohort Revenue ───────────────────────────────────────────────────────
-function CohortSection({ currency }: { currency: string }) {
+function CohortSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useCohortRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
@@ -653,7 +654,7 @@ function CohortSection({ currency }: { currency: string }) {
 }
 
 // ─── ۸. Conversion Funnel ────────────────────────────────────────────────────
-function FunnelSection({ currency }: { currency: string }) {
+function FunnelSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useRevenueFunnel(currency);
   if (isLoading) return <SectionSkeleton h="h-48" />;
   if (!data?.length) return null;
@@ -722,7 +723,7 @@ function FunnelSection({ currency }: { currency: string }) {
 }
 
 // ─── ۹. Churn Revenue ────────────────────────────────────────────────────────
-function ChurnSection({ currency }: { currency: string }) {
+function ChurnSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useChurnRevenue();
   if (isLoading) return <SectionSkeleton h="h-40" />;
   if (!data) return null;
@@ -801,7 +802,7 @@ function ChurnSection({ currency }: { currency: string }) {
 }
 
 // ─── ۱۰. Revenue Concentration ───────────────────────────────────────────────
-function ConcentrationSection({ currency }: { currency: string }) {
+function ConcentrationSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useRevenueConcentration(currency);
   if (isLoading) return <SectionSkeleton h="h-36" />;
   if (!data) return null;
@@ -861,7 +862,7 @@ function ConcentrationSection({ currency }: { currency: string }) {
 }
 
 // ─── ۱۱. Attribution Table ───────────────────────────────────────────────────
-function AttributionSection({ currency }: { currency: string }) {
+function AttributionSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useLtvBySource(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
@@ -939,7 +940,7 @@ function AttributionSection({ currency }: { currency: string }) {
 }
 
 // ─── ۱۲. Forecast Accuracy ───────────────────────────────────────────────────
-function ForecastAccuracySection({ currency }: { currency: string }) {
+function ForecastAccuracySection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useForecastAccuracy(currency);
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
@@ -1087,7 +1088,7 @@ function DecisionCard({ decision, currency }: { decision: any; currency: string 
 
 // ─── صفحه اصلی ───────────────────────────────────────────────────────────────
 function RevenuesPage() {
-  const [currency, setCurrency] = useState("IRT");
+  const [currency, setCurrency] = useState<RevenueCurrency>("IRT");
   const { data: monthly, isLoading: mLoading } = useMonthlyTrend(currency);
   const { data: daily, isLoading: dLoading } = useHistorical(currency);
   const { data: anomalies } = useAnomalies(currency);
