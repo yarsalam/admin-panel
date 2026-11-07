@@ -455,6 +455,9 @@ function GenderArppuSection({ currency }: { currency: string }) {
   return (
     <div>
       <SectionTitle>درآمد به تفکیک جنسیت و ARPPU</SectionTitle>
+      <GlobalText className="text-xs text-gray-500 -mt-2 mb-3">
+        درآمد و تعداد خریدها برای {gender?.periodDays ?? 90} روز اخیر است؛ گروه‌بندی جنسیت براساس مقدار فعلی پروفایل کاربر انجام می‌شود، نه snapshot زمان پرداخت. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
+      </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* جنسیت */}
         {genderRows.length > 0 && (
