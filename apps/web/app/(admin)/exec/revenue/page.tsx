@@ -137,7 +137,7 @@ function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: stri
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v)), "درآمد"]}
+            formatter={(v: any) => [fmtMoney(Number(v), currency), "درآمد"]}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -169,7 +169,7 @@ function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }
           />
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis
-            tickFormatter={(v) => `${(v / 1_000).toFixed(0)}K`}
+            tickFormatter={(v) => fmtAxis(v, currency)}
             tick={{ fontSize: 11 }}
           />
           <Tooltip
@@ -222,7 +222,7 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [fmtMoney(Number(v)), labels[name] ?? name];
+              return [fmtMoney(Number(v), currency), labels[name] ?? name];
             }}
           />
           <Area
@@ -340,8 +340,8 @@ function MrrSection({ currency }: { currency: string }) {
     <div>
       <SectionTitle>MRR / ARR</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <KPICard title="MRR" value={(data.mrr ?? 0) / 10} format="currency" />
-        <KPICard title="ARR" value={(data.arr ?? 0) / 10} format="currency" />
+        <KPICard title="MRR" value={displayAmount(data.mrr, currency)} format="currency" currencyLabel={currencyLabel(currency)} />
+        <KPICard title="ARR" value={displayAmount(data.arr, currency)} format="currency" currencyLabel={currencyLabel(currency)} />
         <KPICard title="رشد MRR" value={data.mrrGrowth ?? 0} format="percent" trend={mrrTrend} />
         <MiniStat label="ماه‌های ردیابی" value={String(data.mrrHistory?.length ?? 0)} />
       </div>
@@ -506,7 +506,7 @@ function GenderArppuSection({ currency }: { currency: string }) {
         {/* ARPPU کلی */}
         {arppu && (
           <div className="grid grid-cols-2 gap-4 content-start">
-            <KPICard title="ARPPU" value={arppu.arppu} format="currency" />
+            <KPICard title="ARPPU" value={displayAmount(arppu.arppu, currency)} format="currency" currencyLabel={currencyLabel(currency)} />
             <KPICard
               title="نرخ پرداخت‌کننده"
               value={arppu.payingRate}
@@ -695,9 +695,9 @@ function ChurnSection({ currency }: { currency: string }) {
     <div>
       <SectionTitle>Churn Revenue</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <KPICard title="درآمد از دست رفته" value={(data.lostRevenue ?? 0) / 10} format="currency" trend="down" />
-        <KPICard title="درآمد بازیابی‌شده" value={(data.recoveredRevenue ?? 0) / 10} format="currency" trend="up" />
-        <KPICard title="Expansion Revenue" value={(data.expansionRevenue ?? 0) / 10} format="currency" trend="up" />
+        <KPICard title="درآمد از دست رفته" value={displayAmount(data.lostRevenue, currency)} format="currency" currencyLabel={currencyLabel(currency)} trend="down" />
+        <KPICard title="درآمد بازیابی‌شده" value={displayAmount(data.recoveredRevenue, currency)} format="currency" currencyLabel={currencyLabel(currency)} trend="up" />
+        <KPICard title="Expansion Revenue" value={displayAmount(data.expansionRevenue, currency)} format="currency" currencyLabel={currencyLabel(currency)} trend="up" />
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 flex flex-col justify-between">
           <span className="text-xs text-gray-500">NRR (Net Revenue Retention)</span>
           <span className={`text-2xl font-bold mt-2 ${nrrColor}`}>{data.netRevenueRetention?.toFixed(1)}%</span>
@@ -1080,12 +1080,12 @@ function RevenuesPage() {
           <>
             <KPICard
               title="درآمد کل (۱۲ ماه)"
-              value={currency === "IRT" ? totalRevenue / 10 : totalRevenue}
+              value={displayAmount(totalRevenue, currency)}
               format="currency"
             />
             <KPICard
               title="میانگین ماهانه"
-              value={currency === "IRT" ? avgMonthly / 10 : avgMonthly}
+              value={displayAmount(avgMonthly, currency)}
               format="currency"
             />
             <KPICard
