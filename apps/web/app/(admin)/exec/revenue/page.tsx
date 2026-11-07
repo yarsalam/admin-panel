@@ -137,7 +137,7 @@ function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: stri
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "فروش"]}
+            formatter={(v: any) => [fmtMoney(Number(v), currency), "واریزی"]}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -471,10 +471,13 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       جنسیت
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      درآمد
+                      مبلغ خرید (تومان)
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                       شارژ کیف پول ({currency})
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      تعداد شارژ
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                       کاربران خریدار
@@ -483,7 +486,7 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       تعداد خرید
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      ARPPU
+                      ARPPU خرید (تومان)
                     </th>
                   </tr>
                 </thead>
@@ -501,6 +504,9 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmtMoney(r.depositRevenue, currency)}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.depositCount)}
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.payingUsers)}
