@@ -60,6 +60,10 @@ export interface MrrData {
   mrrHistory: { month: string; mrr: number }[];
   recurringRevenueAvailable: boolean;
   grossRevenue30d: number;
+  walletDeposits30d?: number;
+  grossSales30d?: number;
+  depositCurrency?: RevenueCurrency;
+  depositUnit?: string;
   activeVipUsers: number;
   limitation?: string;
 }
@@ -78,15 +82,19 @@ export interface GenderRevenueData {
   periodDays: number;
   source: string;
   genderBasis: string;
-  male: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
-  female: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
-  unknown: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
-  total: { revenue: number; payingUsers: number; paymentCount: number };
+  depositCurrency: RevenueCurrency;
+  depositUnit: string;
+  male: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; depositRevenue: number; depositingUsers: number; depositCount: number };
+  female: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; depositRevenue: number; depositingUsers: number; depositCount: number };
+  unknown: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; depositRevenue: number; depositingUsers: number; depositCount: number };
+  total: { revenue: number; payingUsers: number; paymentCount: number; depositRevenue: number; depositingUsers: number; depositCount: number };
 }
 
 export interface ArppuData {
   currency: RevenueCurrency;
   unit: string;
+  depositCurrency: RevenueCurrency;
+  depositUnit: string;
   periodDays: number;
   totalRevenue: number;
   paymentCount: number;
@@ -94,6 +102,9 @@ export interface ArppuData {
   payingUsers: number;
   activeUsers: number;
   payingRate: number;
+  depositRevenue: number;
+  depositCount: number;
+  depositingUsers: number;
 }
 
 export interface CohortRow {
