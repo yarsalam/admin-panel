@@ -83,8 +83,19 @@ const PIE_COLORS = [
 ];
 
 const fmt = (v: number) => v?.toLocaleString() ?? "—";
-const fmtM = (v: number) => `${(v / 10 / 1_000_000).toFixed(1)}M`;
-const fmtToman = (v: number | null | undefined) => v == null ? "—" : `${Math.round(v / 10).toLocaleString("fa-IR")} تومان`;
+const fmtMoney = (v: number | null | undefined, currency: string) => {
+  if (v == null || !Number.isFinite(v)) return "—";
+  if (currency === "IRT") return `${Math.round(v / 10).toLocaleString("fa-IR")} تومان`;
+  if (currency === "USDT") return `${(v / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+  if (currency === "BTC") return `${(v / 100_000_000).toFixed(8)} BTC`;
+  return `${Math.round(v).toLocaleString("en-US")} واحد خام USD (واحد پایه تأیید نشده)`;
+};
+const fmtAxis = (v: number, currency: string) => {
+  if (currency === "IRT") return `${(v / 10 / 1_000_000).toFixed(1)}M`;
+  if (currency === "USDT") return `${(v / 100 / 1_000_000).toFixed(1)}M`;
+  if (currency === "BTC") return `${(v / 100_000_000 / 1_000_000).toFixed(3)}M`;
+  return `${(v / 1_000_000).toFixed(1)}M raw`;
+};
 
 // ─── کامپوننت‌های پایه ───────────────────────────────────────────────────────
 
@@ -149,7 +160,7 @@ function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(v: any) => [`${fmt(Number(v))} تومان`, "درآمد"]}
+            formatter={(v: any) => [fmtMoney(Number(v), currency), "درآمد"]}
           />
           <Area
             type="monotone"
@@ -300,7 +311,7 @@ function MrrSection({ currency }: { currency: string }) {
         <SectionTitle>درآمد اشتراکی و VIP</SectionTitle>
         <Card className="p-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <MiniStat label="درآمد پرداخت‌شده ۳۰ روز اخیر" value={fmtToman(data.grossRevenue30d)} />
+            <MiniStat label="درآمد پرداخت‌شده ۳۰ روز اخیر" value={fmtMoney(data.grossRevenue30d, currency)} />
             <MiniStat label="کاربران دارای VIP فعال" value={fmt(data.activeVipUsers)} />
           </div>
           <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
@@ -353,7 +364,7 @@ function ProductRevenueSection({ currency }: { currency: string }) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v: any) => [`${fmt(Number(v))} تومان`, "درآمد"]}
+                formatter={(v: any) => [fmtMoney(Number(v), currency), "درآمد"]}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -393,7 +404,7 @@ function ProductRevenueSection({ currency }: { currency: string }) {
                       {row.product}
                     </td>
                     <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmtToman(row.revenue)}
+                      {fmtMoney(row.revenue, currency)}
                     </td>
                     <td className="px-4 py-2 text-gray-600">
                       {row.share?.toFixed(1)}%
@@ -463,13 +474,13 @@ function GenderArppuSection({ currency }: { currency: string }) {
                         {r.icon} {r.label}
                       </td>
                       <td className="px-4 py-2 font-bold text-emerald-600">
-                        {fmtToman(r.revenue)}
+                        {fmtMoney(r.revenue, currency)}
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.payingUsers)}
                       </td>
                       <td className="px-4 py-2 text-indigo-600 font-semibold">
-                        {fmtToman(r.arppu)}
+                        {fmtMoney(r.arppu, currency)}
                       </td>
                     </tr>
                   ))}
@@ -551,16 +562,16 @@ function CohortSection({ currency }: { currency: string }) {
                   <td className="px-4 py-2 font-medium">{row.cohort}</td>
                   <td className="px-4 py-2 text-gray-600">{fmt(row.users)}</td>
                   <td className="px-4 py-2 text-emerald-600">
-                    {fmtToman(row.revenue30d)}
+                    {fmtMoney(row.revenue30d, currency)}
                   </td>
                   <td className="px-4 py-2 text-emerald-700">
-                    {fmtToman(row.revenue60d)}
+                    {fmtMoney(row.revenue60d, currency)}
                   </td>
                   <td className="px-4 py-2 text-emerald-800">
-                    {fmtToman(row.revenue90d)}
+                    {fmtMoney(row.revenue90d, currency)}
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-900 dark:text-emerald-400">
-                    {fmtToman(row.revenue180d)}
+                    {fmtMoney(row.revenue180d, currency)}
                   </td>
                 </tr>
               ))}
@@ -629,7 +640,7 @@ function FunnelSection({ currency }: { currency: string }) {
                     </div>
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-600">
-                    {step.revenue > 0 ? fmtToman(step.revenue) : "—"}
+                    {step.revenue > 0 ? fmtMoney(step.revenue, currency) : "—"}
                   </td>
                 </tr>
               ))}
@@ -692,7 +703,7 @@ function ChurnSection() {
               />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: any) => [`${fmt(Number(v))} تومان`]} />
+              <Tooltip formatter={(v: any) => [fmtMoney(Number(v), currency)]} />
               <Legend />
               <Bar
                 dataKey="lost"
@@ -757,7 +768,7 @@ function ConcentrationSection({ currency }: { currency: string }) {
                     {r.share?.toFixed(1)}%
                   </div>
                   <div className="text-xs text-gray-500">
-                    {fmtToman(r.revenue)}
+                    {fmtMoney(r.revenue, currency)}
                   </div>
                 </div>
               </div>
@@ -833,13 +844,13 @@ function AttributionSection({ currency }: { currency: string }) {
                       {fmt(row.userCount)}
                     </td>
                     <td className="px-4 py-2 text-gray-700">
-                      {fmtToman(row.totalRevenue)}
+                      {fmtMoney(row.totalRevenue, currency)}
                     </td>
                     <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmtToman(row.ltv)}
+                      {fmtMoney(row.ltv, currency)}
                     </td>
                     <td className="px-4 py-2 text-rose-600">
-                      {fmtToman(row.cac)}
+                      {fmtMoney(row.cac, currency)}
                     </td>
                     <td className={`px-4 py-2 font-bold ${ratioColor}`}>
                       {ratio > 0 ? `${ratio.toFixed(1)}×` : "—"}
@@ -903,7 +914,7 @@ function ForecastAccuracySection({ currency }: { currency: string }) {
           <Card className="p-5 flex flex-col gap-1">
             <span className="text-xs text-gray-500">RMSE</span>
             <span className="text-3xl font-bold text-indigo-600">
-              {fmtM(data.rmse)}
+              {fmtAxis(data.rmse, currency)}
             </span>
             <span className="text-xs text-gray-400">
               ریشه میانگین مربعات خطا
@@ -919,7 +930,7 @@ function ForecastAccuracySection({ currency }: { currency: string }) {
               <LineChart data={data.history.slice(-30)}>
                 <XAxis dataKey="date" tick={{ fontSize: 9 }} hide />
                 <YAxis tickFormatter={fmtM} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v: any) => [`${fmt(Number(v))} تومان`]} />
+                <Tooltip formatter={(v: any) => [fmtMoney(Number(v), currency)]} />
                 <Line
                   type="monotone"
                   dataKey="actual"
@@ -967,10 +978,10 @@ function AnomalyCard({ anomaly, currency }: { anomaly: any; currency: string }) 
         <div className="text-left shrink-0">
           <div className="text-xs text-gray-500">واقعی</div>
           <div className="text-sm font-bold">
-            {fmtToman(anomaly.actual)}
+            {fmtMoney(anomaly.actual, currency)}
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            منتظره: {fmtToman(anomaly.expected)}
+            منتظره: {fmtMoney(anomaly.expected, currency)}
           </div>
         </div>
       </div>
@@ -990,7 +1001,7 @@ function DecisionCard({ decision, currency }: { decision: any; currency: string 
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-400">تأثیر تخمینی</span>
         <span className="text-sm font-bold text-emerald-600">
-          {fmtToman(decision.impact)}
+          {fmtMoney(decision.impact, currency)}
         </span>
       </div>
       {Number.isFinite(decision.roi) && decision.roi > 0 && (
@@ -1045,12 +1056,12 @@ function RevenuesPage() {
           <>
             <KPICard
               title="درآمد کل (۱۲ ماه)"
-              value={totalRevenue / 10}
+              value={currency === "IRT" ? totalRevenue / 10 : totalRevenue}
               format="currency"
             />
             <KPICard
               title="میانگین ماهانه"
-              value={avgMonthly / 10}
+              value={currency === "IRT" ? avgMonthly / 10 : avgMonthly}
               format="currency"
             />
             <KPICard
