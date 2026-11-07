@@ -5,6 +5,7 @@ interface KPICardProps {
   value: number | string;
   format?: "number" | "currency" | "percent";
   trend?: "up" | "down";
+  currencyLabel?: string;
 }
 
 export default function KPICard({
@@ -12,9 +13,10 @@ export default function KPICard({
   value,
   format = "number",
   trend,
+  currencyLabel = "تومان",
 }: KPICardProps) {
   const formatValue = () => {
-    if (format === "currency") return `${Number(value).toLocaleString()} تومان`;
+    if (format === "currency") return `${Number(value).toLocaleString()} ${currencyLabel}`;
     if (format === "percent") return `${value}%`;
     return Number(value).toLocaleString();
   };
@@ -23,7 +25,6 @@ export default function KPICard({
     <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
       <GlobalText className="text-sm opacity-70 mb-2">{title}</GlobalText>
       <div className="flex items-center gap-2">
-        {/* رفع باگ: کلاس h-3 قبلاً ارتفاع را محدود می‌کرد و عدد را می‌برید */}
         <div className="text-2xl font-bold leading-tight">{formatValue()}</div>
         {trend && (
           <span className={trend === "up" ? "text-green-500" : "text-red-500"}>
