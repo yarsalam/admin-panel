@@ -126,7 +126,7 @@ function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: stri
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-4">
-        درآمد ماهانه (شمسی)
+        واریزی به کیف پول — ماهانه (شمسی)
       </GlobalText>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data}>
@@ -137,7 +137,7 @@ function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: stri
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v), currency), "درآمد"]}
+            formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "فروش"]}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -159,7 +159,7 @@ function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-4">
-        روند روزانه (۹۰ روز)
+        روند واریزی به کیف پول (۹۰ روز)
       </GlobalText>
       <ResponsiveContainer width="100%" height={250}>
         <AreaChart data={chartData}>
@@ -173,7 +173,7 @@ function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v), currency), "درآمد"]}
+            formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "فروش"]}
           />
           <Area
             type="monotone"
@@ -202,10 +202,10 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-1">
-        پیش‌بینی درآمد ۹۰ روز
+        پیش‌بینی واریزی کیف پول — ۹۰ روز
       </GlobalText>
       <GlobalText className="text-xs text-gray-500 mb-4">
-        خط آبی: مرکزی · سایه: بازه اطمینان
+        خط آبی: پیش‌بینی واریزی · سایه: بازه عدم‌قطعیت
       </GlobalText>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={chartData}>
@@ -323,12 +323,13 @@ function MrrSection({ currency }: { currency: string }) {
       <div>
         <SectionTitle>درآمد اشتراکی و VIP</SectionTitle>
         <Card className="p-4 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <MiniStat label="درآمد پرداخت‌شده ۳۰ روز اخیر" value={fmtMoney(data.grossRevenue30d, currency)} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MiniStat label="واریزی شارژ کیف پول — ۳۰ روز" value={fmtMoney(data.walletDeposits30d ?? data.grossRevenue30d, currency)} />
+            <MiniStat label="خرید واقعی بسته‌ها — ۳۰ روز" value={fmtMoney(data.grossSales30d ?? 0, "IRT")} />
             <MiniStat label="کاربران دارای VIP فعال" value={fmt(data.activeVipUsers)} />
           </div>
           <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
-            MRR و ARR فعلاً قابل محاسبه معتبر نیستند: جدول پرداخت به دوره اشتراک و تمدید آن متصل نیست. درآمد واقعی ۳۰ روزه و تعداد VIP فعال جداگانه نمایش داده شده‌اند؛ مبلغ تکرارشونده حدس زده نمی‌شود.
+            MRR و ARR فعلاً قابل محاسبه معتبر نیستند: پرداخت‌های ثبت‌شده شارژ کیف پول‌اند و خرید بسته بعداً از موجودی کیف پول انجام می‌شود. واریزی، خرید واقعی و تعداد VIP فعال جداگانه گزارش می‌شوند؛ مبلغ تکرارشونده حدس زده نمی‌شود.
           </GlobalText>
         </Card>
       </div>
@@ -349,14 +350,14 @@ function MrrSection({ currency }: { currency: string }) {
   );
 }
 
-// ─── ۵. درآمد به تفکیک محصول ─────────────────────────────────────────────────
+// ─── ۵. فروش واقعی بسته‌ها از کیف پول ─────────────────────────────────────────────────
 function ProductRevenueSection({ currency }: { currency: string }) {
   const { data, isLoading } = useProductRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
   return (
     <div>
-      <SectionTitle>درآمد به تفکیک محصول</SectionTitle>
+      <SectionTitle>فروش واقعی بسته‌ها از کیف پول</SectionTitle>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-5">
           <ResponsiveContainer width="100%" height={280}>
@@ -377,7 +378,7 @@ function ProductRevenueSection({ currency }: { currency: string }) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v: any) => [fmtMoney(Number(v), currency), "درآمد"]}
+                formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "فروش"]}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -417,7 +418,7 @@ function ProductRevenueSection({ currency }: { currency: string }) {
                       {row.product}
                     </td>
                     <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmtMoney(row.revenue, currency)}
+                      {fmtMoney(row.revenue, "IRT")}
                     </td>
                     <td className="px-4 py-2 text-gray-600">
                       {row.share?.toFixed(1)}%
@@ -454,9 +455,9 @@ function GenderArppuSection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>درآمد به تفکیک جنسیت و ARPPU</SectionTitle>
+      <SectionTitle>خرید واقعی به تفکیک جنسیت و ARPPU</SectionTitle>
       <GlobalText className="text-xs text-gray-500 -mt-2 mb-3">
-        درآمد و تعداد خریدها برای {gender?.periodDays ?? 90} روز اخیر است؛ گروه‌بندی جنسیت براساس مقدار فعلی پروفایل کاربر انجام می‌شود، نه snapshot زمان پرداخت. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
+        مبالغ خرید از برداشت واقعی کیف پول برای بسته‌های فروشگاهی است (واحد ریال، نمایش تومان). شارژ کیف پول جداگانه در ارز انتخاب‌شده نشان داده می‌شود. جنسیت از پروفایل فعلی کاربر خوانده می‌شود، نه snapshot زمان خرید. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
       </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* جنسیت */}
@@ -473,7 +474,10 @@ function GenderArppuSection({ currency }: { currency: string }) {
                       درآمد
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      کاربران پرداخت‌کننده
+                      شارژ کیف پول ({currency})
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      کاربران خریدار
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                       تعداد خرید
@@ -493,7 +497,10 @@ function GenderArppuSection({ currency }: { currency: string }) {
                         {r.icon} {r.label}
                       </td>
                       <td className="px-4 py-2 font-bold text-emerald-600">
-                        {fmtMoney(r.revenue, currency)}
+                        {fmtMoney(r.revenue, "IRT")}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmtMoney(r.depositRevenue, currency)}
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.payingUsers)}
@@ -502,7 +509,7 @@ function GenderArppuSection({ currency }: { currency: string }) {
                         {fmt(r.paymentCount)}
                       </td>
                       <td className="px-4 py-2 text-indigo-600 font-semibold">
-                        {fmtMoney(r.arppu, currency)}
+                        {fmtMoney(r.arppu, "IRT")}
                       </td>
                     </tr>
                   ))}
@@ -515,7 +522,7 @@ function GenderArppuSection({ currency }: { currency: string }) {
         {/* ARPPU کلی */}
         {arppu && (
           <div className="grid grid-cols-2 gap-4 content-start">
-            <KPICard title="ARPPU" value={displayAmount(arppu.arppu, currency)} format="currency" currencyLabel={currencyLabel(currency)} />
+            <KPICard title="ARPPU" value={displayAmount(arppu.arppu, "IRT")} format="currency" currencyLabel={currencyLabel("IRT")} />
             <KPICard
               title="نرخ پرداخت‌کننده"
               value={arppu.payingRate}
@@ -548,7 +555,7 @@ function CohortSection({ currency }: { currency: string }) {
     <div>
       <SectionTitle>درآمد Cohort</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
-        درآمد کاربران بر اساس ماه جذب — ۳۰، ۶۰، ۹۰ و ۱۸۰ روز بعد
+        مجموع خرید واقعی کاربران بر اساس ماه جذب — ۳۰، ۶۰، ۹۰ و ۱۸۰ روز بعد
       </GlobalText>
       <Card>
         <div className="overflow-x-auto">
@@ -584,16 +591,16 @@ function CohortSection({ currency }: { currency: string }) {
                   <td className="px-4 py-2 font-medium">{row.cohort}</td>
                   <td className="px-4 py-2 text-gray-600">{fmt(row.users)}</td>
                   <td className="px-4 py-2 text-emerald-600">
-                    {fmtMoney(row.revenue30d, currency)}
+                    {fmtMoney(row.revenue30d, "IRT")}
                   </td>
                   <td className="px-4 py-2 text-emerald-700">
-                    {fmtMoney(row.revenue60d, currency)}
+                    {fmtMoney(row.revenue60d, "IRT")}
                   </td>
                   <td className="px-4 py-2 text-emerald-800">
-                    {fmtMoney(row.revenue90d, currency)}
+                    {fmtMoney(row.revenue90d, "IRT")}
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-900 dark:text-emerald-400">
-                    {fmtMoney(row.revenue180d, currency)}
+                    {fmtMoney(row.revenue180d, "IRT")}
                   </td>
                 </tr>
               ))}
@@ -613,7 +620,7 @@ function FunnelSection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>قیف تبدیل درآمد</SectionTitle>
+      <SectionTitle>قیف تبدیل تا خرید واقعی بسته</SectionTitle>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -662,7 +669,7 @@ function FunnelSection({ currency }: { currency: string }) {
                     </div>
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-600">
-                    {step.revenue > 0 ? fmtMoney(step.revenue, currency) : "—"}
+                    {step.revenue > 0 ? fmtMoney(step.revenue, "IRT") : "—"}
                   </td>
                 </tr>
               ))}
@@ -767,9 +774,9 @@ function ConcentrationSection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>تمرکز درآمد</SectionTitle>
+      <SectionTitle>تمرکز خرید واقعی بسته‌ها</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
-        چه درصدی از درآمد از چه درصدی از کاربران می‌آید
+        چه سهمی از خریدهای واقعی از چه سهمی از خریداران می‌آید
       </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
@@ -790,7 +797,7 @@ function ConcentrationSection({ currency }: { currency: string }) {
                     {r.share?.toFixed(1)}%
                   </div>
                   <div className="text-xs text-gray-500">
-                    {fmtMoney(r.revenue, currency)}
+                    {fmtMoney(r.revenue, "IRT")}
                   </div>
                 </div>
               </div>
@@ -823,7 +830,7 @@ function AttributionSection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>اقتصاد جذب کاربر به تفکیک منبع</SectionTitle>
+      <SectionTitle>واریزی کیف پول به تفکیک منبع جذب (نه فروش نهایی محصول)</SectionTitle>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -900,7 +907,7 @@ function ForecastAccuracySection({ currency }: { currency: string }) {
   if (!data.dataAvailable || data.mape === null || data.rmse === null) {
     return (
       <div>
-        <SectionTitle>دقت پیش‌بینی درآمد</SectionTitle>
+        <SectionTitle>دقت پیش‌بینی واریزی کیف پول</SectionTitle>
         <Card className="p-4">
           <GlobalText className="text-sm text-amber-700 dark:text-amber-400">
             {data.reason ?? "برای محاسبه دقت، داده تاریخی کافی در دسترس نیست."}
@@ -921,7 +928,7 @@ function ForecastAccuracySection({ currency }: { currency: string }) {
 
   return (
     <div>
-      <SectionTitle>دقت پیش‌بینی درآمد</SectionTitle>
+      <SectionTitle>دقت پیش‌بینی واریزی کیف پول</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="grid grid-cols-2 gap-4">
           <Card className="p-5 flex flex-col gap-1">
@@ -1088,13 +1095,13 @@ function RevenuesPage() {
         ) : (
           <>
             <KPICard
-              title="درآمد کل (۱۲ ماه)"
+              title="واریزی کل کیف پول (۱۲ ماه)"
               value={displayAmount(totalRevenue, currency)}
               format="currency"
               currencyLabel={currencyLabel(currency)}
             />
             <KPICard
-              title="میانگین ماهانه"
+              title="میانگین ماهانه واریزی"
               value={displayAmount(avgMonthly, currency)}
               format="currency"
               currencyLabel={currencyLabel(currency)}
@@ -1124,7 +1131,7 @@ function RevenuesPage() {
 
       {/* ── ۳. نمودارهای تاریخی ── */}
       <div>
-        <SectionTitle>روند درآمد</SectionTitle>
+        <SectionTitle>روند شارژ کیف پول و واریزی</SectionTitle>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {mLoading ? (
             <SectionSkeleton />
@@ -1137,7 +1144,7 @@ function RevenuesPage() {
 
       {/* ── ۴. Forecast ── */}
       <div>
-        <SectionTitle>پیش‌بینی درآمد</SectionTitle>
+        <SectionTitle>پیش‌بینی واریزی کیف پول</SectionTitle>
         {fLoading ? (
           <SectionSkeleton />
         ) : (
@@ -1179,7 +1186,7 @@ function RevenuesPage() {
       {/* ── ۱۲. Anomalies ── */}
       {anomalies && anomalies.length > 0 && (
         <div>
-          <SectionTitle>ناهنجاری‌های درآمد</SectionTitle>
+          <SectionTitle>ناهنجاری‌های واریزی کیف پول</SectionTitle>
           <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
             انحراف بیش از ۴۰٪ از میانگین متحرک ۷ روزه
           </GlobalText>
@@ -1194,7 +1201,7 @@ function RevenuesPage() {
       {/* ── ۱۳. Strategic Decisions ── */}
       {decisions && decisions.length > 0 && (
         <div>
-          <SectionTitle>پیشنهادات استراتژیک</SectionTitle>
+          <SectionTitle>پیشنهادهای مبتنی بر واریزی و جذب</SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {decisions.map((d) => (
               <DecisionCard key={d.id} decision={d} currency={currency} />
