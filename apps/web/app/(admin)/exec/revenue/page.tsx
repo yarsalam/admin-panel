@@ -122,9 +122,9 @@ function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: stri
             className="stroke-gray-200 dark:stroke-gray-700"
           />
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-          <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [fmtToman(Number(v)), "درآمد"]}
+            formatter={(v: any) => [fmtMoney(Number(v)), "درآمد"]}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -201,7 +201,7 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
             className="stroke-gray-200 dark:stroke-gray-700"
           />
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-          <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
             formatter={(v: any, name: string) => {
               const labels: Record<string, string> = {
@@ -209,7 +209,7 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [fmtToman(Number(v)), labels[name] ?? name];
+              return [fmtMoney(Number(v)), labels[name] ?? name];
             }}
           />
           <Area
@@ -702,7 +702,7 @@ function ChurnSection() {
                 className="stroke-gray-200 dark:stroke-gray-700"
               />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
+              <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
               <Tooltip formatter={(v: any) => [fmtMoney(Number(v), currency)]} />
               <Legend />
               <Bar
@@ -929,7 +929,7 @@ function ForecastAccuracySection({ currency }: { currency: string }) {
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={data.history.slice(-30)}>
                 <XAxis dataKey="date" tick={{ fontSize: 9 }} hide />
-                <YAxis tickFormatter={fmtM} tick={{ fontSize: 10 }} />
+                <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 10 }} />
                 <Tooltip formatter={(v: any) => [fmtMoney(Number(v), currency)]} />
                 <Line
                   type="monotone"
@@ -1039,11 +1039,22 @@ function RevenuesPage() {
   return (
     <div className="space-y-10 p-6" dir="rtl">
       {/* هدر */}
-      <div>
-        <SectionTitle>Executive Revenue Dashboard</SectionTitle>
-        <GlobalText className="text-sm text-gray-500 -mt-2">
-          داده واقعی از جدول payments — فقط تراکنش‌های موفق (paid)
-        </GlobalText>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <SectionTitle>Executive Revenue Dashboard</SectionTitle>
+          <GlobalText className="text-sm text-gray-500 -mt-2">
+            داده واقعی از جدول payments — فقط تراکنش‌های موفق (paid)
+          </GlobalText>
+        </div>
+        <label className="text-sm text-gray-600 flex items-center gap-2">
+          ارز گزارش
+          <select value={currency} onChange={(event) => setCurrency(event.target.value)} className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800">
+            <option value="IRT">ریال / نمایش تومان</option>
+            <option value="USDT">USDT</option>
+            <option value="BTC">BTC</option>
+            <option value="USD">USD (واحد پایه تأیید نشده)</option>
+          </select>
+        </label>
       </div>
 
       {/* ── ۱. KPI اصلی ── */}
