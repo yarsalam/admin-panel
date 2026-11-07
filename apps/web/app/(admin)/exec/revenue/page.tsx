@@ -223,7 +223,7 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return `${labels[name] ?? name}: ${fmtMoney(Number(v), currency)}`;
+              return <span>`${labels[String(name)] ?? String(name)}: ${fmtMoney(Number(v), currency)}`</span>;
             }}
           />
           <Area
@@ -1118,7 +1118,7 @@ function RevenuesPage() {
         </div>
         <label className="text-sm text-gray-600 flex items-center gap-2">
           ارز گزارش
-          <select value={currency} onChange={(event) => setCurrency(event.target.value)} className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800">
+          <select value={currency} onChange={(event) => setCurrency(event.target.value as RevenueCurrency)} className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800">
             <option value="IRT">ریال / نمایش تومان</option>
             <option value="USDT">USDT</option>
             <option value="BTC">BTC</option>
