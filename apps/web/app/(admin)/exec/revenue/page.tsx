@@ -90,6 +90,19 @@ const fmtMoney = (v: number | null | undefined, currency: string) => {
   if (currency === "BTC") return `${(v / 100_000_000).toFixed(8)} BTC`;
   return `${Math.round(v).toLocaleString("en-US")} واحد خام USD (واحد پایه تأیید نشده)`;
 };
+const displayAmount = (v: number | null | undefined, currency: string) => {
+  if (v == null || !Number.isFinite(v)) return 0;
+  if (currency === "IRT") return v / 10;
+  if (currency === "USDT") return v / 100;
+  if (currency === "BTC") return v / 100_000_000;
+  return v;
+};
+const currencyLabel = (currency: string) => {
+  if (currency === "IRT") return "تومان";
+  if (currency === "USDT") return "USDT";
+  if (currency === "BTC") return "BTC";
+  return "واحد خام USD";
+};
 const fmtAxis = (v: number, currency: string) => {
   if (currency === "IRT") return `${(v / 10 / 1_000_000).toFixed(1)}M`;
   if (currency === "USDT") return `${(v / 100 / 1_000_000).toFixed(1)}M`;
@@ -653,7 +666,7 @@ function FunnelSection({ currency }: { currency: string }) {
 }
 
 // ─── ۹. Churn Revenue ────────────────────────────────────────────────────────
-function ChurnSection() {
+function ChurnSection({ currency }: { currency: string }) {
   const { data, isLoading } = useChurnRevenue();
   if (isLoading) return <SectionSkeleton h="h-40" />;
   if (!data) return null;
@@ -1147,7 +1160,7 @@ function RevenuesPage() {
       <AttributionSection currency={currency} />
 
       {/* ── ۱۰. Churn ── */}
-      <ChurnSection />
+      <ChurnSection currency={currency} />
 
       {/* ── ۱۱. Concentration ── */}
       <ConcentrationSection currency={currency} />
