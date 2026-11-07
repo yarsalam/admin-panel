@@ -223,7 +223,7 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return <span>`${labels[String(name)] ?? String(name)}: ${fmtMoney(Number(v), currency)}`</span>;
+              return <span>{`${labels[String(name)] ?? String(name)}: ${fmtMoney(Number(v), currency)}`}</span>;
             }}
           />
           <Area
