@@ -17,6 +17,10 @@ import {
   useForecastAccuracy,
   type LtvSourceRow,
   type CohortRow,
+  type ForecastPoint,
+  type ForecastAlert,
+  type Anomaly,
+  type StrategicDecision,
   type FunnelStep,
   type ProductRevenueRow,
   type RevenueCurrency,
@@ -138,7 +142,7 @@ function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: stri
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v), currency), "واریزی"]}
+            formatter={(v: unknown) => <span>{fmtMoney(Number(v), currency)}</span>}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -174,7 +178,7 @@ function DailyChart({ data, currency }: { data: DailyPoint[]; currency: string }
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "برداشت checkout"]}
+            formatter={(v: unknown) => <span>{fmtMoney(Number(v), "IRT")}</span>}
           />
           <Area
             type="monotone"
@@ -217,7 +221,7 @@ function ForecastChart({ data, currency }: { data: any[]; currency: string }) {
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any, name: string) => {
+            formatter={(v: unknown, name: unknown) => {
               const labels: Record<string, string> = {
                 revenue: "پیش‌بینی",
                 low: "کمترین",
@@ -359,7 +363,7 @@ function MrrSection({ currency }: { currency: RevenueCurrency }) {
 function ProductRevenueSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useProductRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
-  if (!data?.length) return null;
+  if (!data?.length) return <EmptyState text="در بازه انتخاب‌شده خرید بسته‌ای ثبت نشده است." />;
   return (
     <div>
       <SectionTitle>برداشت checkout و فروش تکمیل‌شده به تفکیک بسته</SectionTitle>
@@ -374,16 +378,13 @@ function ProductRevenueSection({ currency }: { currency: RevenueCurrency }) {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={(props: any) =>
-                  `${props.product ?? props.name ?? ""} ${Number(props.share ?? 0).toFixed(0)}%`
-                }
               >
                 {data.map((_, i) => (
                   <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v: any) => [fmtMoney(Number(v), "IRT"), "فروش"]}
+                formatter={(v: unknown) => <span>{fmtMoney(Number(v), "IRT")}</span>}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -773,7 +774,7 @@ function ChurnSection({ currency }: { currency: RevenueCurrency }) {
               />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: any) => [fmtMoney(Number(v), currency)]} />
+              <Tooltip formatter={(v: unknown) => <span>{fmtMoney(Number(v), currency)}</span>} />
               <Legend />
               <Bar
                 dataKey="lost"
@@ -1000,7 +1001,7 @@ function ForecastAccuracySection({ currency }: { currency: RevenueCurrency }) {
               <LineChart data={data.history.slice(-30)}>
                 <XAxis dataKey="date" tick={{ fontSize: 9 }} hide />
                 <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v: any) => [fmtMoney(Number(v), currency)]} />
+                <Tooltip formatter={(v: unknown) => <span>{fmtMoney(Number(v), currency)}</span>} />
                 <Line
                   type="monotone"
                   dataKey="actual"
@@ -1101,10 +1102,10 @@ function RevenuesPage() {
     : 0;
   const totalPayments = monthly?.reduce((s, m) => s + m.paymentCount, 0) ?? 0;
   const lastMonth = monthly?.[monthly.length - 1];
-  const growthRate = (forecast as any)?.growthRate;
-  const peakDays: string[] = (forecast as any)?.peakDays ?? [];
-  const forecastAlerts: any[] = (forecast as any)?.alerts ?? [];
-  const forecastPoints: any[] = (forecast as any)?.forecast ?? [];
+  const growthRate = forecast?.growthRate;
+  const peakDays: string[] = forecast?.peakDays ?? [];
+  const forecastAlerts: ForecastAlert[] = forecast?.alerts ?? [];
+  const forecastPoints: ForecastPoint[] = forecast?.forecast ?? [];
 
   return (
     <div className="space-y-10 p-6" dir="rtl">
