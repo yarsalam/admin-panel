@@ -76,6 +76,8 @@ export interface GenderRevenueData {
   currency: RevenueCurrency;
   unit: string;
   periodDays: number;
+  source: string;
+  genderBasis: string;
   male: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
   female: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
   unknown: { revenue: number; payingUsers: number; paymentCount: number; arppu: number };
