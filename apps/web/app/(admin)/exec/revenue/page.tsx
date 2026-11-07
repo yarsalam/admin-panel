@@ -1082,11 +1082,13 @@ function RevenuesPage() {
               title="درآمد کل (۱۲ ماه)"
               value={displayAmount(totalRevenue, currency)}
               format="currency"
+              currencyLabel={currencyLabel(currency)}
             />
             <KPICard
               title="میانگین ماهانه"
               value={displayAmount(avgMonthly, currency)}
               format="currency"
+              currencyLabel={currencyLabel(currency)}
             />
             <KPICard
               title="تعداد پرداخت‌ها"
