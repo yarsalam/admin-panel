@@ -101,7 +101,7 @@ function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-4">
-        شارژ موفق کیف پول در ماه (شمسی)
+        پرداخت‌های موفق ماهانه (شمسی)
       </GlobalText>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data}>
@@ -134,7 +134,7 @@ function DailyChart({ data }: { data: DailyPoint[] }) {
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-4">
-        روند روزانه شارژ کیف پول (۹۰ روز)
+        روند روزانه پرداخت‌های موفق (۹۰ روز)
       </GlobalText>
       <ResponsiveContainer width="100%" height={250}>
         <AreaChart data={chartData}>
@@ -178,7 +178,7 @@ function ForecastChart({ data }: { data: any[] }) {
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-1">
-        پیش‌بینی شارژ کیف پول در ۹۰ روز
+        پیش‌بینی پرداخت‌های موفق در ۹۰ روز
       </GlobalText>
       <GlobalText className="text-xs text-gray-500 mb-4">
         خط آبی: پیش‌بینی مرکزی · {hasConfidenceBand ? "بازه اطمینان مدل" : "بازه اطمینان معتبر ارائه نشده است"}
@@ -231,7 +231,7 @@ function PeakDaysCard({ peakDays }: { peakDays: string[] }) {
   return (
     <Card className="p-4">
       <GlobalText as="h3" className="font-bold mb-3">
-        📅 روزهای اوج شارژ کیف پول
+        📅 روزهای اوج پرداخت موفق
       </GlobalText>
       <div className="flex flex-wrap gap-2">
         {peakDays.map((day) => (
@@ -907,7 +907,7 @@ function ForecastAccuracySection() {
   if (!data.dataAvailable || data.mape == null || data.rmse == null) {
     return (
       <div>
-        <SectionTitle>دقت پیش‌بینی شارژ کیف پول</SectionTitle>
+        <SectionTitle>دقت پیش‌بینی پرداخت‌های موفق</SectionTitle>
         <EmptyState text={data.reason ?? "برای ارزیابی دقت، نمونه‌های واقعی و پیش‌بینی هم‌تاریخ کافی وجود ندارد. تا آن زمان دقت مدل گزارش نمی‌شود."} />
       </div>
     );
@@ -1044,7 +1044,7 @@ function RevenuesPage() {
       <div>
         <SectionTitle>Executive Revenue Dashboard</SectionTitle>
         <GlobalText className="text-sm text-gray-500 -mt-2">
-          داده واقعی از پرداخت‌های موفق (paid)؛ این بخش شارژ کیف پول را نشان می‌دهد، نه خرید تکمیل‌شده محصول
+          داده واقعی از پرداخت‌های موفق (paid)؛ این بخش با خرید تکمیل‌شده محصول و شارژ کیف پول جداگانه تفاوت دارد
         </GlobalText>
       </div>
 
@@ -1057,24 +1057,24 @@ function RevenuesPage() {
         ) : (
           <>
             <KPICard
-              title="مجموع شارژ موفق کیف پول (۱۲ ماه)"
+              title="مجموع پرداخت‌های موفق (۱۲ ماه)"
               value={totalRevenue}
               format="currency-rial"
             />
             <KPICard
-              title="میانگین شارژ ماهانه"
+              title="میانگین پرداخت موفق ماهانه"
               value={avgMonthly}
               format="currency-rial"
             />
             <KPICard
-              title="تعداد شارژهای موفق"
+              title="تعداد پرداخت‌های موفق"
               value={totalPayments}
               format="number"
             />
             <MiniStat label="آخرین ماه" value={lastMonth?.month ?? "—"} />
             {growthRate !== undefined ? (
               <KPICard
-                title="رشد پیش‌بینی‌شده شارژ"
+                title="رشد پیش‌بینی‌شده پرداخت‌ها"
                 value={growthRate}
                 format="percent"
                 trend={growthRate >= 0 ? "up" : "down"}
@@ -1146,7 +1146,7 @@ function RevenuesPage() {
       {/* ── ۱۲. Anomalies ── */}
       {anomalies && anomalies.length > 0 && (
         <div>
-          <SectionTitle>ناهنجاری‌های شارژ کیف پول</SectionTitle>
+          <SectionTitle>ناهنجاری‌های پرداخت‌های موفق</SectionTitle>
           <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
             انحراف بیش از ۴۰٪ از میانگین متحرک ۷ روزه
           </GlobalText>
