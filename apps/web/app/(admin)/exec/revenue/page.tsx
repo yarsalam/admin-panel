@@ -776,7 +776,7 @@ function ConcentrationSection() {
     <div>
       <SectionTitle>تمرکز خریدهای موفق محصول</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
-        چه درصدی از درآمد از چه درصدی از کاربران می‌آید
+        چه سهمی از خریدهای تکمیل‌شده محصول توسط چه درصدی از کاربران انجام شده است
       </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
@@ -1072,7 +1072,7 @@ function RevenuesPage() {
               format="number"
             />
             <MiniStat label="آخرین ماه" value={lastMonth?.month ?? "—"} />
-            {growthRate !== undefined ? (
+            {growthRate != null ? (
               <KPICard
                 title="رشد پیش‌بینی‌شده پرداخت‌ها"
                 value={growthRate}
@@ -1091,7 +1091,7 @@ function RevenuesPage() {
 
       {/* ── ۳. نمودارهای تاریخی ── */}
       <div>
-        <SectionTitle>روند درآمد</SectionTitle>
+        <SectionTitle>روند پرداخت‌های موفق</SectionTitle>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {mLoading ? (
             <SectionSkeleton />
