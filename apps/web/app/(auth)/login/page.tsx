@@ -160,8 +160,14 @@ export default function LoginPage() {
 
       // از توکن decode شده یا از پاسخ سرور permissionها را بگیر
       // (در اینجا مستقیماً از توکن استفاده می‌کنیم چون setToken آن را ذخیره کرده)
-      const tokenPayload = JSON.parse(atob(res.access_token.split(".")[1]));
-      const permissions: string[] = tokenPayload.permissions || [];
+      const encodedPayload = res.access_token.split(".")[1];
+      if (!encodedPayload) {
+        throw new Error("پاسخ ورود معتبر نیست؛ دوباره تلاش کنید.");
+      }
+      const tokenPayload = JSON.parse(atob(encodedPayload));
+      const permissions: string[] = Array.isArray(tokenPayload.permissions)
+        ? tokenPayload.permissions
+        : [];
       // پیدا کردن مسیر مجاز
       const redirectTo = getFirstAllowedPath(permissions);
       toast.success("ورود موفق");
