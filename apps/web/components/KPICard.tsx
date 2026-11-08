@@ -2,7 +2,7 @@ import GlobalText from "./ui/GlobalText";
 
 interface KPICardProps {
   title: string;
-  value: number | string | null;
+  value: number | string | null | undefined;
   format?: "number" | "currency" | "currency-rial" | "percent";
   trend?: "up" | "down";
 }
