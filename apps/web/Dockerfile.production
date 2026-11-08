@@ -48,7 +48,10 @@ ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 
-RUN mkdir -p /app && chown node:node /app
+# The runtime needs Node.js only. Remove the globally bundled npm CLI and its
+# dependency tree so build tooling vulnerabilities do not ship in the server image.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+    && mkdir -p /app && chown node:node /app
 
 COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
 
