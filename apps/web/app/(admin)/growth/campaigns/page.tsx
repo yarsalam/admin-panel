@@ -83,7 +83,6 @@ function CampaignsPage() {
           />
         </label>
         <CustomButton
-          type="submit"
           label="ایجاد کمپین"
           gradient
           loading={createMut.isPending}
