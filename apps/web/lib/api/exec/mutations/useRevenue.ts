@@ -182,16 +182,24 @@ export const useRevenueForecast = (days: number = 90, currency: RevenueCurrency 
       );
       return {
         ...data,
-        forecast: (data.forecast ?? []).map((p: any) => ({
-          date: p.date,
-          revenue: p.revenue ?? p.predicted ?? 0,
-          confidence: Array.isArray(p.confidence)
-            ? p.confidence
-            : [
-                (p.revenue ?? p.predicted ?? 0) * 0.85,
-                (p.revenue ?? p.predicted ?? 0) * 1.15,
-              ],
-        })),
+        forecast: (Array.isArray(data.forecast) ? data.forecast : []).map(
+          (point: Record<string, unknown>) => {
+            const revenueValue = Number(point.revenue ?? point.predicted ?? 0);
+            const confidenceValue = point.confidence;
+            const confidence: [number, number] =
+              Array.isArray(confidenceValue) &&
+              confidenceValue.length === 2 &&
+              confidenceValue.every((value) => typeof value === "number")
+                ? [confidenceValue[0] as number, confidenceValue[1] as number]
+                : [revenueValue * 0.85, revenueValue * 1.15];
+
+            return {
+              date: String(point.date ?? ""),
+              revenue: Number.isFinite(revenueValue) ? revenueValue : 0,
+              confidence,
+            };
+          },
+        ),
         growthRate: data.growthRate ?? 0,
         peakDays: data.peakDays ?? [],
         alerts: data.alerts ?? [],
