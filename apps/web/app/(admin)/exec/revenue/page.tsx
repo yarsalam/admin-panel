@@ -350,11 +350,6 @@ function MrrSection() {
           value={data.fulfilledPurchaseCount30d ?? null}
           format="number"
         />
-        <KPICard
-          title="درآمد پرداختی ثبت‌شده (۳۰ روز)"
-          value={data.grossRevenue30d ?? null}
-          format="currency-rial"
-        />
       </div>
 
       {data.mrrHistory?.length > 0 && (
@@ -636,6 +631,7 @@ function FunnelSection() {
   return (
     <div>
       <SectionTitle>قیف تبدیل خرید موفق</SectionTitle>
+      <GlobalText className="text-xs text-gray-500 -mt-2 mb-4">کسر از کیف پول و خرید تکمیل‌شده دو مرحله جدا هستند؛ مرحله آخر فقط پس از اعطای موفق محصول ثبت می‌شود.</GlobalText>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -651,7 +647,7 @@ function FunnelSection() {
                   نرخ تبدیل
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                  درآمد
+                  مبلغ مرحله
                 </th>
               </tr>
             </thead>
@@ -665,7 +661,7 @@ function FunnelSection() {
                     <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 text-xs flex items-center justify-center font-bold">
                       {i + 1}
                     </span>
-                    {step.step}
+                    {({registered: "ثبت‌نام", profile_completed: "تکمیل پروفایل", wallet_checkout_debited: "کسر از کیف پول", purchase_fulfilled: "خرید موفق محصول"} as Record<string, string>)[step.step] ?? step.step}
                   </td>
                   <td className="px-4 py-2 text-gray-600">{fmt(step.users)}</td>
                   <td className="px-4 py-2">
@@ -778,7 +774,7 @@ function ConcentrationSection() {
 
   return (
     <div>
-      <SectionTitle>تمرکز کسر از کیف پول</SectionTitle>
+      <SectionTitle>تمرکز خریدهای موفق محصول</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
         چه درصدی از درآمد از چه درصدی از کاربران می‌آید
       </GlobalText>
@@ -911,7 +907,7 @@ function ForecastAccuracySection() {
   if (!data.dataAvailable || data.mape == null || data.rmse == null) {
     return (
       <div>
-        <SectionTitle>دقت مدل پیش‌بینی</SectionTitle>
+        <SectionTitle>دقت پیش‌بینی شارژ کیف پول</SectionTitle>
         <EmptyState text={data.reason ?? "برای ارزیابی دقت، نمونه‌های واقعی و پیش‌بینی هم‌تاریخ کافی وجود ندارد. تا آن زمان دقت مدل گزارش نمی‌شود."} />
       </div>
     );
