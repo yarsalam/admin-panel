@@ -112,7 +112,7 @@ function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
           <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v)), "درآمد"]}
+            formatter={(v: any) => [fmtMoney(Number(v)), "پرداخت موفق"]}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -148,7 +148,7 @@ function DailyChart({ data }: { data: DailyPoint[] }) {
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(v: any) => [fmtMoney(Number(v)), "درآمد"]}
+            formatter={(v: any) => [fmtMoney(Number(v)), "پرداخت موفق"]}
           />
           <Area
             type="monotone"
@@ -547,7 +547,7 @@ function GenderArppuSection() {
             <KPICard title="کاربران خریدار" value={arppu.fulfilledPayingUsers} format="number" />
             <KPICard title="تعداد خرید موفق" value={arppu.fulfilledPurchaseCount} format="number" />
             <KPICard title="شارژ کیف پول" value={arppu.depositRevenue} format="currency-rial" />
-            <KPICard title="نرخ پرداخت‌کننده" value={arppu.payingRate} format="percent" />
+            <KPICard title="نرخ کاربران با کسر از کیف پول" value={arppu.payingRate} format="percent" />
           </div>
         )}
       </div>
@@ -565,7 +565,7 @@ function CohortSection() {
     <div>
       <SectionTitle>خریدهای موفق Cohort</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
-        درآمد کاربران بر اساس ماه جذب — ۳۰، ۶۰، ۹۰ و ۱۸۰ روز بعد
+        خریدهای موفق کاربران بر اساس ماه جذب — ۳۰، ۶۰، ۹۰ و ۱۸۰ روز بعد
       </GlobalText>
       <Card>
         <div className="overflow-x-auto">
@@ -1104,7 +1104,7 @@ function RevenuesPage() {
 
       {/* ── ۴. Forecast ── */}
       <div>
-        <SectionTitle>پیش‌بینی درآمد</SectionTitle>
+        <SectionTitle>پیش‌بینی پرداخت‌های موفق</SectionTitle>
         {fLoading ? (
           <SectionSkeleton />
         ) : (
