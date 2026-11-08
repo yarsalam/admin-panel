@@ -113,6 +113,7 @@ export interface ArppuData {
   fulfilledRevenue?: number;
   fulfilledPurchaseCount?: number;
   fulfilledPayingUsers?: number;
+  fulfilledArppu?: number | null;
 }
 
 export interface CohortRow {
