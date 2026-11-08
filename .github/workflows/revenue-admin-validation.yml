@@ -8,6 +8,7 @@ on:
       - "apps/web/lib/api/exec/mutations/useRevenue.ts"
       - "apps/web/components/KPICard.tsx"
       - "apps/server/src/executive/controllers/revenue.controller.ts"
+      - "apps/server/src/executive/**"
       - "apps/server/src/admin/common/**"
       - "package.json"
       - "pnpm-lock.yaml"
