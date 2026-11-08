@@ -45,13 +45,13 @@ jobs:
 
       - name: Scan admin runtime image for CRITICAL/HIGH vulnerabilities
         run: |
-          docker run --rm \\
-            -v /var/run/docker.sock:/var/run/docker.sock \\
-            -v "${RUNNER_TEMP}/trivy-cache:/root/.cache/" \\
-            aquasec/trivy:0.59.1 image \\
-            --exit-code 1 \\
-            --severity CRITICAL,HIGH \\
-            --ignore-unfixed \\
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "${RUNNER_TEMP}/trivy-cache:/root/.cache/" \
+            aquasec/trivy:0.59.1 image \
+            --exit-code 1 \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
             "admin-panel-web:ci-${GITHUB_SHA}"
 
       - name: Verify runtime server and login route
