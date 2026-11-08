@@ -14,7 +14,7 @@ interface Props {
   label?: string;
   type: "text" | "password" | "dropdown" | "textarea";
   placeholder?: string;
-  dropdownItems?: DropdownItem[];
+  dropdownItems?: readonly DropdownItem[];
   searchable?: boolean;
   multiple?: boolean; // فقط برای dropdown
   className?: string;
