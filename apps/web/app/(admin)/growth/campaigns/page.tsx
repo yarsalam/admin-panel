@@ -42,7 +42,7 @@ function CampaignsPage() {
   const forecastMut = useForecastTraffic();
   const feedbackMut = useSendCampaignFeedback();
 
-  const { control, handleSubmit, reset } = useForm({
+  const { control, register, handleSubmit, reset } = useForm({
     defaultValues: {
       platform: "instagram",
       type: "social_post",
@@ -71,12 +71,17 @@ function CampaignsPage() {
           control={control}
         />
         <FormInput type="text" label="نوع" name="type" control={control} />
-        <FormInput
-          type="number"
-          label="بودجه (تومان)"
-          name="budget"
-          control={control}
-        />
+        <label className="block">
+          <span className="mb-1 block text-sm font-bold">بودجه (تومان)</span>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            inputMode="numeric"
+            {...register("budget", { valueAsNumber: true, min: 1 })}
+            className="w-full rounded border border-[var(--color-border)] bg-[var(--color-primary)] px-3 py-2 text-[var(--color-text)]"
+          />
+        </label>
         <CustomButton
           type="submit"
           label="ایجاد کمپین"
