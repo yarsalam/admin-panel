@@ -1,16 +1,52 @@
-name: Admin web runtime image validation (registration)
+name: Admin panel PR validation
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/server/**"
+      - "apps/web/**"
+      - "packages/**"
+      - ".github/workflows/runtime-image-validation.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
 
 permissions:
   contents: read
 
 jobs:
-  registration_notice:
+  validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Explain how to run the feature-branch validator
-        run: |
-          echo "This is a registration stub only; it does not build, push or deploy."
-          echo "Select branch feat/admin-runtime-only-image to run the full standalone image build and /login smoke test."
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build admin API server
+        run: pnpm --filter server build
+
+      - name: Validate admin web types
+        run: pnpm --filter web check-types
+
+      - name: Lint admin web
+        run: pnpm --filter web lint
+
+      - name: Build admin web
+        env:
+          NEXT_PUBLIC_API_URL: https://api.yarsalam.top
+        run: pnpm --filter web build
