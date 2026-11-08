@@ -171,16 +171,17 @@ function ForecastChart({ data }: { data: any[] }) {
       day: "numeric",
     }),
     revenue: d.revenue,
-    low: d.confidence?.[0] ?? d.revenue * 0.85,
-    high: d.confidence?.[1] ?? d.revenue * 1.15,
+    low: d.confidence?.[0] ?? null,
+    high: d.confidence?.[1] ?? null,
   }));
+  const hasConfidenceBand = chartData.some((point) => point.low != null && point.high != null);
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-1">
         پیش‌بینی شارژ کیف پول در ۹۰ روز
       </GlobalText>
       <GlobalText className="text-xs text-gray-500 mb-4">
-        خط آبی: مرکزی · سایه: بازه اطمینان
+        خط آبی: پیش‌بینی مرکزی · {hasConfidenceBand ? "بازه اطمینان مدل" : "بازه اطمینان معتبر ارائه نشده است"}
       </GlobalText>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={chartData}>
@@ -567,7 +568,7 @@ function CohortSection() {
 
   return (
     <div>
-      <SectionTitle>درآمد Cohort</SectionTitle>
+      <SectionTitle>خریدهای موفق Cohort</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
         درآمد کاربران بر اساس ماه جذب — ۳۰، ۶۰، ۹۰ و ۱۸۰ روز بعد
       </GlobalText>
@@ -634,7 +635,7 @@ function FunnelSection() {
 
   return (
     <div>
-      <SectionTitle>قیف تبدیل درآمد</SectionTitle>
+      <SectionTitle>قیف تبدیل خرید موفق</SectionTitle>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -777,7 +778,7 @@ function ConcentrationSection() {
 
   return (
     <div>
-      <SectionTitle>تمرکز درآمد</SectionTitle>
+      <SectionTitle>تمرکز کسر از کیف پول</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
         چه درصدی از درآمد از چه درصدی از کاربران می‌آید
       </GlobalText>
@@ -1062,12 +1063,12 @@ function RevenuesPage() {
             <KPICard
               title="مجموع شارژ موفق کیف پول (۱۲ ماه)"
               value={totalRevenue}
-              format="currency"
+              format="currency-rial"
             />
             <KPICard
               title="میانگین شارژ ماهانه"
               value={avgMonthly}
-              format="currency"
+              format="currency-rial"
             />
             <KPICard
               title="تعداد شارژهای موفق"
