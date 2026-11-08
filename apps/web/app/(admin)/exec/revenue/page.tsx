@@ -567,7 +567,11 @@ function GenderArppuSection({ currency }: { currency: RevenueCurrency }) {
         {/* ARPPU کلی */}
         {arppu && (
           <div className="grid grid-cols-2 gap-4 content-start">
-            <KPICard title="ARPPU" value={displayAmount(arppu.arppu, "IRT")} format="currency" currencyLabel={currencyLabel("IRT")} />
+            <KPICard title="ARPPU برداشت کیف پول" value={displayAmount(arppu.arppu, "IRT")} format="currency" currencyLabel={currencyLabel("IRT")} />
+            <MiniStat
+              label="ARPPU خرید تکمیل‌شده"
+              value={arppu.fulfilledArppu == null ? "—" : fmtMoney(arppu.fulfilledArppu, "IRT")}
+            />
             <KPICard
               title="نرخ پرداخت‌کننده"
               value={arppu.payingRate}
