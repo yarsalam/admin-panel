@@ -1,17 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../client";
 
-// ─── تایپ‌های پایه ────────────────────────────────────────────────────────────
-
 export interface ForecastPoint {
   date: string;
   revenue: number;
-  confidence: [number, number];
+  confidence: [number, number] | null;
 }
 
 export interface RevenueForecast {
   forecast: ForecastPoint[];
-  growthRate: number;
+  growthRate: number | null;
   peakDays: string[];
   alerts: ForecastAlert[];
 }
@@ -24,6 +22,7 @@ export interface ForecastAlert {
 export interface Anomaly {
   id: string;
   date: string;
+  currency?: string;
   severity: "low" | "medium" | "high";
   description: string;
   actual: number;
@@ -34,55 +33,119 @@ export interface StrategicDecision {
   id: string;
   title: string;
   description: string;
+  currency?: string;
   impact: number;
-  roi: number;
+  roi?: number | null;
 }
 
 export interface LtvSourceRow {
   source: string;
+  currency?: string;
   userCount: number;
   totalRevenue: number;
   ltv: number;
-  cac: number;
-  paybackPeriod: number;
+  cac: number | null;
+  paybackPeriod: number | null;
 }
 
-// ─── تایپ‌های جدید ────────────────────────────────────────────────────────────
-
 export interface MrrData {
-  mrr: number;
-  arr: number;
-  mrrGrowth: number;
+  currency: string;
+  unit: string;
+  mrr: number | null;
+  arr: number | null;
+  mrrGrowth: number | null;
   mrrHistory: { month: string; mrr: number }[];
+  recurringRevenueAvailable: boolean;
+  grossRevenue30d?: number;
+  walletDeposits30d?: number;
+  walletDebits30d?: number;
+  grossSales30d?: number;
+  fulfilledPurchaseCount30d?: number;
+  activeVipUsers?: number;
+  limitation?: string;
 }
 
 export interface ProductRevenueRow {
   product: string;
   revenue: number;
+  fulfilledRevenue: number;
+  fulfilledPurchaseCount: number;
+  fulfilledPayingUsers: number;
   share: number;
   transactionCount: number;
+  payingUsers: number;
+}
+
+export interface ProductRevenueData {
+  currency: string;
+  unit: string;
+  periodDays: number;
+  totalRevenue: number;
+  totalFulfilledRevenue: number;
+  fulfilledPurchaseCount: number;
+  rows: ProductRevenueRow[];
+}
+
+export interface GenderRevenueGroup {
+  revenue: number;
+  payingUsers: number;
+  paymentCount: number;
+  arppu: number;
+  fulfilledRevenue: number;
+  fulfilledPurchaseCount: number;
+  fulfilledPayingUsers: number;
+  depositRevenue: number;
+  depositingUsers: number;
+  depositCount: number;
 }
 
 export interface GenderRevenueData {
-  male: { revenue: number; payingUsers: number; arppu: number };
-  female: { revenue: number; payingUsers: number; arppu: number };
-  unknown: { revenue: number; payingUsers: number; arppu: number };
+  currency: string;
+  unit: string;
+  depositCurrency: string;
+  depositUnit: string;
+  periodDays: number;
+  genderBasis: string;
+  purchaseSource: string;
+  fulfilledPurchaseSource: string;
+  depositSource: string;
+  male: GenderRevenueGroup;
+  female: GenderRevenueGroup;
+  unknown: GenderRevenueGroup;
+  total: Omit<GenderRevenueGroup, "arppu"> & { arppu?: number };
 }
 
 export interface ArppuData {
-  arppu: number;
+  currency: string;
+  unit: string;
+  depositCurrency: string;
+  depositUnit: string;
+  periodDays: number;
+  totalRevenue: number;
+  paymentCount: number;
   payingUsers: number;
+  arppu: number;
+  fulfilledRevenue: number;
+  fulfilledPurchaseCount: number;
+  fulfilledPayingUsers: number;
+  fulfilledArppu: number | null;
   activeUsers: number;
   payingRate: number;
+  depositRevenue: number;
+  depositCount: number;
+  depositingUsers: number;
+  definition: string;
 }
 
 export interface CohortRow {
   cohort: string;
   users: number;
-  revenue30d: number;
-  revenue60d: number;
-  revenue90d: number;
-  revenue180d: number;
+  revenue30d: number | null;
+  revenue60d: number | null;
+  revenue90d: number | null;
+  revenue180d: number | null;
+  matureDays?: number[];
+  ageDays?: number;
 }
 
 export interface FunnelStep {
@@ -90,22 +153,36 @@ export interface FunnelStep {
   users: number;
   revenue: number;
   conversionRate: number;
+  transactions?: number;
 }
 
 export interface ChurnRevenueData {
-  lostRevenue: number;
-  recoveredRevenue: number;
-  expansionRevenue: number;
-  netRevenueRetention: number;
+  periodDays: number;
+  activeVipUsers: number;
+  recentlyExpiredVipUsers: number;
+  usersWithVipHistory: number;
+  expiryRate: number;
+  revenueMetricsAvailable: boolean;
+  lostRevenue: number | null;
+  recoveredRevenue: number | null;
+  expansionRevenue: number | null;
+  netRevenueRetention: number | null;
   history: {
     month: string;
     lost: number;
     recovered: number;
     expansion: number;
   }[];
+  limitation?: string;
 }
 
 export interface ConcentrationData {
+  currency: string;
+  unit: string;
+  periodDays: number;
+  source: string;
+  payingUsers: number;
+  totalRevenue: number;
   top1pct: { users: number; revenue: number; share: number };
   top5pct: { users: number; revenue: number; share: number };
   top10pct: { users: number; revenue: number; share: number };
@@ -113,13 +190,16 @@ export interface ConcentrationData {
 }
 
 export interface ForecastAccuracyData {
-  mape: number;
-  rmse: number;
-  lastEvaluatedAt: string;
+  dataAvailable: boolean;
+  currency?: string;
+  mape: number | null;
+  rmse: number | null;
+  lastEvaluatedAt: string | null;
   history: { date: string; predicted: number; actual: number; error: number }[];
+  evaluationMethod?: string;
+  evaluationSamples?: number;
+  reason?: string;
 }
-
-// ─── هوک‌های موجود (اصلاح‌شده) ───────────────────────────────────────────────
 
 export const useRevenueForecast = (days: number = 90) =>
   useQuery<RevenueForecast>({
@@ -132,15 +212,12 @@ export const useRevenueForecast = (days: number = 90) =>
         ...data,
         forecast: (data.forecast ?? []).map((p: any) => ({
           date: p.date,
-          revenue: p.revenue ?? p.predicted ?? 0,
+          revenue: p.revenue ?? p.predicted,
           confidence: Array.isArray(p.confidence)
             ? p.confidence
-            : [
-                (p.revenue ?? p.predicted ?? 0) * 0.85,
-                (p.revenue ?? p.predicted ?? 0) * 1.15,
-              ],
+            : null,
         })),
-        growthRate: data.growthRate ?? 0,
+        growthRate: data.growthRate ?? null,
         peakDays: data.peakDays ?? [],
         alerts: data.alerts ?? [],
       } satisfies RevenueForecast;
@@ -168,7 +245,6 @@ export const useStrategicDecisions = () =>
     staleTime: 30 * 60 * 1000,
   });
 
-/** باگ‌فیکس: مسیر از /admin-api/revenue به /exec/revenue تصحیح شد */
 export const useLtvBySource = () =>
   useQuery<LtvSourceRow[]>({
     queryKey: ["exec", "revenue", "ltv-by-source"],
@@ -178,8 +254,6 @@ export const useLtvBySource = () =>
     },
     staleTime: 30 * 60 * 1000,
   });
-
-// ─── هوک‌های جدید ─────────────────────────────────────────────────────────────
 
 export const useMrr = () =>
   useQuery<MrrData>({
@@ -192,11 +266,23 @@ export const useMrr = () =>
   });
 
 export const useProductRevenue = () =>
-  useQuery<ProductRevenueRow[]>({
+  useQuery<ProductRevenueData>({
     queryKey: ["exec", "revenue", "by-product"],
     queryFn: async () => {
       const { data } = await apiClient.get("/exec/revenue/by-product");
-      return data;
+      // Preserve compatibility with the previous array response while adapting
+      // the current backend envelope containing rows and source totals.
+      return Array.isArray(data)
+        ? {
+            currency: "IRT",
+            unit: "rial",
+            periodDays: 90,
+            totalRevenue: data.reduce((sum, row) => sum + Number(row.revenue ?? 0), 0),
+            totalFulfilledRevenue: data.reduce((sum, row) => sum + Number(row.fulfilledRevenue ?? 0), 0),
+            fulfilledPurchaseCount: data.reduce((sum, row) => sum + Number(row.fulfilledPurchaseCount ?? 0), 0),
+            rows: data,
+          }
+        : { ...data, rows: data.rows ?? [] };
     },
     staleTime: 30 * 60 * 1000,
   });
@@ -226,7 +312,7 @@ export const useCohortRevenue = () =>
     queryKey: ["exec", "revenue", "cohort"],
     queryFn: async () => {
       const { data } = await apiClient.get("/exec/revenue/cohort");
-      return data;
+      return Array.isArray(data) ? data : data.cohorts ?? [];
     },
     staleTime: 60 * 60 * 1000,
   });
@@ -236,7 +322,7 @@ export const useRevenueFunnel = () =>
     queryKey: ["exec", "revenue", "funnel"],
     queryFn: async () => {
       const { data } = await apiClient.get("/exec/revenue/funnel");
-      return data;
+      return Array.isArray(data) ? data : data.steps ?? [];
     },
     staleTime: 30 * 60 * 1000,
   });
