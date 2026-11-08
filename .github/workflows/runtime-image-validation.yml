@@ -36,7 +36,7 @@ jobs:
           cache: pnpm
 
       - name: Install locked dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --registry=https://registry.npmjs.org --replace-registry-host=always
 
       - name: Build admin API server
         run: pnpm --filter server build
