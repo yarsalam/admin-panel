@@ -18,7 +18,17 @@
   "engines": {
     "node": ">=18"
   },
-    "pnpm": {
-    "onlyBuiltDependencies": ["@swc/core", "bcrypt"]
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "bcrypt"
+    ],
+    "overrides": {
+      "fast-uri": "3.1.9",
+      "sharp": "0.35.5",
+      "brace-expansion@^1.0.0": "1.1.21",
+      "brace-expansion@^2.0.0": "2.1.7",
+      "brace-expansion@^5.0.0": "5.0.10"
+    }
   }
 }
