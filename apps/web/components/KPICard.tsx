@@ -2,8 +2,8 @@ import GlobalText from "./ui/GlobalText";
 
 interface KPICardProps {
   title: string;
-  value: number | string;
-  format?: "number" | "currency" | "percent";
+  value: number | string | null;
+  format?: "number" | "currency" | "currency-rial" | "percent";
   trend?: "up" | "down";
 }
 
@@ -14,7 +14,9 @@ export default function KPICard({
   trend,
 }: KPICardProps) {
   const formatValue = () => {
+    if (value === null || value === undefined || value === "") return "—";
     if (format === "currency") return `${Number(value).toLocaleString()} تومان`;
+    if (format === "currency-rial") return `${Math.round(Number(value) / 10).toLocaleString()} تومان`;
     if (format === "percent") return `${value}%`;
     return Number(value).toLocaleString();
   };
