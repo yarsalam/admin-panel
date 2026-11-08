@@ -255,9 +255,9 @@ export default function RiskTab({
                 {levelCfg.desc}
               </p>
               <span
-                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${actionCfg.color}`}
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${actionCfg?.color ?? ACTION_CONFIG.none.color}`}
               >
-                پیشنهاد: {actionCfg.label}
+                پیشنهاد: {actionCfg?.label ?? ACTION_CONFIG.none.label}
               </span>
             </div>
           </div>
