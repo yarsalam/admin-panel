@@ -24,11 +24,18 @@
       "bcrypt"
     ],
     "overrides": {
-      "brace-expansion@^1.0.0": "1.1.21",
-      "brace-expansion@^2.0.0": "2.1.7",
-      "brace-expansion@^5.0.0": "5.0.10",
+      "brace-expansion@1.1.15": "1.1.21",
+      "brace-expansion@2.0.2": "2.1.7",
+      "brace-expansion@2.1.1": "2.1.7",
+      "brace-expansion@5.0.6": "5.0.11",
+      "browserslist": "4.28.7",
       "fast-uri": "3.1.9",
-      "sharp": "0.35.5"
+      "ip-address": "10.3.1",
+      "nanoid@3": "3.3.18",
+      "nanoid@5": "5.1.16",
+      "picomatch": "4.0.4",
+      "sharp": "0.35.5",
+      "source-map-js": "1.2.2"
     }
   }
 }
