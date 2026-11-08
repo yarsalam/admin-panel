@@ -369,11 +369,12 @@ function ProductRevenueSection({ currency }: { currency: RevenueCurrency }) {
       <SectionTitle>برداشت checkout و فروش تکمیل‌شده به تفکیک بسته</SectionTitle>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-5">
+          <GlobalText as="h3" className="font-bold mb-2">فروش تکمیل‌شده به تفکیک بسته</GlobalText>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
                 data={data}
-                dataKey="revenue"
+                dataKey="fulfilledRevenue"
                 nameKey="product"
                 cx="50%"
                 cy="50%"
@@ -468,7 +469,9 @@ function GenderArppuSection({ currency }: { currency: RevenueCurrency }) {
         { label: "مرد", icon: "👨", ...gender.male },
         { label: "زن", icon: "👩", ...gender.female },
         { label: "نامشخص", icon: "❓", ...gender.unknown },
-      ].filter((r) => r.revenue > 0)
+      ].filter((r) =>
+        r.revenue > 0 || (r.fulfilledRevenue ?? 0) > 0 || r.depositRevenue > 0
+      )
     : [];
 
   return (
