@@ -39,9 +39,20 @@ jobs:
           push: false
           tags: admin-panel-web:ci-${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_API_URL=https://ci.invalid
+            NEXT_PUBLIC_API_URL=https://api.yarsalam.top
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Scan admin runtime image for CRITICAL/HIGH vulnerabilities
+        run: |
+          docker run --rm \\
+            -v /var/run/docker.sock:/var/run/docker.sock \\
+            -v "${RUNNER_TEMP}/trivy-cache:/root/.cache/" \\
+            aquasec/trivy:0.59.1 image \\
+            --exit-code 1 \\
+            --severity CRITICAL,HIGH \\
+            --ignore-unfixed \\
+            "admin-panel-web:ci-${GITHUB_SHA}"
 
       - name: Verify runtime server and login route
         shell: bash
@@ -69,3 +80,23 @@ jobs:
             test ! -e /app/.github
             test ! -e /app/docs
           '
+
+      - name: Export scanned private admin image candidate
+        if: success()
+        run: |
+          docker save "admin-panel-web:ci-${GITHUB_SHA}" | gzip -1 > admin-panel-web-image.tar.gz
+          sha256sum admin-panel-web-image.tar.gz > admin-panel-web-image.tar.gz.sha256
+          echo "${GITHUB_SHA}" > admin-panel-web-image.source-commit.txt
+
+      - name: Upload scanned private admin image candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yarsalam-admin-web-runtime-image-candidate
+          path: |
+            admin-panel-web-image.tar.gz
+            admin-panel-web-image.tar.gz.sha256
+            admin-panel-web-image.source-commit.txt
+          retention-days: 14
+          if-no-files-found: error
+
