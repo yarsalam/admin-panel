@@ -12,9 +12,9 @@ interface Props {
   name: string;
   control: any;
   label?: string;
-  type: "text" | "password" | "dropdown" | "textarea";
+  type: "text" | "number" | "password" | "dropdown" | "textarea";
   placeholder?: string;
-  dropdownItems?: DropdownItem[];
+  dropdownItems?: readonly DropdownItem[];
   searchable?: boolean;
   multiple?: boolean; // فقط برای dropdown
   className?: string;
@@ -59,9 +59,14 @@ export default function FormInput({
         <GlobalText className="text-sm font-bold mb-1">{label}</GlobalText>
       )}
 
-      {type === "text" && (
+      {(type === "text" || type === "number") && (
         <input
           {...field}
+          type={type}
+          onChange={type === "number"
+            ? (event) => field.onChange(event.target.value === "" ? undefined : Number(event.target.value))
+            : field.onChange}
+          value={field.value ?? ""}
           placeholder={placeholder}
           className="w-full border rounded py-2 px-3 bg-[var(--color-primary)] border-[var(--color-border)] text-[var(--color-text)]"
         />
