@@ -198,7 +198,8 @@ function ForecastChart({ data }: { data: any[] }) {
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [fmtMoney(Number(v)), labels[name] ?? name];
+              const key = String(name ?? "");
+              return [fmtMoney(Number(v)), labels[key] ?? key];
             }}
           />
           <Area
