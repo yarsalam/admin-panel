@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "repositories": [
+    {"name":"mobile","github":"yarsalam/mobile","path":"~/projects/yarsalam-project/yarsalam"},
+    {"name":"mobApp","github":"yarsalam/mobApp","path":"~/projects/yarsalam-project/backend"},
+    {"name":"admin-panel","github":"yarsalam/admin-panel","path":"~/projects/yarsalam-project/admin-panel"}
+  ]
+}

@@ -1,0 +1,30 @@
+name: Yarsalam Quality System tests
+
+on:
+  pull_request:
+    paths:
+      - "quality-system/**"
+      - ".github/workflows/yarsalam-quality-system.yml"
+  push:
+    branches: [main]
+    paths:
+      - "quality-system/**"
+      - ".github/workflows/yarsalam-quality-system.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile tools
+        run: python -m py_compile quality-system/yqe.py quality-system/yqh.py quality-system/yqte.py
+      - name: Run tests
+        working-directory: quality-system
+        run: python -m unittest discover -s tests -v
