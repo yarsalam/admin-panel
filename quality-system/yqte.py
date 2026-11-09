@@ -11,27 +11,27 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 def gh_json(args: list[str], timeout: int=90):
+    """Fetch every API page using gh versions that do not support --slurp."""
     if not shutil.which("gh"):
         raise RuntimeError("GitHub CLI (gh) is not installed")
     try:
-        proc = subprocess.run(["gh","api","--paginate","--slurp",*args],
+        proc = subprocess.run(["gh","api","--paginate","--jq",".[]",*args],
             capture_output=True,text=True,timeout=timeout,check=True)
     except subprocess.CalledProcessError as exc:
         detail=(exc.stderr or exc.stdout or str(exc)).strip()
         raise RuntimeError(f"gh api failed: {detail}") from exc
     except subprocess.TimeoutExpired as exc:
         raise RuntimeError(f"gh api timed out after {timeout}s: {args[-1]}") from exc
-    try:
-        pages=json.loads(proc.stdout or "[]")
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("gh api returned invalid JSON") from exc
-    if not isinstance(pages,list):
-        return pages
-    flattened=[]
-    for page in pages:
-        if isinstance(page,list): flattened.extend(page)
-        elif page is not None: flattened.append(page)
-    return flattened
+    rows=[]
+    for line in proc.stdout.splitlines():
+        line=line.strip()
+        if not line:
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("gh api returned invalid JSON output") from exc
+    return rows
 
 def repo_rows(repos_path: Path):
     return load_json(repos_path)["repositories"]
