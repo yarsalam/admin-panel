@@ -15,7 +15,10 @@ def gh_json(args: list[str], timeout: int=90):
     if not shutil.which("gh"):
         raise RuntimeError("GitHub CLI (gh) is not installed")
     try:
-        proc = subprocess.run(["gh","api","--paginate","--jq",".[]",*args],
+        # @json forces one compact JSON value per line. Without it, some gh
+        # versions pretty-print objects across several lines, which cannot be
+        # decoded by a line-oriented parser.
+        proc = subprocess.run(["gh","api","--paginate","--jq",".[] | @json",*args],
             capture_output=True,text=True,timeout=timeout,check=True)
     except subprocess.CalledProcessError as exc:
         detail=(exc.stderr or exc.stdout or str(exc)).strip()
@@ -28,7 +31,8 @@ def gh_json(args: list[str], timeout: int=90):
         if not line:
             continue
         try:
-            rows.append(json.loads(line))
+            value=json.loads(line)
+            rows.append(json.loads(value) if isinstance(value,str) else value)
         except json.JSONDecodeError as exc:
             raise RuntimeError("gh api returned invalid JSON output") from exc
     return rows
