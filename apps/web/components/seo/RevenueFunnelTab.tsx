@@ -79,7 +79,7 @@ function RevenueAttributionTable({ rows }: { rows: any[] }) {
   const sourceKey =
     ["source", "channel", "name", "acquisitionSource"].find(
       (k) => typeof first[k] === "string",
-    ) ?? Object.keys(first)[0];
+    ) ?? Object.keys(first)[0] ?? "source";
   const ltvKey = ["ltv", "avgLtv", "averageLtv"].find(
     (k) => typeof first[k] === "number",
   );
