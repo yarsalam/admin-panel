@@ -503,8 +503,13 @@ function GenderArppuSection() {
     <div>
       <SectionTitle>خرید، پرداخت و شارژ به تفکیک جنسیت</SectionTitle>
       <GlobalText className="text-xs text-gray-500 -mt-2 mb-4">
-        تفکیک جنسیت بر اساس مقدار فعلی پروفایل کاربر در زمان گزارش است؛
-        بنابراین تغییر جنسیت پروفایل می‌تواند گروه‌بندی تاریخی را تغییر دهد.
+        تفکیک خریدهای موفق از snapshot جنسیت در زمان خرید استفاده می‌کند؛
+        رخدادهای قدیمی فاقد snapshot با جنسیت فعلی پروفایل محاسبه می‌شوند.
+        تعداد fallback قدیمی: {fmt(gender?.fulfilledPurchaseLegacyGenderFallbackCount)} ·
+        پوشش snapshot: {gender?.fulfilledPurchaseSnapshotCoveragePercent == null
+          ? "نامشخص"
+          : `${fmt(gender.fulfilledPurchaseSnapshotCoveragePercent)}٪`}
+        . کسر کیف پول و شارژ کیف پول همچنان بر اساس جنسیت فعلی پروفایل هستند.
         خرید موفق فقط پس از تکمیل اعطای محصول ثبت می‌شود.
       </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
