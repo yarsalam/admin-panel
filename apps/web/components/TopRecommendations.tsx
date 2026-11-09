@@ -53,7 +53,7 @@ export default function TopRecommendations({
   return (
     <div className="space-y-3">
       {recommendations.map((rec) => {
-        const style = PRIORITY_STYLE[rec.priority] || PRIORITY_STYLE.low;
+        const style = PRIORITY_STYLE[rec.priority] ?? PRIORITY_STYLE.low!;
         return (
           <div
             key={rec.id}
