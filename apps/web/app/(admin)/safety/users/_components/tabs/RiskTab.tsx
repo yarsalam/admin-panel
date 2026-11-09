@@ -213,7 +213,7 @@ export default function RiskTab({
   const levelKey = (risk?.level ?? "low") as keyof typeof LEVEL_CONFIG;
   const levelCfg = LEVEL_CONFIG[levelKey] ?? LEVEL_CONFIG.low;
   const actionCfg =
-    ACTION_CONFIG[risk?.recommendedAction ?? "none"] ?? ACTION_CONFIG.none;
+    ACTION_CONFIG[risk?.recommendedAction ?? "none"] ?? ACTION_CONFIG.none!;
 
   return (
     <div className="space-y-5" dir="rtl">
