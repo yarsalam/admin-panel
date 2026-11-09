@@ -8,3 +8,7 @@ export const fetchAnalyzeCampaigns = () =>
 
 export const fetchLTVBySource = () =>
   apiClient.get("/growth/campaigns/ltv-by-source").then((r) => r.data);
+
+/** Backwards-compatible names used by the existing growth hooks. */
+export const analyzeCampaigns = fetchAnalyzeCampaigns;
+export const getLTVBySource = fetchLTVBySource;
