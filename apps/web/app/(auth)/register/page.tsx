@@ -92,6 +92,7 @@ export default function RegisterAdminPage() {
           </GlobalText>
         </div>
         <CustomButton
+          type="submit"
           label="ایجاد ادمین"
           gradient
           loading={registerMutation.isPending}
