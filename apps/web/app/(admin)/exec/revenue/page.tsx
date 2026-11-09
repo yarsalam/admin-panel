@@ -192,7 +192,7 @@ function ForecastChart({ data }: { data: any[] }) {
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any, name: string) => {
+            formatter={(v: any, name: string | number | undefined) => {
               const labels: Record<string, string> = {
                 revenue: "پیش‌بینی",
                 low: "کمترین",
@@ -273,7 +273,7 @@ function ForecastAlerts({
   return (
     <div className="space-y-2">
       {alerts.map((a, i) => {
-        const c = cfg[a.type] ?? cfg.info;
+        const c = cfg[a.type] ?? { color: 'border-blue-400 bg-blue-50 dark:bg-blue-900/20', icon: 'ℹ️' };
         return (
           <div
             key={i}
@@ -429,7 +429,7 @@ function ProductRevenueSection() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={({ product, fulfilledShare }) =>
+                  label={({ product, fulfilledShare }: any) =>
                     `${product} ${fulfilledShare?.toFixed(0)}%`
                   }
                 >
