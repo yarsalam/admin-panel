@@ -485,7 +485,7 @@ function GenderArppuSection({ currency }: { currency: RevenueCurrency }) {
     <div>
       <SectionTitle>برداشت checkout و فروش تکمیل‌شده به تفکیک جنسیت</SectionTitle>
       <GlobalText className="text-xs text-gray-500 -mt-2 mb-3">
-        مبلغ برداشت checkout نشان‌دهنده کسر واقعی کیف پول برای خرید بسته است؛ فروش تکمیل‌شده جداگانه پس از اعطای موفق بسته ثبت می‌شود. مبالغ خرید IRT و به تومان نمایش داده می‌شوند؛ واریز کیف پول در ارز انتخاب‌شده جداست. جنسیت از پروفایل فعلی کاربر خوانده می‌شود، نه snapshot زمان خرید. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
+        برداشت checkout و شارژ کیف پول بر اساس جنسیت فعلی پروفایل در زمان گزارش گروه‌بندی می‌شوند؛ اما فروش تکمیل‌شده خریدهای جدید از snapshot جنسیت زمان خرید استفاده می‌کند. پوشش snapshot: {gender?.fulfilledPurchaseSnapshotCoveragePercent == null ? "نامشخص" : `${gender.fulfilledPurchaseSnapshotCoveragePercent.toLocaleString("fa-IR")}٪`}؛ تعداد خریدهای قدیمی با fallback جنسیت فعلی: {fmt(gender?.fulfilledPurchaseLegacyGenderFallbackCount ?? 0)}. مبالغ خرید IRT و به تومان نمایش داده می‌شوند؛ واریز کیف پول در ارز انتخاب‌شده جداست. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
       </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* جنسیت */}
