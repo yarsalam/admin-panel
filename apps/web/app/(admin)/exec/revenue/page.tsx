@@ -201,16 +201,19 @@ function ForecastChart({ data, currency }: { data: ForecastPoint[]; currency: Re
       day: "numeric",
     }),
     revenue: d.revenue,
-    low: d.confidence?.[0] ?? d.revenue * 0.85,
-    high: d.confidence?.[1] ?? d.revenue * 1.15,
+    low: d.confidence?.[0] ?? null,
+    high: d.confidence?.[1] ?? null,
   }));
+  const hasConfidenceBand = chartData.some(
+    (point) => point.low !== null && point.high !== null,
+  );
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-1">
         پیش‌بینی واریزی کیف پول — ۹۰ روز
       </GlobalText>
       <GlobalText className="text-xs text-gray-500 mb-4">
-        خط آبی: پیش‌بینی واریزی · سایه: بازه عدم‌قطعیت
+        خط آبی: پیش‌بینی واریزی · {hasConfidenceBand ? "سایه: بازه عدم‌قطعیت مدل" : "بازه اطمینان معتبر ارائه نشده است"}
       </GlobalText>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={chartData}>
@@ -230,18 +233,22 @@ function ForecastChart({ data, currency }: { data: ForecastPoint[]; currency: Re
               return <span>{`${labels[String(name)] ?? String(name)}: ${fmtMoney(Number(v), currency)}`}</span>;
             }}
           />
-          <Area
-            type="monotone"
-            dataKey="high"
-            stroke="transparent"
-            fill="#6366f122"
-          />
-          <Area
-            type="monotone"
-            dataKey="low"
-            stroke="transparent"
-            fill="#ffffff"
-          />
+          {hasConfidenceBand && (
+            <>
+              <Area
+                type="monotone"
+                dataKey="high"
+                stroke="transparent"
+                fill="#6366f122"
+              />
+              <Area
+                type="monotone"
+                dataKey="low"
+                stroke="transparent"
+                fill="#ffffff"
+              />
+            </>
+          )}
           <Line
             type="monotone"
             dataKey="revenue"
@@ -1109,7 +1116,7 @@ function RevenuesPage() {
     : 0;
   const totalPayments = monthly?.reduce((s, m) => s + m.paymentCount, 0) ?? 0;
   const lastMonth = monthly?.[monthly.length - 1];
-  const growthRate = forecast?.growthRate;
+  const growthRate = forecast?.growthRate ?? null;
   const peakDays: string[] = forecast?.peakDays ?? [];
   const forecastAlerts: ForecastAlert[] = forecast?.alerts ?? [];
   const forecastPoints: ForecastPoint[] = forecast?.forecast ?? [];
@@ -1161,7 +1168,7 @@ function RevenuesPage() {
               format="number"
             />
             <MiniStat label="آخرین ماه" value={lastMonth?.month ?? "—"} />
-            {growthRate !== undefined ? (
+            {growthRate != null ? (
               <KPICard
                 title="رشد پیش‌بینی‌شده"
                 value={growthRate}
@@ -1169,7 +1176,7 @@ function RevenuesPage() {
                 trend={growthRate >= 0 ? "up" : "down"}
               />
             ) : (
-              <Skeleton className="h-24" />
+              <MiniStat label="رشد پیش‌بینی‌شده" value="قابل محاسبه نیست" />
             )}
           </>
         )}
