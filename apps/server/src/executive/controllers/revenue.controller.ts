@@ -7,46 +7,50 @@ import { UserApiClientService } from '../../admin/common/api-client/user-api-cli
 export class RevenueController {
   constructor(private readonly api: UserApiClientService) {}
 
-  // ─── endpointهای موجود ───────────────────────────────────────────────────
+  private query(params: Record<string, string | number | undefined>): string {
+    const entries = Object.entries(params)
+      .filter((entry): entry is [string, string | number] => entry[1] !== undefined && entry[1] !== '');
+    return entries.length
+      ? `?${new URLSearchParams(entries.map(([key, value]) => [key, String(value)])).toString()}`
+      : '';
+  }
 
   @Get('monthly')
-  async monthly(@Query('months') months?: string) {
-    const params = months ? `?months=${months}` : '';
-    return this.api.get(`/admin-api/revenue/monthly${params}`);
+  async monthly(@Query('months') months?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/monthly${this.query({ months, currency })}`);
   }
 
   @Get('historical')
-  async historical(@Query('days') days?: string) {
-    const params = days ? `?days=${days}` : '';
-    return this.api.get(`/admin-api/revenue/historical${params}`);
+  async historical(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/historical${this.query({ days, currency })}`);
   }
 
   @Get('forecast')
-  async forecast(@Query('days') days = 90) {
-    return this.api.get(`/admin-api/revenue/forecast?days=${days}`);
+  async forecast(@Query('days') days = '90', @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/forecast${this.query({ days, currency })}`);
   }
 
   @Get('anomalies')
-  async anomalies() {
-    return this.api.get('/admin-api/revenue/anomalies');
+  async anomalies(@Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/anomalies${this.query({ currency })}`);
   }
 
   @Get('strategic-decisions')
-  async strategicDecisions() {
-    return this.api.get('/admin-api/revenue/strategic-decisions');
+  async strategicDecisions(@Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/strategic-decisions${this.query({ currency })}`);
   }
 
   @Get('ltv-by-source')
-  async ltvBySource() {
-    return this.api.get('/admin-api/revenue/ltv-by-source');
+  async ltvBySource(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/ltv-by-source${this.query({ days, currency })}`);
   }
 
-  /** overview — ترکیب ltv و monthly برای backward compat */
+  /** Backward-compatible overview. */
   @Get('overview')
-  async overview() {
+  async overview(@Query('currency') currency = 'IRT') {
     const [ltvRaw, monthly] = await Promise.all([
-      this.api.get('/admin-api/revenue/ltv-by-source'),
-      this.api.get('/admin-api/revenue/monthly'),
+      this.api.get(`/admin-api/revenue/ltv-by-source${this.query({ currency })}`),
+      this.api.get(`/admin-api/revenue/monthly${this.query({ currency })}`),
     ]);
     const ltvBySource: Record<string, number> = {};
     if (Array.isArray(ltvRaw)) {
@@ -54,62 +58,51 @@ export class RevenueController {
         if (row?.source) ltvBySource[row.source] = row.ltv ?? 0;
       }
     }
-    return { ltvBySource, monthlyRevenue: monthly ?? [] };
+    return { currency, ltvBySource, monthlyRevenue: monthly ?? [] };
   }
 
-  // ─── endpointهای جدید ────────────────────────────────────────────────────
-
-  /** MRR / ARR / MRR Growth */
   @Get('mrr')
-  async mrr() {
-    return this.api.get('/admin-api/revenue/mrr');
+  async mrr(@Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/mrr${this.query({ currency })}`);
   }
 
-  /** درآمد به تفکیک محصول (VIP، Boost، Credit Pack، …) */
   @Get('by-product')
-  async byProduct() {
-    return this.api.get('/admin-api/revenue/by-product');
+  async byProduct(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/by-product${this.query({ days, currency })}`);
   }
 
-  /** درآمد به تفکیک جنسیت */
   @Get('by-gender')
-  async byGender() {
-    return this.api.get('/admin-api/revenue/by-gender');
+  async byGender(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/by-gender${this.query({ days, currency })}`);
   }
 
-  /** ARPPU و Paying User Rate */
   @Get('arppu')
-  async arppu() {
-    return this.api.get('/admin-api/revenue/arppu');
+  async arppu(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/arppu${this.query({ days, currency })}`);
   }
 
-  /** Cohort Revenue — درآمد کاربران بر اساس ماه جذب */
   @Get('cohort')
-  async cohort() {
-    return this.api.get('/admin-api/revenue/cohort');
+  async cohort(@Query('months') months?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/cohort${this.query({ months, currency })}`);
   }
 
-  /** Revenue Conversion Funnel */
   @Get('funnel')
-  async funnel() {
-    return this.api.get('/admin-api/revenue/funnel');
+  async funnel(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/funnel${this.query({ days, currency })}`);
   }
 
-  /** Churn Revenue — lost / recovered / expansion / NRR */
   @Get('churn')
-  async churn() {
-    return this.api.get('/admin-api/revenue/churn');
+  async churn(@Query('days') days?: string) {
+    return this.api.get(`/admin-api/revenue/churn${this.query({ days })}`);
   }
 
-  /** Revenue Concentration — top 1% / 5% / 10% */
   @Get('concentration')
-  async concentration() {
-    return this.api.get('/admin-api/revenue/concentration');
+  async concentration(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/concentration${this.query({ days, currency })}`);
   }
 
-  /** Forecast Accuracy — MAPE / RMSE */
   @Get('forecast-accuracy')
-  async forecastAccuracy() {
-    return this.api.get('/admin-api/revenue/forecast-accuracy');
+  async forecastAccuracy(@Query('days') days?: string, @Query('currency') currency = 'IRT') {
+    return this.api.get(`/admin-api/revenue/forecast-accuracy${this.query({ days, currency })}`);
   }
 }

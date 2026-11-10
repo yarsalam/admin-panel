@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { withPageProtection } from "@/components/withPageProtection";
 import {
   useRevenueForecast,
@@ -16,8 +17,13 @@ import {
   useForecastAccuracy,
   type LtvSourceRow,
   type CohortRow,
+  type ForecastPoint,
+  type ForecastAlert,
+  type Anomaly,
+  type StrategicDecision,
   type FunnelStep,
   type ProductRevenueRow,
+  type RevenueCurrency,
 } from "@/lib/api/exec/mutations/useRevenue";
 import SectionTitle from "@/components/ui/SectionTitle";
 import GlobalText from "@/components/ui/GlobalText";
@@ -56,18 +62,18 @@ interface DailyPoint {
   amount: number;
 }
 
-const useMonthlyTrend = () =>
+const useMonthlyTrend = (currency: RevenueCurrency) =>
   useQuery<MonthlyPoint[]>({
-    queryKey: ["revenue", "monthly"],
-    queryFn: () => apiClient.get("/exec/revenue/monthly").then((r) => r.data),
+    queryKey: ["revenue", "monthly", currency],
+    queryFn: () => apiClient.get(`/exec/revenue/monthly?currency=${currency}`).then((r) => r.data),
     staleTime: 15 * 60 * 1000,
   });
 
-const useHistorical = () =>
+const useHistorical = (currency: RevenueCurrency) =>
   useQuery<DailyPoint[]>({
-    queryKey: ["revenue", "historical"],
+    queryKey: ["revenue", "historical", currency],
     queryFn: () =>
-      apiClient.get("/exec/revenue/historical").then((r) => r.data),
+      apiClient.get(`/exec/revenue/historical?currency=${currency}`).then((r) => r.data),
     staleTime: 15 * 60 * 1000,
   });
 
@@ -82,7 +88,32 @@ const PIE_COLORS = [
 ];
 
 const fmt = (v: number) => v?.toLocaleString() ?? "—";
-const fmtM = (v: number) => `${(v / 1_000_000).toFixed(1)}M`;
+const fmtMoney = (v: number | null | undefined, currency: RevenueCurrency) => {
+  if (v == null || !Number.isFinite(v)) return "—";
+  if (currency === "IRT") return `${Math.round(v / 10).toLocaleString("fa-IR")} تومان`;
+  if (currency === "USDT") return `${(v / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+  if (currency === "BTC") return `${(v / 100_000_000).toFixed(8)} BTC`;
+  return `${Math.round(v).toLocaleString("en-US")} واحد خام USD (واحد پایه تأیید نشده)`;
+};
+const displayAmount = (v: number | null | undefined, currency: RevenueCurrency) => {
+  if (v == null || !Number.isFinite(v)) return 0;
+  if (currency === "IRT") return v / 10;
+  if (currency === "USDT") return v / 100;
+  if (currency === "BTC") return v / 100_000_000;
+  return v;
+};
+const currencyLabel = (currency: RevenueCurrency) => {
+  if (currency === "IRT") return "تومان";
+  if (currency === "USDT") return "USDT";
+  if (currency === "BTC") return "BTC";
+  return "واحد خام USD";
+};
+const fmtAxis = (v: number, currency: RevenueCurrency) => {
+  if (currency === "IRT") return `${(v / 10 / 1_000_000).toFixed(1)}M`;
+  if (currency === "USDT") return `${(v / 100 / 1_000_000).toFixed(1)}M`;
+  if (currency === "BTC") return `${(v / 100_000_000 / 1_000_000).toFixed(3)}M`;
+  return `${(v / 1_000_000).toFixed(1)}M raw`;
+};
 
 // ─── کامپوننت‌های پایه ───────────────────────────────────────────────────────
 
@@ -95,12 +126,12 @@ function EmptyState({ text }: { text: string }) {
 }
 
 // ─── ۱. نمودار ماهانه ────────────────────────────────────────────────────────
-function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
+function MonthlyChart({ data, currency }: { data: MonthlyPoint[]; currency: RevenueCurrency }) {
   if (!data?.length) return null;
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-4">
-        درآمد ماهانه (شمسی)
+        واریزی به کیف پول — ماهانه (شمسی)
       </GlobalText>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data}>
@@ -109,9 +140,9 @@ function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
             className="stroke-gray-200 dark:stroke-gray-700"
           />
           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-          <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any) => [`${fmt(Number(v))} تومان`, "درآمد"]}
+            formatter={(v: unknown) => <span>{fmtMoney(Number(v), currency)}</span>}
           />
           <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -121,7 +152,7 @@ function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
 }
 
 // ─── ۲. نمودار روزانه ────────────────────────────────────────────────────────
-function DailyChart({ data }: { data: DailyPoint[] }) {
+function DailyChart({ data, currency }: { data: DailyPoint[]; currency: RevenueCurrency }) {
   if (!data?.length) return null;
   const chartData = data.map((d) => ({
     ...d,
@@ -133,7 +164,7 @@ function DailyChart({ data }: { data: DailyPoint[] }) {
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-4">
-        روند روزانه (۹۰ روز)
+        روند واریزی به کیف پول (۹۰ روز)
       </GlobalText>
       <ResponsiveContainer width="100%" height={250}>
         <AreaChart data={chartData}>
@@ -143,11 +174,11 @@ function DailyChart({ data }: { data: DailyPoint[] }) {
           />
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis
-            tickFormatter={(v) => `${(v / 1_000).toFixed(0)}K`}
+            tickFormatter={(v) => fmtAxis(v, currency)}
             tick={{ fontSize: 11 }}
           />
           <Tooltip
-            formatter={(v: any) => [`${fmt(Number(v))} تومان`, "درآمد"]}
+            formatter={(v: unknown) => <span>{fmtMoney(Number(v), "IRT")}</span>}
           />
           <Area
             type="monotone"
@@ -162,7 +193,7 @@ function DailyChart({ data }: { data: DailyPoint[] }) {
 }
 
 // ─── ۳. Forecast ─────────────────────────────────────────────────────────────
-function ForecastChart({ data }: { data: any[] }) {
+function ForecastChart({ data, currency }: { data: ForecastPoint[]; currency: RevenueCurrency }) {
   if (!data?.length) return null;
   const chartData = data.map((d) => ({
     date: new Date(d.date).toLocaleDateString("fa-IR", {
@@ -170,16 +201,19 @@ function ForecastChart({ data }: { data: any[] }) {
       day: "numeric",
     }),
     revenue: d.revenue,
-    low: d.confidence?.[0] ?? d.revenue * 0.85,
-    high: d.confidence?.[1] ?? d.revenue * 1.15,
+    low: d.confidence?.[0] ?? null,
+    high: d.confidence?.[1] ?? null,
   }));
+  const hasConfidenceBand = chartData.some(
+    (point) => point.low !== null && point.high !== null,
+  );
   return (
     <Card className="p-5">
       <GlobalText as="h3" className="font-bold mb-1">
-        پیش‌بینی درآمد ۹۰ روز
+        پیش‌بینی واریزی کیف پول — ۹۰ روز
       </GlobalText>
       <GlobalText className="text-xs text-gray-500 mb-4">
-        خط آبی: مرکزی · سایه: بازه اطمینان
+        خط آبی: پیش‌بینی واریزی · {hasConfidenceBand ? "سایه: بازه عدم‌قطعیت مدل" : "بازه اطمینان معتبر ارائه نشده است"}
       </GlobalText>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={chartData}>
@@ -188,29 +222,33 @@ function ForecastChart({ data }: { data: any[] }) {
             className="stroke-gray-200 dark:stroke-gray-700"
           />
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-          <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
+          <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
           <Tooltip
-            formatter={(v: any, name: string) => {
+            formatter={(v: unknown, name: unknown) => {
               const labels: Record<string, string> = {
                 revenue: "پیش‌بینی",
                 low: "کمترین",
                 high: "بیشترین",
               };
-              return [`${fmt(Number(v))} تومان`, labels[name] ?? name];
+              return <span>{`${labels[String(name)] ?? String(name)}: ${fmtMoney(Number(v), currency)}`}</span>;
             }}
           />
-          <Area
-            type="monotone"
-            dataKey="high"
-            stroke="transparent"
-            fill="#6366f122"
-          />
-          <Area
-            type="monotone"
-            dataKey="low"
-            stroke="transparent"
-            fill="#ffffff"
-          />
+          {hasConfidenceBand && (
+            <>
+              <Area
+                type="monotone"
+                dataKey="high"
+                stroke="transparent"
+                fill="#6366f122"
+              />
+              <Area
+                type="monotone"
+                dataKey="low"
+                stroke="transparent"
+                fill="#ffffff"
+              />
+            </>
+          )}
           <Line
             type="monotone"
             dataKey="revenue"
@@ -271,7 +309,7 @@ function ForecastAlerts({
   return (
     <div className="space-y-2">
       {alerts.map((a, i) => {
-        const c = cfg[a.type] ?? cfg.info;
+        const c = cfg[a.type] ?? cfg.info!;
         return (
           <div
             key={i}
@@ -287,88 +325,74 @@ function ForecastAlerts({
 }
 
 // ─── ۴. MRR / ARR ────────────────────────────────────────────────────────────
-function MrrSection() {
-  const { data, isLoading } = useMrr();
+function MrrSection({ currency }: { currency: RevenueCurrency }) {
+  const { data, isLoading } = useMrr(currency);
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
-  const mrrTrend = data.mrrGrowth >= 0 ? "up" : "down";
+
+  if (!data.recurringRevenueAvailable) {
+    return (
+      <div>
+        <SectionTitle>درآمد اشتراکی و VIP</SectionTitle>
+        <Card className="p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <MiniStat label="واریزی شارژ کیف پول — ۳۰ روز" value={fmtMoney(data.walletDeposits30d ?? data.grossRevenue30d, currency)} />
+            <MiniStat label="برداشت برای checkout — ۳۰ روز" value={fmtMoney(data.walletDebits30d ?? 0, "IRT")} />
+            <MiniStat label="فروش تکمیل‌شده — ۳۰ روز" value={fmtMoney(data.grossSales30d ?? 0, "IRT")} />
+            <MiniStat label="VIP فعال" value={fmt(data.activeVipUsers)} />
+          </div>
+          <GlobalText className="text-xs text-gray-500">
+            فروش تکمیل‌شده از رخدادهای خریدی محاسبه می‌شود که پس از اعطای موفق بسته ثبت شده‌اند؛ سابقه‌های قدیمی فاقد مبلغ در این شاخص backfill نمی‌شوند.
+          </GlobalText>
+          <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
+            MRR و ARR فعلاً قابل محاسبه معتبر نیستند: پرداخت‌های ثبت‌شده شارژ کیف پول‌اند و خرید بسته بعداً از موجودی کیف پول انجام می‌شود. واریزی، خرید واقعی و تعداد VIP فعال جداگانه گزارش می‌شوند؛ مبلغ تکرارشونده حدس زده نمی‌شود.
+          </GlobalText>
+        </Card>
+      </div>
+    );
+  }
+
+  const mrrTrend = (data.mrrGrowth ?? 0) >= 0 ? "up" : "down";
   return (
     <div>
       <SectionTitle>MRR / ARR</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <KPICard title="MRR" value={data.mrr} format="currency" />
-        <KPICard title="ARR" value={data.arr} format="currency" />
-        <KPICard
-          title="رشد MRR"
-          value={data.mrrGrowth}
-          format="percent"
-          trend={mrrTrend}
-        />
-        <MiniStat
-          label="ماه‌های ردیابی"
-          value={String(data.mrrHistory?.length ?? 0)}
-        />
+        <KPICard title="MRR" value={displayAmount(data.mrr, currency)} format="currency" currencyLabel={currencyLabel(currency)} />
+        <KPICard title="ARR" value={displayAmount(data.arr, currency)} format="currency" currencyLabel={currencyLabel(currency)} />
+        <KPICard title="رشد MRR" value={data.mrrGrowth ?? 0} format="percent" trend={mrrTrend} />
+        <MiniStat label="ماه‌های ردیابی" value={String(data.mrrHistory?.length ?? 0)} />
       </div>
-      {data.mrrHistory?.length > 0 && (
-        <Card className="p-5">
-          <GlobalText as="h3" className="font-bold mb-4">
-            روند MRR
-          </GlobalText>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={data.mrrHistory}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                className="stroke-gray-200 dark:stroke-gray-700"
-              />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
-              <Tooltip
-                formatter={(v: any) => [`${fmt(Number(v))} تومان`, "MRR"]}
-              />
-              <Line
-                type="monotone"
-                dataKey="mrr"
-                stroke="#6366f1"
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-      )}
     </div>
   );
 }
 
-// ─── ۵. درآمد به تفکیک محصول ─────────────────────────────────────────────────
-function ProductRevenueSection() {
-  const { data, isLoading } = useProductRevenue();
+// ─── ۵. فروش واقعی بسته‌ها از کیف پول ─────────────────────────────────────────────────
+function ProductRevenueSection({ currency }: { currency: RevenueCurrency }) {
+  const { data, isLoading } = useProductRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
-  if (!data?.length) return null;
+  if (!data?.length) return <EmptyState text="در بازه انتخاب‌شده خرید بسته‌ای ثبت نشده است." />;
   return (
     <div>
-      <SectionTitle>درآمد به تفکیک محصول</SectionTitle>
+      <SectionTitle>برداشت checkout و فروش تکمیل‌شده به تفکیک بسته</SectionTitle>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-5">
+          <GlobalText as="h3" className="font-bold mb-2">فروش تکمیل‌شده به تفکیک بسته</GlobalText>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
                 data={data}
-                dataKey="revenue"
+                dataKey="fulfilledRevenue"
                 nameKey="product"
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={({ product, share }) =>
-                  `${product} ${share?.toFixed(0)}%`
-                }
               >
                 {data.map((_, i) => (
                   <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v: any) => [`${fmt(Number(v))} تومان`, "درآمد"]}
+                formatter={(v: unknown) => <span>{fmtMoney(Number(v), "IRT")}</span>}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -382,18 +406,24 @@ function ProductRevenueSection() {
                     محصول
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                    درآمد
+                    برداشت checkout (تومان)
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                    فروش تکمیل‌شده (تومان)
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                     سهم
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                    تراکنش
+                    برداشت‌ها
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                    خریدهای تکمیل‌شده
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {data.map((row, i) => (
+                {data.map((row: ProductRevenueRow, i: number) => (
                   <tr
                     key={row.product}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
@@ -408,13 +438,19 @@ function ProductRevenueSection() {
                       {row.product}
                     </td>
                     <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmt(row.revenue)} تومان
+                      {fmtMoney(row.revenue, "IRT")}
+                    </td>
+                    <td className="px-4 py-2 font-semibold text-indigo-600">
+                      {fmtMoney(row.fulfilledRevenue ?? 0, "IRT")}
                     </td>
                     <td className="px-4 py-2 text-gray-600">
                       {row.share?.toFixed(1)}%
                     </td>
                     <td className="px-4 py-2 text-gray-500">
                       {fmt(row.transactionCount)}
+                    </td>
+                    <td className="px-4 py-2 text-gray-500">
+                      {fmt(row.fulfilledPurchaseCount ?? 0)}
                     </td>
                   </tr>
                 ))}
@@ -428,9 +464,9 @@ function ProductRevenueSection() {
 }
 
 // ─── ۶. درآمد به تفکیک جنسیت + ARPPU ────────────────────────────────────────
-function GenderArppuSection() {
-  const { data: gender, isLoading: gLoading } = useGenderRevenue();
-  const { data: arppu, isLoading: aLoading } = useArppu();
+function GenderArppuSection({ currency }: { currency: RevenueCurrency }) {
+  const { data: gender, isLoading: gLoading } = useGenderRevenue(currency);
+  const { data: arppu, isLoading: aLoading } = useArppu(currency);
 
   if (gLoading || aLoading) return <SectionSkeleton h="h-40" />;
   if (!gender && !arppu) return null;
@@ -440,12 +476,17 @@ function GenderArppuSection() {
         { label: "مرد", icon: "👨", ...gender.male },
         { label: "زن", icon: "👩", ...gender.female },
         { label: "نامشخص", icon: "❓", ...gender.unknown },
-      ].filter((r) => r.revenue > 0)
+      ].filter((r) =>
+        r.revenue > 0 || (r.fulfilledRevenue ?? 0) > 0 || r.depositRevenue > 0
+      )
     : [];
 
   return (
     <div>
-      <SectionTitle>درآمد به تفکیک جنسیت و ARPPU</SectionTitle>
+      <SectionTitle>برداشت checkout و فروش تکمیل‌شده به تفکیک جنسیت</SectionTitle>
+      <GlobalText className="text-xs text-gray-500 -mt-2 mb-3">
+        برداشت checkout و شارژ کیف پول بر اساس جنسیت فعلی پروفایل در زمان گزارش گروه‌بندی می‌شوند؛ اما فروش تکمیل‌شده خریدهای جدید از snapshot جنسیت زمان خرید استفاده می‌کند. پوشش snapshot: {gender?.fulfilledPurchaseSnapshotCoveragePercent == null ? "نامشخص" : `${gender.fulfilledPurchaseSnapshotCoveragePercent.toLocaleString("fa-IR")}٪`}؛ تعداد خریدهای قدیمی با fallback جنسیت فعلی: {fmt(gender?.fulfilledPurchaseLegacyGenderFallbackCount ?? 0)}. مبالغ خرید IRT و به تومان نمایش داده می‌شوند؛ واریز کیف پول در ارز انتخاب‌شده جداست. ARPPU بازه {arppu?.periodDays ?? 30} روزه دارد.
+      </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* جنسیت */}
         {genderRows.length > 0 && (
@@ -458,13 +499,31 @@ function GenderArppuSection() {
                       جنسیت
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      درآمد
+                      مبلغ برداشت checkout (تومان)
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      کاربران پرداخت‌کننده
+                      شارژ کیف پول ({currency})
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                      ARPPU
+                      تعداد شارژ
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      فروش تکمیل‌شده (تومان)
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      خریداران با اعطای موفق
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      کاربران checkout
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      تعداد برداشت checkout
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      تعداد خرید تکمیل‌شده
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+                      میانگین برداشت checkout (تومان)
                     </th>
                   </tr>
                 </thead>
@@ -478,13 +537,31 @@ function GenderArppuSection() {
                         {r.icon} {r.label}
                       </td>
                       <td className="px-4 py-2 font-bold text-emerald-600">
-                        {fmt(r.revenue)} تومان
+                        {fmtMoney(r.revenue, "IRT")}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmtMoney(r.depositRevenue, currency)}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.depositCount)}
+                      </td>
+                      <td className="px-4 py-2 font-semibold text-indigo-600">
+                        {fmtMoney(r.fulfilledRevenue ?? 0, "IRT")}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.fulfilledPayingUsers ?? 0)}
                       </td>
                       <td className="px-4 py-2 text-gray-600">
                         {fmt(r.payingUsers)}
                       </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.paymentCount)}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">
+                        {fmt(r.fulfilledPurchaseCount ?? 0)}
+                      </td>
                       <td className="px-4 py-2 text-indigo-600 font-semibold">
-                        {fmt(r.arppu)} تومان
+                        {fmtMoney(r.arppu, "IRT")}
                       </td>
                     </tr>
                   ))}
@@ -497,7 +574,11 @@ function GenderArppuSection() {
         {/* ARPPU کلی */}
         {arppu && (
           <div className="grid grid-cols-2 gap-4 content-start">
-            <KPICard title="ARPPU" value={arppu.arppu} format="currency" />
+            <KPICard title="ARPPU برداشت کیف پول" value={displayAmount(arppu.arppu, "IRT")} format="currency" currencyLabel={currencyLabel("IRT")} />
+            <MiniStat
+              label="ARPPU خرید تکمیل‌شده"
+              value={arppu.fulfilledArppu == null ? "—" : fmtMoney(arppu.fulfilledArppu, "IRT")}
+            />
             <KPICard
               title="نرخ پرداخت‌کننده"
               value={arppu.payingRate}
@@ -521,8 +602,8 @@ function GenderArppuSection() {
 }
 
 // ─── ۷. Cohort Revenue ───────────────────────────────────────────────────────
-function CohortSection() {
-  const { data, isLoading } = useCohortRevenue();
+function CohortSection({ currency }: { currency: RevenueCurrency }) {
+  const { data, isLoading } = useCohortRevenue(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
 
@@ -530,7 +611,7 @@ function CohortSection() {
     <div>
       <SectionTitle>درآمد Cohort</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
-        درآمد کاربران بر اساس ماه جذب — ۳۰، ۶۰، ۹۰ و ۱۸۰ روز بعد
+        مجموع خرید واقعی کاربران بر اساس ماه جذب — ۳۰، ۶۰، ۹۰ و ۱۸۰ روز بعد
       </GlobalText>
       <Card>
         <div className="overflow-x-auto">
@@ -566,16 +647,16 @@ function CohortSection() {
                   <td className="px-4 py-2 font-medium">{row.cohort}</td>
                   <td className="px-4 py-2 text-gray-600">{fmt(row.users)}</td>
                   <td className="px-4 py-2 text-emerald-600">
-                    {fmt(row.revenue30d)}
+                    {fmtMoney(row.revenue30d, "IRT")}
                   </td>
                   <td className="px-4 py-2 text-emerald-700">
-                    {fmt(row.revenue60d)}
+                    {fmtMoney(row.revenue60d, "IRT")}
                   </td>
                   <td className="px-4 py-2 text-emerald-800">
-                    {fmt(row.revenue90d)}
+                    {fmtMoney(row.revenue90d, "IRT")}
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-900 dark:text-emerald-400">
-                    {fmt(row.revenue180d)}
+                    {fmtMoney(row.revenue180d, "IRT")}
                   </td>
                 </tr>
               ))}
@@ -588,14 +669,14 @@ function CohortSection() {
 }
 
 // ─── ۸. Conversion Funnel ────────────────────────────────────────────────────
-function FunnelSection() {
-  const { data, isLoading } = useRevenueFunnel();
+function FunnelSection({ currency }: { currency: RevenueCurrency }) {
+  const { data, isLoading } = useRevenueFunnel(currency);
   if (isLoading) return <SectionSkeleton h="h-48" />;
   if (!data?.length) return null;
 
   return (
     <div>
-      <SectionTitle>قیف تبدیل درآمد</SectionTitle>
+      <SectionTitle>قیف تبدیل تا برداشت checkout برای خرید بسته</SectionTitle>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -644,7 +725,7 @@ function FunnelSection() {
                     </div>
                   </td>
                   <td className="px-4 py-2 font-bold text-emerald-600">
-                    {step.revenue > 0 ? `${fmt(step.revenue)} تومان` : "—"}
+                    {step.revenue > 0 ? fmtMoney(step.revenue, "IRT") : "—"}
                   </td>
                 </tr>
               ))}
@@ -657,43 +738,41 @@ function FunnelSection() {
 }
 
 // ─── ۹. Churn Revenue ────────────────────────────────────────────────────────
-function ChurnSection() {
+function ChurnSection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useChurnRevenue();
   if (isLoading) return <SectionSkeleton h="h-40" />;
   if (!data) return null;
 
+  if (!data.revenueMetricsAvailable) {
+    return (
+      <div>
+        <SectionTitle>وضعیت تمدید و انقضای VIP</SectionTitle>
+        <Card className="p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MiniStat label="VIP فعال" value={fmt(data.activeVipUsers ?? 0)} />
+            <MiniStat label="VIP منقضی‌شده در ۳۰ روز" value={fmt(data.recentlyExpiredVipUsers ?? 0)} />
+            <MiniStat label="کاربران با سابقه VIP" value={fmt(data.usersWithVipHistory ?? 0)} />
+          </div>
+          <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
+            درآمد ازدست‌رفته و NRR تا زمان اتصال هر دوره VIP به پرداخت اصلی، مبلغ، ارز و تمدید واقعی قابل محاسبه نیستند. نرخ انقضا در این بخش تعداد کاربران را نشان می‌دهد، نه مبلغ درآمد.
+          </GlobalText>
+        </Card>
+      </div>
+    );
+  }
   const nrrColor =
-    data.netRevenueRetention >= 100 ? "text-emerald-600" : "text-red-600";
+    (data.netRevenueRetention ?? 0) >= 100 ? "text-emerald-600" : "text-red-600";
 
   return (
     <div>
       <SectionTitle>Churn Revenue</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <KPICard
-          title="درآمد از دست رفته"
-          value={data.lostRevenue}
-          format="currency"
-          trend="down"
-        />
-        <KPICard
-          title="درآمد بازیابی‌شده"
-          value={data.recoveredRevenue}
-          format="currency"
-          trend="up"
-        />
-        <KPICard
-          title="Expansion Revenue"
-          value={data.expansionRevenue}
-          format="currency"
-          trend="up"
-        />
+        <KPICard title="درآمد از دست رفته" value={displayAmount(data.lostRevenue, currency)} format="currency" currencyLabel={currencyLabel(currency)} trend="down" />
+        <KPICard title="درآمد بازیابی‌شده" value={displayAmount(data.recoveredRevenue, currency)} format="currency" currencyLabel={currencyLabel(currency)} trend="up" />
+        <KPICard title="Expansion Revenue" value={displayAmount(data.expansionRevenue, currency)} format="currency" currencyLabel={currencyLabel(currency)} trend="up" />
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 flex flex-col justify-between">
-          <span className="text-xs text-gray-500">
-            NRR (Net Revenue Retention)
-          </span>
-          <span className={`text-2xl font-bold mt-2 ${nrrColor}`}>
-            {data.netRevenueRetention?.toFixed(1)}%
-          </span>
+          <span className="text-xs text-gray-500">NRR (Net Revenue Retention)</span>
+          <span className={`text-2xl font-bold mt-2 ${nrrColor}`}>{data.netRevenueRetention?.toFixed(1)}%</span>
         </div>
       </div>
       {data.history?.length > 0 && (
@@ -708,8 +787,8 @@ function ChurnSection() {
                 className="stroke-gray-200 dark:stroke-gray-700"
               />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: any) => [`${fmt(Number(v))} تومان`]} />
+              <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(v: unknown) => <span>{fmtMoney(Number(v), currency)}</span>} />
               <Legend />
               <Bar
                 dataKey="lost"
@@ -738,8 +817,8 @@ function ChurnSection() {
 }
 
 // ─── ۱۰. Revenue Concentration ───────────────────────────────────────────────
-function ConcentrationSection() {
-  const { data, isLoading } = useRevenueConcentration();
+function ConcentrationSection({ currency }: { currency: RevenueCurrency }) {
+  const { data, isLoading } = useRevenueConcentration(currency);
   if (isLoading) return <SectionSkeleton h="h-36" />;
   if (!data) return null;
 
@@ -751,9 +830,9 @@ function ConcentrationSection() {
 
   return (
     <div>
-      <SectionTitle>تمرکز درآمد</SectionTitle>
+      <SectionTitle>تمرکز مبلغ برداشت checkout برای بسته‌ها</SectionTitle>
       <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
-        چه درصدی از درآمد از چه درصدی از کاربران می‌آید
+        چه سهمی از خریدهای واقعی از چه سهمی از خریداران می‌آید
       </GlobalText>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
@@ -774,7 +853,7 @@ function ConcentrationSection() {
                     {r.share?.toFixed(1)}%
                   </div>
                   <div className="text-xs text-gray-500">
-                    {fmt(r.revenue)} تومان
+                    {fmtMoney(r.revenue, "IRT")}
                   </div>
                 </div>
               </div>
@@ -798,8 +877,8 @@ function ConcentrationSection() {
 }
 
 // ─── ۱۱. Attribution Table ───────────────────────────────────────────────────
-function AttributionSection() {
-  const { data, isLoading } = useLtvBySource();
+function AttributionSection({ currency }: { currency: RevenueCurrency }) {
+  const { data, isLoading } = useLtvBySource(currency);
   if (isLoading) return <SectionSkeleton />;
   if (!data?.length) return null;
 
@@ -807,7 +886,7 @@ function AttributionSection() {
 
   return (
     <div>
-      <SectionTitle>اقتصاد جذب کاربر به تفکیک منبع</SectionTitle>
+      <SectionTitle>واریزی کیف پول به تفکیک منبع جذب (نه فروش نهایی محصول)</SectionTitle>
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -850,13 +929,13 @@ function AttributionSection() {
                       {fmt(row.userCount)}
                     </td>
                     <td className="px-4 py-2 text-gray-700">
-                      {fmt(row.totalRevenue)} تومان
+                      {fmtMoney(row.totalRevenue, currency)}
                     </td>
                     <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmt(row.ltv)} تومان
+                      {fmtMoney(row.ltv, currency)}
                     </td>
                     <td className="px-4 py-2 text-rose-600">
-                      {fmt(row.cac)} تومان
+                      {fmtMoney(row.cac, currency)}
                     </td>
                     <td className={`px-4 py-2 font-bold ${ratioColor}`}>
                       {ratio > 0 ? `${ratio.toFixed(1)}×` : "—"}
@@ -876,11 +955,26 @@ function AttributionSection() {
 }
 
 // ─── ۱۲. Forecast Accuracy ───────────────────────────────────────────────────
-function ForecastAccuracySection() {
-  const { data, isLoading } = useForecastAccuracy();
+function ForecastAccuracySection({ currency }: { currency: RevenueCurrency }) {
+  const { data, isLoading } = useForecastAccuracy(currency);
   if (isLoading) return <SectionSkeleton h="h-32" />;
   if (!data) return null;
 
+  if (!data.dataAvailable || data.mape === null || data.rmse === null) {
+    return (
+      <div>
+        <SectionTitle>دقت پیش‌بینی واریزی کیف پول</SectionTitle>
+        <Card className="p-4">
+          <GlobalText className="text-sm text-amber-700 dark:text-amber-400">
+            {data.reason ?? "برای محاسبه دقت، داده تاریخی کافی در دسترس نیست."}
+          </GlobalText>
+          <GlobalText className="text-xs text-gray-500 mt-2">
+            روش ارزیابی: {data.evaluationMethod ?? "آزمون بازگشتی میانگین متحرک ۷ روزه"}
+          </GlobalText>
+        </Card>
+      </div>
+    );
+  }
   const mapeColor =
     data.mape <= 10
       ? "text-emerald-600"
@@ -890,7 +984,7 @@ function ForecastAccuracySection() {
 
   return (
     <div>
-      <SectionTitle>دقت مدل پیش‌بینی</SectionTitle>
+      <SectionTitle>دقت پیش‌بینی واریزی کیف پول</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="grid grid-cols-2 gap-4">
           <Card className="p-5 flex flex-col gap-1">
@@ -905,7 +999,7 @@ function ForecastAccuracySection() {
           <Card className="p-5 flex flex-col gap-1">
             <span className="text-xs text-gray-500">RMSE</span>
             <span className="text-3xl font-bold text-indigo-600">
-              {fmtM(data.rmse)}
+              {fmtAxis(data.rmse, currency)}
             </span>
             <span className="text-xs text-gray-400">
               ریشه میانگین مربعات خطا
@@ -920,8 +1014,8 @@ function ForecastAccuracySection() {
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={data.history.slice(-30)}>
                 <XAxis dataKey="date" tick={{ fontSize: 9 }} hide />
-                <YAxis tickFormatter={fmtM} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v: any) => [`${fmt(Number(v))} تومان`]} />
+                <YAxis tickFormatter={(v) => fmtAxis(v, currency)} tick={{ fontSize: 10 }} />
+                <Tooltip formatter={(v: unknown) => <span>{fmtMoney(Number(v), currency)}</span>} />
                 <Line
                   type="monotone"
                   dataKey="actual"
@@ -950,7 +1044,7 @@ function ForecastAccuracySection() {
 }
 
 // ─── Anomaly / Decision cards ─────────────────────────────────────────────────
-function AnomalyCard({ anomaly }: { anomaly: any }) {
+function AnomalyCard({ anomaly, currency }: { anomaly: Anomaly; currency: RevenueCurrency }) {
   const color =
     anomaly.severity === "high"
       ? "border-red-500 bg-red-50 dark:bg-red-900/20"
@@ -969,10 +1063,10 @@ function AnomalyCard({ anomaly }: { anomaly: any }) {
         <div className="text-left shrink-0">
           <div className="text-xs text-gray-500">واقعی</div>
           <div className="text-sm font-bold">
-            {anomaly.actual?.toLocaleString()}
+            {fmtMoney(anomaly.actual, currency)}
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            منتظره: {anomaly.expected?.toLocaleString()}
+            منتظره: {fmtMoney(anomaly.expected, currency)}
           </div>
         </div>
       </div>
@@ -980,7 +1074,7 @@ function AnomalyCard({ anomaly }: { anomaly: any }) {
   );
 }
 
-function DecisionCard({ decision }: { decision: any }) {
+function DecisionCard({ decision, currency }: { decision: StrategicDecision; currency: RevenueCurrency }) {
   return (
     <Card className="p-4">
       <GlobalText as="h4" className="font-bold text-sm mb-2">
@@ -992,10 +1086,10 @@ function DecisionCard({ decision }: { decision: any }) {
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-400">تأثیر تخمینی</span>
         <span className="text-sm font-bold text-emerald-600">
-          {fmt(decision.impact)} تومان
+          {fmtMoney(decision.impact, currency)}
         </span>
       </div>
-      {decision.roi > 0 && (
+      {Number.isFinite(decision.roi) && decision.roi > 0 && (
         <div className="flex items-center justify-between mt-1">
           <span className="text-xs text-gray-400">ROI</span>
           <span className="text-sm font-bold text-blue-600">
@@ -1009,11 +1103,12 @@ function DecisionCard({ decision }: { decision: any }) {
 
 // ─── صفحه اصلی ───────────────────────────────────────────────────────────────
 function RevenuesPage() {
-  const { data: monthly, isLoading: mLoading } = useMonthlyTrend();
-  const { data: daily, isLoading: dLoading } = useHistorical();
-  const { data: anomalies } = useAnomalies();
-  const { data: decisions } = useStrategicDecisions();
-  const { data: forecast, isLoading: fLoading } = useRevenueForecast(90);
+  const [currency, setCurrency] = useState<RevenueCurrency>("IRT");
+  const { data: monthly, isLoading: mLoading } = useMonthlyTrend(currency);
+  const { data: daily, isLoading: dLoading } = useHistorical(currency);
+  const { data: anomalies } = useAnomalies(currency);
+  const { data: decisions } = useStrategicDecisions(currency);
+  const { data: forecast, isLoading: fLoading } = useRevenueForecast(90, currency);
 
   const totalRevenue = monthly?.reduce((s, m) => s + m.amount, 0) ?? 0;
   const avgMonthly = monthly?.length
@@ -1021,19 +1116,30 @@ function RevenuesPage() {
     : 0;
   const totalPayments = monthly?.reduce((s, m) => s + m.paymentCount, 0) ?? 0;
   const lastMonth = monthly?.[monthly.length - 1];
-  const growthRate = (forecast as any)?.growthRate;
-  const peakDays: string[] = (forecast as any)?.peakDays ?? [];
-  const forecastAlerts: any[] = (forecast as any)?.alerts ?? [];
-  const forecastPoints: any[] = (forecast as any)?.forecast ?? [];
+  const growthRate = forecast?.growthRate ?? null;
+  const peakDays: string[] = forecast?.peakDays ?? [];
+  const forecastAlerts: ForecastAlert[] = forecast?.alerts ?? [];
+  const forecastPoints: ForecastPoint[] = forecast?.forecast ?? [];
 
   return (
     <div className="space-y-10 p-6" dir="rtl">
       {/* هدر */}
-      <div>
-        <SectionTitle>Executive Revenue Dashboard</SectionTitle>
-        <GlobalText className="text-sm text-gray-500 -mt-2">
-          داده واقعی از جدول payments — فقط تراکنش‌های موفق (paid)
-        </GlobalText>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <SectionTitle>Executive Revenue Dashboard</SectionTitle>
+          <GlobalText className="text-sm text-gray-500 -mt-2">
+            داده واقعی از جدول payments — فقط تراکنش‌های موفق (paid)
+          </GlobalText>
+        </div>
+        <label className="text-sm text-gray-600 flex items-center gap-2">
+          ارز گزارش
+          <select value={currency} onChange={(event) => setCurrency(event.target.value as RevenueCurrency)} className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800">
+            <option value="IRT">ریال / نمایش تومان</option>
+            <option value="USDT">USDT</option>
+            <option value="BTC">BTC</option>
+            <option value="USD">USD (واحد پایه تأیید نشده)</option>
+          </select>
+        </label>
       </div>
 
       {/* ── ۱. KPI اصلی ── */}
@@ -1045,14 +1151,16 @@ function RevenuesPage() {
         ) : (
           <>
             <KPICard
-              title="درآمد کل (۱۲ ماه)"
-              value={totalRevenue}
+              title="واریزی کل کیف پول (۱۲ ماه)"
+              value={displayAmount(totalRevenue, currency)}
               format="currency"
+              currencyLabel={currencyLabel(currency)}
             />
             <KPICard
-              title="میانگین ماهانه"
-              value={avgMonthly}
+              title="میانگین ماهانه واریزی"
+              value={displayAmount(avgMonthly, currency)}
               format="currency"
+              currencyLabel={currencyLabel(currency)}
             />
             <KPICard
               title="تعداد پرداخت‌ها"
@@ -1060,7 +1168,7 @@ function RevenuesPage() {
               format="number"
             />
             <MiniStat label="آخرین ماه" value={lastMonth?.month ?? "—"} />
-            {growthRate !== undefined ? (
+            {growthRate != null ? (
               <KPICard
                 title="رشد پیش‌بینی‌شده"
                 value={growthRate}
@@ -1068,37 +1176,37 @@ function RevenuesPage() {
                 trend={growthRate >= 0 ? "up" : "down"}
               />
             ) : (
-              <Skeleton className="h-24" />
+              <MiniStat label="رشد پیش‌بینی‌شده" value="قابل محاسبه نیست" />
             )}
           </>
         )}
       </div>
 
       {/* ── ۲. MRR / ARR ── */}
-      <MrrSection />
+      <MrrSection currency={currency} />
 
       {/* ── ۳. نمودارهای تاریخی ── */}
       <div>
-        <SectionTitle>روند درآمد</SectionTitle>
+        <SectionTitle>روند شارژ کیف پول و واریزی</SectionTitle>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {mLoading ? (
             <SectionSkeleton />
           ) : (
-            <MonthlyChart data={monthly ?? []} />
+            <MonthlyChart data={monthly ?? []} currency={currency} />
           )}
-          {dLoading ? <SectionSkeleton /> : <DailyChart data={daily ?? []} />}
+          {dLoading ? <SectionSkeleton /> : <DailyChart data={daily ?? []} currency={currency} />}
         </div>
       </div>
 
       {/* ── ۴. Forecast ── */}
       <div>
-        <SectionTitle>پیش‌بینی درآمد</SectionTitle>
+        <SectionTitle>پیش‌بینی واریزی کیف پول</SectionTitle>
         {fLoading ? (
           <SectionSkeleton />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <ForecastChart data={forecastPoints} />
+              <ForecastChart data={forecastPoints} currency={currency} />
             </div>
             <div className="space-y-4">
               <PeakDaysCard peakDays={peakDays} />
@@ -1111,36 +1219,36 @@ function RevenuesPage() {
       </div>
 
       {/* ── ۵. محصول ── */}
-      <ProductRevenueSection />
+      <ProductRevenueSection currency={currency} />
 
       {/* ── ۶. جنسیت + ARPPU ── */}
-      <GenderArppuSection />
+      <GenderArppuSection currency={currency} />
 
       {/* ── ۷. Cohort ── */}
-      <CohortSection />
+      <CohortSection currency={currency} />
 
       {/* ── ۸. Funnel ── */}
-      <FunnelSection />
+      <FunnelSection currency={currency} />
 
       {/* ── ۹. Attribution ── */}
-      <AttributionSection />
+      <AttributionSection currency={currency} />
 
       {/* ── ۱۰. Churn ── */}
-      <ChurnSection />
+      <ChurnSection currency={currency} />
 
       {/* ── ۱۱. Concentration ── */}
-      <ConcentrationSection />
+      <ConcentrationSection currency={currency} />
 
       {/* ── ۱۲. Anomalies ── */}
       {anomalies && anomalies.length > 0 && (
         <div>
-          <SectionTitle>ناهنجاری‌های درآمد</SectionTitle>
+          <SectionTitle>ناهنجاری‌های واریزی کیف پول</SectionTitle>
           <GlobalText className="text-sm text-gray-500 -mt-2 mb-4">
             انحراف بیش از ۴۰٪ از میانگین متحرک ۷ روزه
           </GlobalText>
           <div className="space-y-3">
             {anomalies.slice(0, 5).map((a) => (
-              <AnomalyCard key={a.id} anomaly={a} />
+              <AnomalyCard key={a.id} anomaly={a} currency={currency} />
             ))}
           </div>
         </div>
@@ -1149,17 +1257,17 @@ function RevenuesPage() {
       {/* ── ۱۳. Strategic Decisions ── */}
       {decisions && decisions.length > 0 && (
         <div>
-          <SectionTitle>پیشنهادات استراتژیک</SectionTitle>
+          <SectionTitle>پیشنهادهای مبتنی بر واریزی و جذب</SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {decisions.map((d) => (
-              <DecisionCard key={d.id} decision={d} />
+              <DecisionCard key={d.id} decision={d} currency={currency} />
             ))}
           </div>
         </div>
       )}
 
       {/* ── ۱۴. Forecast Accuracy ── */}
-      <ForecastAccuracySection />
+      <ForecastAccuracySection currency={currency} />
     </div>
   );
 }

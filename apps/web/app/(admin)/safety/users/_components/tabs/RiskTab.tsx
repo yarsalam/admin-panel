@@ -213,7 +213,10 @@ export default function RiskTab({
   const levelKey = (risk?.level ?? "low") as keyof typeof LEVEL_CONFIG;
   const levelCfg = LEVEL_CONFIG[levelKey] ?? LEVEL_CONFIG.low;
   const actionCfg =
-    ACTION_CONFIG[risk?.recommendedAction ?? "none"] ?? ACTION_CONFIG.none;
+    ACTION_CONFIG[risk?.recommendedAction ?? "none"] ?? {
+      label: "نامشخص",
+      color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+    };
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -252,9 +255,9 @@ export default function RiskTab({
                 {levelCfg.desc}
               </p>
               <span
-                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${actionCfg.color}`}
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${actionCfg?.color ?? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"}`}
               >
-                پیشنهاد: {actionCfg.label}
+                پیشنهاد: {actionCfg?.label ?? "اقدام لازم نیست"}
               </span>
             </div>
           </div>

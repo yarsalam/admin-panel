@@ -41,7 +41,7 @@ function getFirstAllowedPath(permissions: string[]): string {
       for (const item of panel.items) {
         if (
           Array.isArray(item.permission)
-            ? item.permission.some(p => permissions.includes(p))
+            ? item.permission.some((p: string) => permissions.includes(p))
             : permissions.includes(item.permission)
         ) {
           return item.href;

@@ -1,0 +1,44 @@
+name: Revenue Admin Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "apps/web/lib/api/exec/mutations/useRevenue.ts"
+      - "apps/web/components/KPICard.tsx"
+      - "apps/server/src/executive/controllers/revenue.controller.ts"
+      - "apps/server/src/executive/**"
+      - "apps/server/src/admin/common/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".npmrc"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/revenue-admin-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  admin-revenue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Install workspace dependencies from the current security policy
+        run: pnpm install --no-frozen-lockfile
+      - name: Lint the complete web application
+        # Existing repository-wide warnings are reported, while actual lint errors fail CI.
+        run: pnpm --filter web exec eslint .
+      - name: Type-check the complete web application
+        run: pnpm --filter web check-types
+      - name: Build admin server
+        run: pnpm --filter server build
