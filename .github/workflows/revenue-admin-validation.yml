@@ -35,23 +35,9 @@ jobs:
           cache: pnpm
       - name: Install workspace dependencies from the current security policy
         run: pnpm install --no-frozen-lockfile
-      - name: Lint changed Revenue web files
-        working-directory: apps/web
-        run: pnpm exec eslint --max-warnings 0 "app/(admin)/exec/revenue/page.tsx" "lib/api/exec/mutations/useRevenue.ts" "components/KPICard.tsx"
-      - name: Type-check web and reject Revenue-specific errors
-        shell: bash
-        run: |
-          set +e
-          pnpm --filter web check-types > /tmp/web-typecheck.log 2>&1
-          status=$?
-          set -e
-          cat /tmp/web-typecheck.log
-          if grep -E 'exec/revenue/|lib/api/exec/mutations/useRevenue\.ts|components/KPICard\.tsx' /tmp/web-typecheck.log; then
-            echo "Revenue UI type errors were found."
-            exit 1
-          fi
-          if [ "$status" -ne 0 ]; then
-            echo "::warning::The full web type-check still reports pre-existing errors outside Revenue scope; no errors were reported in the changed Revenue files."
-          fi
+      - name: Lint the complete web application
+        run: pnpm --filter web lint
+      - name: Type-check the complete web application
+        run: pnpm --filter web check-types
       - name: Build admin server
         run: pnpm --filter server build
