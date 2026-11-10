@@ -87,6 +87,14 @@ export interface GenderRevenueData {
   periodDays: number;
   source: string;
   genderBasis: string;
+  fulfilledPurchaseGenderBasis?: string;
+  fulfilledPurchaseLegacyGenderFallbackCount?: number;
+  fulfilledPurchaseSnapshotCoveragePercent?: number | null;
+  walletDebitGenderBasis?: string;
+  walletDepositGenderBasis?: string;
+  purchaseSource?: string;
+  fulfilledPurchaseSource?: string;
+  depositSource?: string;
   depositCurrency: RevenueCurrency;
   depositUnit: string;
   male: { revenue: number; payingUsers: number; paymentCount: number; arppu: number; fulfilledRevenue: number; fulfilledPurchaseCount: number; fulfilledPayingUsers: number; depositRevenue: number; depositingUsers: number; depositCount: number };
