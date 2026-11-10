@@ -1,0 +1,66 @@
+name: Production Docker validation
+
+on:
+  pull_request:
+    branches: [fix/admin-api-contracts]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "docker-compose.yml"
+      - "docker-compose.production.yml"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/production-docker-build.yml"
+  push:
+    branches: [feat/production-deployment-memory]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose-config:
+    name: Validate production Compose configuration
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_DB_ROOT_PASSWORD: ci-root-password
+      ADMIN_DB_PASSWORD: ci-admin-password
+      ADMIN_DB_USER: admin_app
+      JWT_SECRET: ci-only-not-a-production-secret
+      USER_API_KEY: ci-only-not-a-production-key
+      ADMIN_WEB_ORIGINS: https://admin.example.invalid
+      NEXT_PUBLIC_API_URL: https://api.example.invalid
+      USER_API_BASE_URL: http://backend:5000
+      PORT: "4000"
+      DB_SYNC: "false"
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate merged Compose config
+        run: docker compose -f docker-compose.yml -f docker-compose.production.yml config --quiet
+
+  build-production-images:
+    name: Build ${{ matrix.component }} production image
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: admin-web
+            dockerfile: apps/web/Dockerfile.production
+          - component: admin-backend
+            dockerfile: apps/server/Dockerfile.production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.example.invalid

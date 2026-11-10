@@ -10,4 +10,21 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      typeof window !== "undefined" &&
+      error?.response?.status === 401
+    ) {
+      localStorage.removeItem("admin-token");
+      if (window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 export default apiClient;

@@ -35,16 +35,17 @@ export interface StrategicDecision {
   title: string;
   description: string;
   impact: number;
-  roi: number;
+  roi?: number;
 }
 
 export interface LtvSourceRow {
   source: string;
+  currency: string;
   userCount: number;
   totalRevenue: number;
   ltv: number;
-  cac: number;
-  paybackPeriod: number;
+  cac: number | null;
+  paybackPeriod: number | null;
 }
 
 // ─── تایپ‌های جدید ────────────────────────────────────────────────────────────
@@ -163,7 +164,13 @@ export const useStrategicDecisions = () =>
     queryKey: ["exec", "revenue", "strategic-decisions"],
     queryFn: async () => {
       const { data } = await apiClient.get("/exec/revenue/strategic-decisions");
-      return data;
+      // Backend currently returns { currency, decisions }, not a bare array.
+      const rows = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.decisions)
+          ? data.decisions
+          : [];
+      return rows;
     },
     staleTime: 30 * 60 * 1000,
   });
@@ -185,88 +192,74 @@ export const useMrr = () =>
   useQuery<MrrData>({
     queryKey: ["exec", "revenue", "mrr"],
     queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/mrr");
-      return data;
+      // MRR is exposed by the real executive dashboard endpoint.
+      const { data } = await apiClient.get("/exec/dashboard");
+      if (data && typeof data === "object" && "error" in data) {
+        throw new Error(String(data.error || "داده درآمد در دسترس نیست"));
+      }
+      const mrr = Number(data?.revenue?.mrr ?? 0);
+      return {
+        mrr,
+        arr: mrr * 12,
+        mrrGrowth: Number(data?.revenue?.mrrDelta ?? 0),
+        mrrHistory: [],
+      };
     },
     staleTime: 60 * 60 * 1000,
   });
 
 export const useProductRevenue = () =>
-  useQuery<ProductRevenueRow[]>({
+  useQuery<ProductRevenueRow[] | null>({
     queryKey: ["exec", "revenue", "by-product"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/by-product");
-      return data;
-    },
-    staleTime: 30 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });
 
 export const useGenderRevenue = () =>
-  useQuery<GenderRevenueData>({
+  useQuery<GenderRevenueData | null>({
     queryKey: ["exec", "revenue", "by-gender"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/by-gender");
-      return data;
-    },
-    staleTime: 30 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });
 
 export const useArppu = () =>
-  useQuery<ArppuData>({
+  useQuery<ArppuData | null>({
     queryKey: ["exec", "revenue", "arppu"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/arppu");
-      return data;
-    },
-    staleTime: 30 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });
 
 export const useCohortRevenue = () =>
-  useQuery<CohortRow[]>({
+  useQuery<CohortRow[] | null>({
     queryKey: ["exec", "revenue", "cohort"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/cohort");
-      return data;
-    },
-    staleTime: 60 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });
 
 export const useRevenueFunnel = () =>
-  useQuery<FunnelStep[]>({
+  useQuery<FunnelStep[] | null>({
     queryKey: ["exec", "revenue", "funnel"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/funnel");
-      return data;
-    },
-    staleTime: 30 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });
 
 export const useChurnRevenue = () =>
-  useQuery<ChurnRevenueData>({
+  useQuery<ChurnRevenueData | null>({
     queryKey: ["exec", "revenue", "churn"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/churn");
-      return data;
-    },
-    staleTime: 30 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });
 
 export const useRevenueConcentration = () =>
-  useQuery<ConcentrationData>({
+  useQuery<ConcentrationData | null>({
     queryKey: ["exec", "revenue", "concentration"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/concentration");
-      return data;
-    },
-    staleTime: 60 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });
 
 export const useForecastAccuracy = () =>
-  useQuery<ForecastAccuracyData>({
+  useQuery<ForecastAccuracyData | null>({
     queryKey: ["exec", "revenue", "forecast-accuracy"],
-    queryFn: async () => {
-      const { data } = await apiClient.get("/exec/revenue/forecast-accuracy");
-      return data;
-    },
-    staleTime: 60 * 60 * 1000,
+    queryFn: async () => null,
+    enabled: false,
   });

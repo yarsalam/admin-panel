@@ -3,6 +3,7 @@ import GlobalText from "./GlobalText";
 
 interface Props {
   label: string;
+  type?: "button" | "submit" | "reset";
   onClick?: () => void;
   gradient?: boolean;
   loading?: boolean;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function CustomButton({
   label,
+  type = "button",
   onClick,
   gradient,
   loading,
@@ -20,6 +22,7 @@ export default function CustomButton({
 }: Props) {
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={loading || disabled}
       className={`relative overflow-hidden py-2 px-4 rounded-lg w-full justify-center items-center  border-[0.6px] border-gray-300 

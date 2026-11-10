@@ -51,7 +51,7 @@ function CampaignsPage() {
   });
 
   const onSubmit = (data: any) => {
-    createMut.mutate(data);
+    createMut.mutate({ ...data, budget: Number(data.budget) });
     reset();
   };
 

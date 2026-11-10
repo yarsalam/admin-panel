@@ -16,6 +16,16 @@ import { Card, MiniStat, NoData, SkeletonRows, TableHead } from "../ui/shared";
 
 const PRIORITY_DOT: Record<string, string> = { high: "bg-red-500", medium: "bg-amber-500", low: "bg-gray-400" };
 
+function positionBg(position: number): string {
+  if (position <= 3) {
+    return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
+  }
+  if (position <= 10) {
+    return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300";
+  }
+  return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+}
+
 export function OverviewTab() {
   const { data: keywords = [], isLoading: kwLoading } = useKeywordsRanking();
   const { data: competitors = [] } = useCompetitorAnalysis();

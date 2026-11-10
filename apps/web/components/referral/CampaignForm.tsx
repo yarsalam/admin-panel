@@ -1,13 +1,12 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { campaignFormSchema } from "@/schemas/growth/referral";
-import { useCreateCampaign } from "@/lib/api/growth/queries/useReferrals";
+import { useCreateCampaign } from "@/lib/api/growth/useReferrals";
 import FormInput from "@/components/ui/FormInput";
 import CustomButton from "@/components/ui/CustomButton";
 
 export default function CampaignForm({ onClose }: { onClose: () => void }) {
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit, register } = useForm({
     resolver: zodResolver(campaignFormSchema),
   });
   const createMutation = useCreateCampaign();
@@ -51,7 +50,7 @@ export default function CampaignForm({ onClose }: { onClose: () => void }) {
             type="text"
           />
           <div className="flex items-center gap-2">
-            <input type="checkbox" {...control.register("bothRewarded")} />
+            <input type="checkbox" {...register("bothRewarded")} />
             <label>پاداش به هر دو نفر</label>
           </div>
           <div className="flex justify-end gap-2">
@@ -63,6 +62,7 @@ export default function CampaignForm({ onClose }: { onClose: () => void }) {
               انصراف
             </button>
             <CustomButton
+              type="submit"
               label="ایجاد"
               gradient
               loading={createMutation.isPending}

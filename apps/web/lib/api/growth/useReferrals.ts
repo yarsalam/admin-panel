@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import apiClient from "../../client";
+import apiClient from "@/lib/api/client";
 import {
   campaignSchema,
   referralStatsSchema,
   topReferrerSchema,
 } from "@/schemas/growth/referral";
 import toast from "react-hot-toast";
+import { z } from "zod";
 
 // کمپین‌ها
 export function useReferralCampaigns() {

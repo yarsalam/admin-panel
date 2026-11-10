@@ -156,12 +156,27 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const res = await loginMutation.mutateAsync(data);
-      setToken(res.access_token);
 
-      // از توکن decode شده یا از پاسخ سرور permissionها را بگیر
-      // (در اینجا مستقیماً از توکن استفاده می‌کنیم چون setToken آن را ذخیره کرده)
-      const tokenPayload = JSON.parse(atob(res.access_token.split(".")[1]));
-      const permissions: string[] = tokenPayload.permissions || [];
+      // Validate and decode the JWT payload before storing the token.
+      const tokenParts = res.access_token.split(".");
+      const encodedPayload = tokenParts[1];
+      if (!encodedPayload) {
+        throw new Error("پاسخ ورود شامل توکن معتبر نیست");
+      }
+      const base64Payload = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
+      const paddedPayload = base64Payload.padEnd(
+        Math.ceil(base64Payload.length / 4) * 4,
+        "=",
+      );
+      const tokenPayload = JSON.parse(atob(paddedPayload)) as {
+        permissions?: unknown;
+      };
+      const permissions: string[] = Array.isArray(tokenPayload.permissions)
+        ? tokenPayload.permissions.filter(
+            (permission): permission is string => typeof permission === "string",
+          )
+        : [];
+      setToken(res.access_token);
       // پیدا کردن مسیر مجاز
       const redirectTo = getFirstAllowedPath(permissions);
       toast.success("ورود موفق");
