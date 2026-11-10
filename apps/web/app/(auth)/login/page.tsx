@@ -160,13 +160,20 @@ export default function LoginPage() {
 
       // از توکن decode شده یا از پاسخ سرور permissionها را بگیر
       // (در اینجا مستقیماً از توکن استفاده می‌کنیم چون setToken آن را ذخیره کرده)
-      const encodedPayload = res.access_token.split(".")[1];
-      if (!encodedPayload) {
-        throw new Error("پاسخ ورود معتبر نیست؛ دوباره تلاش کنید.");
+      const tokenPayloadPart = res.access_token.split(".")[1];
+      if (!tokenPayloadPart) {
+        throw new Error("پاسخ احراز هویت معتبر نیست");
       }
-      const tokenPayload = JSON.parse(atob(encodedPayload));
+      const base64 = tokenPayloadPart.replace(/-/g, "+").replace(/_/g, "/");
+      const paddedBase64 = base64.padEnd(
+        base64.length + ((4 - (base64.length % 4)) % 4),
+        "=",
+      );
+      const tokenPayload = JSON.parse(atob(paddedBase64));
       const permissions: string[] = Array.isArray(tokenPayload.permissions)
-        ? tokenPayload.permissions
+        ? tokenPayload.permissions.filter(
+            (item: unknown): item is string => typeof item === "string",
+          )
         : [];
       // پیدا کردن مسیر مجاز
       const redirectTo = getFirstAllowedPath(permissions);
@@ -227,6 +234,7 @@ export default function LoginPage() {
           </Link>
         </div>
         <CustomButton
+          type="submit"
           label="ورود"
           gradient
           loading={loginMutation.isPending}
