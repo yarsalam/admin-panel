@@ -6,7 +6,7 @@ import apiClient from "../../client";
 export interface ForecastPoint {
   date: string;
   revenue: number;
-  confidence: [number, number];
+  confidence: [number, number] | null;
 }
 
 export interface RevenueForecast {
@@ -187,12 +187,14 @@ export const useRevenueForecast = (days: number = 90, currency: RevenueCurrency 
           (point: Record<string, unknown>) => {
             const revenueValue = Number(point.revenue ?? point.predicted ?? 0);
             const confidenceValue = point.confidence;
-            const confidence: [number, number] =
+            const confidence: [number, number] | null =
               Array.isArray(confidenceValue) &&
               confidenceValue.length === 2 &&
-              confidenceValue.every((value) => typeof value === "number")
+              confidenceValue.every(
+                (value) => typeof value === "number" && Number.isFinite(value),
+              )
                 ? [confidenceValue[0] as number, confidenceValue[1] as number]
-                : [revenueValue * 0.85, revenueValue * 1.15];
+                : null;
 
             return {
               date: String(point.date ?? ""),
@@ -201,7 +203,10 @@ export const useRevenueForecast = (days: number = 90, currency: RevenueCurrency 
             };
           },
         ),
-        growthRate: data.growthRate ?? 0,
+        growthRate:
+          typeof data.growthRate === "number" && Number.isFinite(data.growthRate)
+            ? data.growthRate
+            : null,
         peakDays: data.peakDays ?? [],
         alerts: data.alerts ?? [],
       } satisfies RevenueForecast;
