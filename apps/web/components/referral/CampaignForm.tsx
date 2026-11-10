@@ -1,18 +1,26 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { campaignFormSchema } from "@/schemas/growth/referral";
+import type { z } from "zod";
 import { useCreateCampaign } from "@/lib/api/growth/useReferrals";
 import FormInput from "@/components/ui/FormInput";
 import CustomButton from "@/components/ui/CustomButton";
 
 export default function CampaignForm({ onClose }: { onClose: () => void }) {
-  const { control, register, handleSubmit } = useForm({
+  const { control, register, handleSubmit } = useForm<z.infer<typeof campaignFormSchema>>({
     resolver: zodResolver(campaignFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      rewardType: "credit",
+      rewardValue: 1,
+      bothRewarded: true,
+      isActive: true,
+    },
   });
   const createMutation = useCreateCampaign();
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: z.infer<typeof campaignFormSchema>) => {
     createMutation.mutate(data, { onSuccess: onClose });
   };
 
@@ -48,7 +56,7 @@ export default function CampaignForm({ onClose }: { onClose: () => void }) {
             name="rewardValue"
             control={control}
             label="مقدار"
-            type="text"
+            type="number"
           />
           <div className="flex items-center gap-2">
             <input type="checkbox" {...register("bothRewarded")} />
