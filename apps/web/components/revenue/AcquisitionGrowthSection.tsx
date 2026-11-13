@@ -263,7 +263,7 @@ export default function AcquisitionGrowthSection({
             <table className="w-full text-xs min-w-[1100px]">
               <thead className="bg-gray-50 dark:bg-gray-900/40">
                 <tr>
-                  {["منبع / مدیوم / کمپین","کاربران جدید","تکمیل پروفایل","تعامل معنادار","D7 بازگشت","D30 بازگشت","خریدار نخستین","درآمد ناخالص خرید","هزینه ثبت‌شده","CAC","درآمد/کاربر","درآمد/CAC"].map(label => (
+                  {["منبع / مدیوم / کمپین","کاربران جدید","تکمیل پروفایل","تعامل معنادار","D7 بازگشت","D30 بازگشت","خریدار نخستین","درآمد ناخالص خرید","هزینه ثبت‌شده","CAC","درآمد/کاربر","درآمد ناخالص پنجره/CAC"].map(label => (
                     <th key={label} className="px-3 py-3 text-right font-semibold">{label}</th>
                   ))}
                 </tr>
@@ -286,7 +286,7 @@ export default function AcquisitionGrowthSection({
                     <td className="px-3 py-3">{money(row.costAmount, row.costCurrency)}</td>
                     <td className="px-3 py-3 font-semibold">{row.cac === null ? "نامعلوم" : money(row.cac, row.costCurrency)}</td>
                     <td className="px-3 py-3">{row.grossRevenuePerAcquiredUser === null ? "—" : money(row.grossRevenuePerAcquiredUser, "IRT")}</td>
-                    <td className="px-3 py-3">{row.ltvOverCac === null ? "—" : `${row.ltvOverCac.toLocaleString("fa-IR")}×`}</td>
+                    <td className="px-3 py-3">{row.grossRevenueToCacRatio === null ? "—" : `${row.grossRevenueToCacRatio.toLocaleString("fa-IR")}×`}</td>
                   </tr>
                 ))}
                 {rows.length === 0 ? (
