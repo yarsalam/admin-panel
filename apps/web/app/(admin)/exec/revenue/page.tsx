@@ -1475,7 +1475,9 @@ function RevenuesPage() {
         )}
       </div>
 
-      <PricingExperimentSection />\n\n      {/* ── ۲. MRR / ARR ── */}
+      <PricingExperimentSection />
+
+      {/* ── ۲. MRR / ARR ── */}
       <MrrSection currency={currency} />
 
       {/* ── ۳. نمودارهای تاریخی ── */}
