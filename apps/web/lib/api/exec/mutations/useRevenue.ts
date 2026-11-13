@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "../../client";
 
 // ─── تایپ‌های پایه ────────────────────────────────────────────────────────────
@@ -360,14 +360,46 @@ export interface PricingExperimentVariantReport {
   observedRevenuePerExposedUserRials: number | null;
 }
 
+export interface PricingExperimentBudget {
+  budgetCapRials: number;
+  spentDiscountRials: number;
+  reservedDiscountRials: number;
+  remainingBudgetRials: number;
+  budgetExhausted: boolean;
+}
+
 export interface PricingExperimentReport {
   experimentId: string;
   currency: 'IRT';
   unit: 'rial';
   periodDays: number;
+  budget: PricingExperimentBudget;
   variants: PricingExperimentVariantReport[];
   interpretation: string;
 }
+
+export interface PricingExperimentSettings {
+  experimentId: string;
+  enabled: boolean;
+  discountBps: number;
+  treatmentRateBps: number;
+  maxDiscountBudgetRials: number;
+  endsAt: string;
+  secretConfigured: boolean;
+  started: boolean;
+  isActive: boolean;
+  budgetCapRials: number;
+  spentDiscountRials: number;
+  reservedDiscountRials: number;
+  remainingBudgetRials: number;
+  budgetExhausted: boolean;
+}
+
+export type PricingExperimentSettingsInput = Pick<
+  PricingExperimentSettings,
+  'enabled' | 'discountBps' | 'treatmentRateBps' | 'maxDiscountBudgetRials' | 'endsAt'
+>;
+
 
 export const usePricingExperimentReport = (
   experimentId: string,
@@ -385,3 +417,38 @@ export const usePricingExperimentReport = (
     staleTime: 5 * 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
   });
+
+export const usePricingExperimentSettings = (experimentId: string) =>
+  useQuery<PricingExperimentSettings>({
+    queryKey: ['exec', 'revenue', 'pricing-experiment-settings', experimentId],
+    queryFn: async () => {
+      const { data } = await apiClient.get(
+        `/exec/revenue/pricing-experiments/${encodeURIComponent(experimentId)}/config`,
+      );
+      return data;
+    },
+    enabled: /^[A-Za-z0-9._:-]{1,96}$/.test(experimentId),
+    staleTime: 30_000,
+  });
+
+export const useUpdatePricingExperimentSettings = (experimentId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: PricingExperimentSettingsInput) => {
+      const { data } = await apiClient.patch(
+        `/exec/revenue/pricing-experiments/${encodeURIComponent(experimentId)}/config`,
+        settings,
+      );
+      return data as PricingExperimentSettings;
+    },
+    onSuccess: (settings) => {
+      queryClient.setQueryData(
+        ['exec', 'revenue', 'pricing-experiment-settings', experimentId],
+        settings,
+      );
+      queryClient.invalidateQueries({
+        queryKey: ['exec', 'revenue', 'pricing-experiment', experimentId],
+      });
+    },
+  });
+};
