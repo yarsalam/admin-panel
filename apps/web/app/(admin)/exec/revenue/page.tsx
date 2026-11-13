@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { withPageProtection } from "@/components/withPageProtection";
 import {
   useRevenueForecast,
@@ -16,6 +16,8 @@ import {
   useRevenueConcentration,
   useForecastAccuracy,
   usePricingExperimentReport,
+  usePricingExperimentSettings,
+  useUpdatePricingExperimentSettings,
   type LtvSourceRow,
   type CohortRow,
   type ForecastPoint,
@@ -1106,7 +1108,48 @@ function DecisionCard({ decision, currency }: { decision: StrategicDecision; cur
 function PricingExperimentSection() {
   const [experimentId, setExperimentId] = useState('pricing-first-purchase-v1');
   const [days, setDays] = useState(90);
+  const [enabled, setEnabled] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState('10');
+  const [treatmentPercent, setTreatmentPercent] = useState('20');
+  const [budgetToman, setBudgetToman] = useState('20000');
+  const [endsAtInput, setEndsAtInput] = useState('');
+  const [saveNotice, setSaveNotice] = useState('');
+  const { data: settings, isLoading: settingsLoading, isError: settingsError } =
+    usePricingExperimentSettings(experimentId);
+  const updateSettings = useUpdatePricingExperimentSettings(experimentId);
   const { data, isLoading, isError, refetch } = usePricingExperimentReport(experimentId, days);
+
+  useEffect(() => {
+    if (!settings) return;
+    setEnabled(settings.enabled);
+    setDiscountPercent(String(settings.discountBps / 100));
+    setTreatmentPercent(String(settings.treatmentRateBps / 100));
+    setBudgetToman(String(settings.maxDiscountBudgetRials / 10));
+    const end = new Date(settings.endsAt);
+    const localEnd = new Date(end.getTime() - end.getTimezoneOffset() * 60_000);
+    setEndsAtInput(localEnd.toISOString().slice(0, 16));
+  }, [settings]);
+
+  const saveExperimentSettings = async () => {
+    setSaveNotice('');
+    try {
+      await updateSettings.mutateAsync({
+        enabled,
+        discountBps: Math.round(Number(discountPercent) * 100),
+        treatmentRateBps: Math.round(Number(treatmentPercent) * 100),
+        maxDiscountBudgetRials: Math.round(Number(budgetToman) * 10),
+        endsAt: new Date(endsAtInput).toISOString(),
+      });
+      setSaveNotice('تنظیمات آزمایش ذخیره شد.');
+    } catch (error) {
+      const status = (error as {response?: {status?: number}})?.response?.status;
+      setSaveNotice(
+        status === 403
+          ? 'فقط مدیر ارشد مجاز به تغییر تنظیمات آزمایش است.'
+          : 'ذخیره تنظیمات ناموفق بود؛ محدودیت‌ها و اتصال سرویس را بررسی کنید.',
+      );
+    }
+  };
   const variants = data?.variants ?? [];
   const control = variants.find((row) => row.variant === 'control');
   const treatment = variants.find((row) => row.variant === 'treatment');
@@ -1153,6 +1196,130 @@ function PricingExperimentSection() {
 
   return (
     <section className="space-y-4">
+      <Card className="p-4 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h3 className="font-bold">تنظیمات زندهٔ آزمایش</h3>
+            <p className="text-xs text-gray-500 mt-1">
+              تنظیمات در Redis ذخیره می‌شوند و بدون انتشار نسخه جدید قابل تغییرند.
+            </p>
+          </div>
+          <span className={`text-xs font-bold rounded-full px-3 py-1 ${settings?.enabled && settings?.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+            {settings?.enabled && settings?.isActive ? 'فعال' : 'غیرفعال'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          <label className="text-xs text-gray-500">
+            شناسه آزمایش
+            <input
+              value={experimentId}
+              onChange={(event) => setExperimentId(event.target.value)}
+              className="block w-full mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+              dir="ltr"
+            />
+          </label>
+          <label className="text-xs text-gray-500">
+            تخفیف گروه آزمایش (درصد)
+            <input
+              type="number"
+              min="0.01"
+              max="30"
+              step="0.1"
+              value={discountPercent}
+              onChange={(event) => setDiscountPercent(event.target.value)}
+              disabled={settings?.started}
+              className="block w-full mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800 disabled:opacity-50"
+            />
+          </label>
+          <label className="text-xs text-gray-500">
+            سهم گروه تخفیف (درصد)
+            <input
+              type="number"
+              min="0.01"
+              max="99.99"
+              step="0.1"
+              value={treatmentPercent}
+              onChange={(event) => setTreatmentPercent(event.target.value)}
+              disabled={settings?.started}
+              className="block w-full mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800 disabled:opacity-50"
+            />
+          </label>
+          <label className="text-xs text-gray-500">
+            سقف مجموع تخفیف همه محصولات (تومان)
+            <input
+              type="number"
+              min="1"
+              max="10000000"
+              step="1000"
+              value={budgetToman}
+              onChange={(event) => setBudgetToman(event.target.value)}
+              className="block w-full mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+            />
+          </label>
+          <label className="text-xs text-gray-500">
+            زمان پایان آزمایش
+            <input
+              type="datetime-local"
+              value={endsAtInput}
+              onChange={(event) => setEndsAtInput(event.target.value)}
+              className="block w-full mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm pt-5">
+            <input
+              type="checkbox"
+              checked={enabled}
+              onChange={(event) => setEnabled(event.target.checked)}
+              disabled={!settings?.secretConfigured}
+            />
+            فعال‌سازی آزمایش برای کاربران واجد شرایط
+          </label>
+        </div>
+
+        {settingsLoading ? <p className="text-xs text-gray-500">در حال دریافت تنظیمات...</p> : null}
+        {settingsError ? (
+          <p className="text-xs text-red-600">تنظیمات قابل دریافت نیستند؛ اتصال پنل و API را بررسی کنید.</p>
+        ) : null}
+        {!settings?.secretConfigured ? (
+          <p className="text-xs text-amber-700 dark:text-amber-400">
+            برای فعال‌سازی باید PRICING_EXPERIMENT_SECRET با حداقل ۳۲ کاراکتر در محیط امن سرور تنظیم شود. این مقدار در پنل نمایش داده یا ذخیره نمی‌شود.
+          </p>
+        ) : null}
+        {settings?.started ? (
+          <p className="text-xs text-amber-700 dark:text-amber-400">
+            پس از اولین نمایش واقعی، درصد تخفیف و سهم گروه‌ها قفل می‌شوند تا داده‌های دو گروه قابل مقایسه بمانند. برای تغییر این دو مقدار، شناسه آزمایش جدید بسازید.
+          </p>
+        ) : null}
+        {settings ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {metric('سقف هزینه', fmtMoney(settings.budgetCapRials, 'IRT'))}
+            {metric('تخفیف مصرف‌شده', fmtMoney(settings.spentDiscountRials, 'IRT'))}
+            {metric('رزرو خریدهای درحال انجام', fmtMoney(settings.reservedDiscountRials, 'IRT'))}
+            {metric('بودجه باقی‌مانده', fmtMoney(settings.remainingBudgetRials, 'IRT'))}
+          </div>
+        ) : null}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <button
+            onClick={saveExperimentSettings}
+            disabled={
+              settingsLoading ||
+              settingsError ||
+              updateSettings.isPending ||
+              !endsAtInput ||
+              !Number.isFinite(Number(discountPercent)) ||
+              !Number.isFinite(Number(treatmentPercent)) ||
+              !Number.isFinite(Number(budgetToman)) ||
+              (enabled && !settings?.secretConfigured)
+            }
+            className="rounded-lg px-4 py-2 bg-indigo-600 text-white text-sm disabled:opacity-50"
+          >
+            {updateSettings.isPending ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
+          </button>
+          {saveNotice ? <span className="text-xs text-gray-600">{saveNotice}</span> : null}
+        </div>
+      </Card>
+
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
           <SectionTitle>آزمایش قیمت و اثر تخفیف</SectionTitle>
@@ -1161,15 +1328,6 @@ function PricingExperimentSection() {
           </GlobalText>
         </div>
         <div className="flex flex-wrap gap-2 items-end">
-          <label className="text-xs text-gray-500">
-            شناسه آزمایش
-            <input
-              value={experimentId}
-              onChange={(event) => setExperimentId(event.target.value)}
-              className="block mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
-              dir="ltr"
-            />
-          </label>
           <label className="text-xs text-gray-500">
             بازه گزارش
             <select
@@ -1198,6 +1356,12 @@ function PricingExperimentSection() {
       ) : null}
       {!isLoading && !isError && data ? (
         <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {metric('سقف مشترک تخفیف', fmtMoney(data.budget.budgetCapRials, 'IRT'))}
+            {metric('هزینه ثبت‌شده', fmtMoney(data.budget.spentDiscountRials, 'IRT'))}
+            {metric('رزرو جاری', fmtMoney(data.budget.reservedDiscountRials, 'IRT'))}
+            {metric('مانده مجاز', fmtMoney(data.budget.remainingBudgetRials, 'IRT'))}
+          </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {variantCard(control, 'گروه کنترل')}
             {variantCard(treatment, 'گروه تخفیف')}
