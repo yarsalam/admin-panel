@@ -1,4 +1,6 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Roles } from '../../admin/common/decorators/roles.decorator';
+import { RolesGuard } from '../../admin/common/guards/roles.guard';
 import { JwtAuthGuard } from '../../admin/common/guards/jwt-auth.guard';
 import { UserApiClientService } from '../../admin/common/api-client/user-api-client.service';
 
@@ -38,6 +40,40 @@ export class RevenueController {
   @Get('strategic-decisions')
   async strategicDecisions(@Query('currency') currency = 'IRT') {
     return this.api.get(`/admin-api/revenue/strategic-decisions${this.query({ currency })}`);
+  }
+
+  @Get('acquisition-growth')
+  async acquisitionGrowth(
+    @Query('days') days = '90',
+    @Query('currency') currency = 'IRT',
+  ) {
+    return this.api.get(
+      `/admin-api/revenue/acquisition-growth${this.query({ days, currency })}`,
+    );
+  }
+
+  @Post('acquisition-costs')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin')
+  async createAcquisitionCost(
+    @Body() body: {
+      source: string;
+      medium?: string | null;
+      campaign?: string | null;
+      campaignId?: string | null;
+      category: string;
+      amount: number;
+      currency: string;
+      occurredAt: string;
+      notes?: string | null;
+      idempotencyKey: string;
+    },
+    @Req() request: any,
+  ) {
+    return this.api.post('/admin-api/revenue/acquisition-costs', {
+      ...body,
+      createdBy: String(request.user?.id ?? request.user?.sub ?? 'superadmin'),
+    });
   }
 
   @Get('ltv-by-source')
