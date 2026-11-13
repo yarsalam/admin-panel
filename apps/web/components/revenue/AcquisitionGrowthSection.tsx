@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import {
   useAcquisitionGrowth,
   useCreateAcquisitionCost,
@@ -45,6 +45,7 @@ export default function AcquisitionGrowthSection({
   const [occurredAt, setOccurredAt] = useState(localDateTimeValue());
   const [notes, setNotes] = useState("");
   const [formMessage, setFormMessage] = useState("");
+  const pendingCostIdempotencyKey = useRef<string | null>(null);
 
   const rows = useMemo(() => data?.rows ?? [], [data?.rows]);
 
@@ -56,6 +57,9 @@ export default function AcquisitionGrowthSection({
       return;
     }
 
+    if (!pendingCostIdempotencyKey.current) {
+      pendingCostIdempotencyKey.current = `acq-cost-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    }
     const payload: CreateAcquisitionCostInput = {
       source: source.trim(),
       medium: medium.trim() || null,
@@ -66,11 +70,12 @@ export default function AcquisitionGrowthSection({
       currency,
       occurredAt: new Date(occurredAt).toISOString(),
       notes: notes.trim() || null,
-      idempotencyKey: `acq-cost-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`,
+      idempotencyKey: pendingCostIdempotencyKey.current,
     };
 
     try {
       await createCost.mutateAsync(payload);
+      pendingCostIdempotencyKey.current = null;
       setAmount("");
       setNotes("");
       setFormMessage("هزینه با موفقیت در دفترکل ثبت شد.");
