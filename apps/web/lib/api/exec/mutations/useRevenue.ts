@@ -378,6 +378,14 @@ export interface AcquisitionGrowthReport {
   attributionModel: "first_touch";
   costCoverage: string;
   rows: AcquisitionGrowthRow[];
+  lastTouchSummary: {
+    source: string;
+    medium: string | null;
+    campaign: string | null;
+    campaignId: string | null;
+    users: number;
+  }[];
+  lastTouchTrackedUsers: number;
   interpretation: string;
   limitations: string[];
 }
