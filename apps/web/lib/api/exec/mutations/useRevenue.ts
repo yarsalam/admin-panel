@@ -344,3 +344,44 @@ export const useForecastAccuracy = (currency: RevenueCurrency = "IRT") =>
     },
     staleTime: 60 * 60 * 1000,
   });
+
+export interface PricingExperimentVariantReport {
+  variant: 'control' | 'treatment';
+  exposedUsers: number;
+  purchasedUsers: number;
+  conversionRatePercent: number | null;
+  revenueRials: number;
+  discountRials: number;
+  repeatPurchasedUsers: number;
+  repeatPurchaseCount: number;
+  repeatPurchaseRatePercent: number | null;
+  repeatRevenueRials: number;
+  totalObservedRevenueRials: number;
+  observedRevenuePerExposedUserRials: number | null;
+}
+
+export interface PricingExperimentReport {
+  experimentId: string;
+  currency: 'IRT';
+  unit: 'rial';
+  periodDays: number;
+  variants: PricingExperimentVariantReport[];
+  interpretation: string;
+}
+
+export const usePricingExperimentReport = (
+  experimentId: string,
+  days: number,
+) =>
+  useQuery<PricingExperimentReport>({
+    queryKey: ['exec', 'revenue', 'pricing-experiment', experimentId, days],
+    queryFn: async () => {
+      const { data } = await apiClient.get(
+        `/exec/revenue/pricing-experiments/${encodeURIComponent(experimentId)}?days=${days}`,
+      );
+      return data;
+    },
+    enabled: /^[A-Za-z0-9._:-]{1,96}$/.test(experimentId) && days >= 1 && days <= 3650,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+  });
