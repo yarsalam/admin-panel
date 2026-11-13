@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "../../client";
 
 // ─── تایپ‌های پایه ────────────────────────────────────────────────────────────
@@ -43,8 +43,8 @@ export interface LtvSourceRow {
   userCount: number;
   totalRevenue: number;
   ltv: number;
-  cac: number;
-  paybackPeriod: number;
+  cac: number | null;
+  paybackPeriod: number | null;
 }
 
 // ─── تایپ‌های جدید ────────────────────────────────────────────────────────────
@@ -344,3 +344,91 @@ export const useForecastAccuracy = (currency: RevenueCurrency = "IRT") =>
     },
     staleTime: 60 * 60 * 1000,
   });
+
+
+export interface AcquisitionGrowthRow {
+  source: string;
+  medium: string | null;
+  campaign: string | null;
+  campaignId: string | null;
+  newUsers: number;
+  profileCompletedUsers: number;
+  profileCompletionRatePercent: number | null;
+  firstInteractionUsers: number;
+  firstInteractionRatePercent: number | null;
+  d7EligibleUsers: number;
+  d7RetainedUsers: number;
+  d7RetentionRatePercent: number | null;
+  d30EligibleUsers: number;
+  d30RetainedUsers: number;
+  d30RetentionRatePercent: number | null;
+  firstPurchasers: number;
+  grossPurchaseRevenueRials: number;
+  costAmount: number | null;
+  costCurrency: RevenueCurrency;
+  cac: number | null;
+  grossRevenuePerAcquiredUser: number | null;
+  grossRevenueToCacRatio: number | null;
+}
+
+export interface AcquisitionGrowthReport {
+  currency: RevenueCurrency;
+  unit: string;
+  periodDays: number;
+  attributionModel: "first_touch";
+  costCoverage: string;
+  rows: AcquisitionGrowthRow[];
+  lastTouchSummary: {
+    source: string;
+    medium: string | null;
+    campaign: string | null;
+    campaignId: string | null;
+    users: number;
+  }[];
+  lastTouchTrackedUsers: number;
+  interpretation: string;
+  limitations: string[];
+}
+
+export interface CreateAcquisitionCostInput {
+  source: string;
+  medium?: string | null;
+  campaign?: string | null;
+  campaignId?: string | null;
+  category: "media" | "content" | "labor" | "agency" | "tools" | "other";
+  amount: number;
+  currency: RevenueCurrency;
+  occurredAt: string;
+  notes?: string | null;
+  idempotencyKey: string;
+}
+
+export const useAcquisitionGrowth = (
+  days = 90,
+  currency: RevenueCurrency = "IRT",
+) =>
+  useQuery<AcquisitionGrowthReport>({
+    queryKey: ["exec", "revenue", "acquisition-growth", days, currency],
+    queryFn: async () => {
+      const { data } = await apiClient.get(
+        `/exec/revenue/acquisition-growth?days=${days}&currency=${currency}`,
+      );
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+
+export const useCreateAcquisitionCost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateAcquisitionCostInput) => {
+      const { data } = await apiClient.post("/exec/revenue/acquisition-costs", input);
+      return data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["exec", "revenue", "acquisition-growth"],
+      });
+    },
+  });
+};

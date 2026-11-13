@@ -5,7 +5,6 @@ import {
   useRevenueForecast,
   useAnomalies,
   useStrategicDecisions,
-  useLtvBySource,
   useMrr,
   useProductRevenue,
   useGenderRevenue,
@@ -15,7 +14,6 @@ import {
   useChurnRevenue,
   useRevenueConcentration,
   useForecastAccuracy,
-  type LtvSourceRow,
   type CohortRow,
   type ForecastPoint,
   type ForecastAlert,
@@ -30,6 +28,7 @@ import GlobalText from "@/components/ui/GlobalText";
 import { Skeleton } from "@/components/ui/Skeleton";
 import KPICard from "@/components/KPICard";
 import { Card, MiniStat } from "@/components/ui/shared";
+import AcquisitionGrowthSection from "@/components/revenue/AcquisitionGrowthSection";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/lib/api/client";
 import {
@@ -876,84 +875,6 @@ function ConcentrationSection({ currency }: { currency: RevenueCurrency }) {
   );
 }
 
-// ─── ۱۱. Attribution Table ───────────────────────────────────────────────────
-function AttributionSection({ currency }: { currency: RevenueCurrency }) {
-  const { data, isLoading } = useLtvBySource(currency);
-  if (isLoading) return <SectionSkeleton />;
-  if (!data?.length) return null;
-
-  const sorted = [...data].sort((a, b) => (b.ltv ?? 0) - (a.ltv ?? 0));
-
-  return (
-    <div>
-      <SectionTitle>واریزی کیف پول به تفکیک منبع جذب (نه فروش نهایی محصول)</SectionTitle>
-      <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-900/40">
-              <tr>
-                {[
-                  "منبع",
-                  "کاربران",
-                  "درآمد کل",
-                  "LTV",
-                  "CAC",
-                  "LTV/CAC",
-                  "دوره بازگشت",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-right text-xs font-semibold text-gray-600"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {sorted.map((row: LtvSourceRow) => {
-                const ratio = row.cac > 0 ? row.ltv / row.cac : 0;
-                const ratioColor =
-                  ratio >= 3
-                    ? "text-emerald-600"
-                    : ratio >= 1
-                      ? "text-amber-600"
-                      : "text-red-600";
-                return (
-                  <tr
-                    key={row.source}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
-                  >
-                    <td className="px-4 py-2 font-medium">{row.source}</td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {fmt(row.userCount)}
-                    </td>
-                    <td className="px-4 py-2 text-gray-700">
-                      {fmtMoney(row.totalRevenue, currency)}
-                    </td>
-                    <td className="px-4 py-2 font-bold text-emerald-600">
-                      {fmtMoney(row.ltv, currency)}
-                    </td>
-                    <td className="px-4 py-2 text-rose-600">
-                      {fmtMoney(row.cac, currency)}
-                    </td>
-                    <td className={`px-4 py-2 font-bold ${ratioColor}`}>
-                      {ratio > 0 ? `${ratio.toFixed(1)}×` : "—"}
-                    </td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {row.paybackPeriod ? `${row.paybackPeriod} روز` : "—"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
 // ─── ۱۲. Forecast Accuracy ───────────────────────────────────────────────────
 function ForecastAccuracySection({ currency }: { currency: RevenueCurrency }) {
   const { data, isLoading } = useForecastAccuracy(currency);
@@ -1231,7 +1152,7 @@ function RevenuesPage() {
       <FunnelSection currency={currency} />
 
       {/* ── ۹. Attribution ── */}
-      <AttributionSection currency={currency} />
+      <AcquisitionGrowthSection currency={currency} />
 
       {/* ── ۱۰. Churn ── */}
       <ChurnSection currency={currency} />
