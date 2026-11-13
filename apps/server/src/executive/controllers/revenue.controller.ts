@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../admin/common/guards/jwt-auth.guard';
 import { UserApiClientService } from '../../admin/common/api-client/user-api-client.service';
 
@@ -112,7 +112,7 @@ export class RevenueController {
     @Query('days') days = '90',
   ) {
     if (!/^[A-Za-z0-9._:-]{1,96}$/.test(experimentId)) {
-      throw new Error('Invalid pricing experiment ID');
+      throw new BadRequestException('Invalid pricing experiment ID');
     }
     return this.api.get(
       `/admin-api/revenue/pricing-experiments/${encodeURIComponent(experimentId)}${this.query({ days })}`,
