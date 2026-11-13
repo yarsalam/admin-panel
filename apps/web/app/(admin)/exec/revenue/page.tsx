@@ -1118,6 +1118,18 @@ function PricingExperimentSection() {
       <div className="font-bold text-sm">{value}</div>
     </div>
   );
+  const percentagePointDelta = (
+    treatmentValue: number | null | undefined,
+    controlValue: number | null | undefined,
+  ) => treatmentValue == null || controlValue == null
+    ? '—'
+    : `${treatmentValue - controlValue > 0 ? '+' : ''}${(treatmentValue - controlValue).toFixed(2)} واحد درصد`;
+  const revenuePerExposedDelta =
+    treatment?.observedRevenuePerExposedUserRials == null ||
+    control?.observedRevenuePerExposedUserRials == null
+      ? null
+      : treatment.observedRevenuePerExposedUserRials -
+        control.observedRevenuePerExposedUserRials;
   const variantCard = (row: typeof control, title: string) => row ? (
     <Card className="p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -1190,6 +1202,16 @@ function PricingExperimentSection() {
             {variantCard(control, 'گروه کنترل')}
             {variantCard(treatment, 'گروه تخفیف')}
           </div>
+          {control && treatment ? (
+            <Card className="p-4 space-y-3">
+              <h3 className="font-bold text-sm">اختلاف مشاهده‌شده (گروه تخفیف منهای کنترل)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {metric('اختلاف نرخ تبدیل خرید اول', percentagePointDelta(treatment.conversionRatePercent, control.conversionRatePercent))}
+                {metric('اختلاف نرخ خرید مجدد', percentagePointDelta(treatment.repeatPurchaseRatePercent, control.repeatPurchaseRatePercent))}
+                {metric('اختلاف درآمد به‌ازای هر کاربر در معرض', revenuePerExposedDelta == null ? '—' : `${revenuePerExposedDelta > 0 ? '+' : ''}${fmtMoney(revenuePerExposedDelta, 'IRT')}`)}
+              </div>
+            </Card>
+          ) : null}
           <Card className="p-4">
             <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
               این گزارش توصیفی است. اختلاف درآمد یا تبدیل، به‌تنهایی اثبات اثر علّی تخفیف یا معناداری آماری نیست. پیش از تصمیم‌گیری باید اندازه نمونه، مدت مشاهده، بازپرداخت/لغو و پنجره بلوغ خرید مجدد بررسی شود.
