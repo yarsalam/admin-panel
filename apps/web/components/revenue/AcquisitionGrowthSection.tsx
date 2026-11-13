@@ -296,6 +296,28 @@ export default function AcquisitionGrowthSection({
             </table>
           </div>
 
+          <div className="rounded-xl border p-3 space-y-3">
+            <div>
+              <h3 className="font-semibold text-sm">ترکیب آخرین تماس ثبت‌شده</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                این فهرست برای مسیر چندتماسی است و جایگزین First-touch در محاسبهٔ CAC نمی‌شود. فقط تماس‌هایی را نشان می‌دهد که پس از ورود احرازشده ثبت شده‌اند.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {data.lastTouchSummary.map((item) => (
+                <div key={`${item.source}:${item.medium ?? ""}:${item.campaignId ?? item.campaign ?? ""}`} className="rounded-lg border px-3 py-2">
+                  <div className="font-semibold text-xs">{item.source}</div>
+                  <div className="text-[11px] text-gray-500">{item.medium ?? "بدون مدیوم"} · {item.campaign ?? item.campaignId ?? "بدون کمپین"}</div>
+                  <div className="text-sm mt-1">{fmt(item.users)} کاربر</div>
+                </div>
+              ))}
+              {data.lastTouchSummary.length === 0 ? (
+                <span className="text-xs text-gray-500">هنوز تماس آخرِ احرازشده‌ای ثبت نشده است.</span>
+              ) : null}
+            </div>
+            <p className="text-xs text-gray-500">کاربران دارای حداقل یک رویداد Last-touch ثبت‌شده: {fmt(data.lastTouchTrackedUsers)}</p>
+          </div>
+
           <div className="rounded-xl border p-3 space-y-2 text-xs text-gray-600 dark:text-gray-300">
             <p><strong>مدل انتساب:</strong> {data.attributionModel}؛ هر کاربر فقط در یک کانال First-touch شمرده می‌شود. Last-touch جداگانه ذخیره شده، اما در این جدول دوباره‌شماری ایجاد نمی‌کند.</p>
             <p>D7 فقط برای کاربران با حداقل ۷ روز عمر و فعالیت در روزهای ۷ تا ۱۳ محاسبه می‌شود. D30 فقط برای کاربران با حداقل ۳۰ روز عمر و فعالیت در روزهای ۳۰ تا ۳۶ محاسبه می‌شود.</p>
