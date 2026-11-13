@@ -1,4 +1,6 @@
-import { BadRequestException, Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Roles } from '../../admin/common/decorators/roles.decorator';
+import { RolesGuard } from '../../admin/common/guards/roles.guard';
 import { JwtAuthGuard } from '../../admin/common/guards/jwt-auth.guard';
 import { UserApiClientService } from '../../admin/common/api-client/user-api-client.service';
 
@@ -116,6 +118,40 @@ export class RevenueController {
     }
     return this.api.get(
       `/admin-api/revenue/pricing-experiments/${encodeURIComponent(experimentId)}${this.query({ days })}`,
+    );
+  }
+
+  @Get('pricing-experiments/:experimentId/config')
+  async pricingExperimentSettings(
+    @Param('experimentId') experimentId: string,
+  ) {
+    if (!/^[A-Za-z0-9._:-]{1,96}$/.test(experimentId)) {
+      throw new BadRequestException('Invalid pricing experiment ID');
+    }
+    return this.api.get(
+      `/admin-api/revenue/pricing-experiments/${encodeURIComponent(experimentId)}/config`,
+    );
+  }
+
+  @Patch('pricing-experiments/:experimentId/config')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin')
+  async updatePricingExperimentSettings(
+    @Param('experimentId') experimentId: string,
+    @Body() body: {
+      enabled: boolean;
+      discountBps: number;
+      treatmentRateBps: number;
+      maxDiscountBudgetRials: number;
+      endsAt: string;
+    },
+  ) {
+    if (!/^[A-Za-z0-9._:-]{1,96}$/.test(experimentId)) {
+      throw new BadRequestException('Invalid pricing experiment ID');
+    }
+    return this.api.patch(
+      `/admin-api/revenue/pricing-experiments/${encodeURIComponent(experimentId)}/config`,
+      body,
     );
   }
 }
