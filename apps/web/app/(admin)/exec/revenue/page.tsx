@@ -15,6 +15,7 @@ import {
   useChurnRevenue,
   useRevenueConcentration,
   useForecastAccuracy,
+  usePricingExperimentReport,
   type LtvSourceRow,
   type CohortRow,
   type ForecastPoint,
