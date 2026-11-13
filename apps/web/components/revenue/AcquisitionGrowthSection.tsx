@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import {
   useAcquisitionGrowth,
   useCreateAcquisitionCost,
@@ -48,7 +48,7 @@ export default function AcquisitionGrowthSection({
 
   const rows = useMemo(() => data?.rows ?? [], [data?.rows]);
 
-  const submitCost = async (event: React.FormEvent<HTMLFormElement>) => {
+  const submitCost = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const numericAmount = Number(amount);
     if (!source.trim() || !Number.isFinite(numericAmount) || numericAmount < 0 || !occurredAt) {
