@@ -1310,6 +1310,13 @@ function PricingExperimentSection() {
               !Number.isFinite(Number(discountPercent)) ||
               !Number.isFinite(Number(treatmentPercent)) ||
               !Number.isFinite(Number(budgetToman)) ||
+              Number(discountPercent) <= 0 ||
+              Number(discountPercent) > 30 ||
+              Number(treatmentPercent) <= 0 ||
+              Number(treatmentPercent) >= 100 ||
+              Number(budgetToman) <= 0 ||
+              Number(budgetToman) > 10000000 ||
+              !Number.isFinite(Date.parse(endsAtInput)) ||
               (enabled && !settings?.secretConfigured)
             }
             className="rounded-lg px-4 py-2 bg-indigo-600 text-white text-sm disabled:opacity-50"
