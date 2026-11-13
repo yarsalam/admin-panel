@@ -1101,6 +1101,105 @@ function DecisionCard({ decision, currency }: { decision: StrategicDecision; cur
   );
 }
 
+
+function PricingExperimentSection() {
+  const [experimentId, setExperimentId] = useState('pricing-first-purchase-v1');
+  const [days, setDays] = useState(90);
+  const { data, isLoading, isError, refetch } = usePricingExperimentReport(experimentId, days);
+  const variants = data?.variants ?? [];
+  const control = variants.find((row) => row.variant === 'control');
+  const treatment = variants.find((row) => row.variant === 'treatment');
+  const formatRate = (value: number | null | undefined) =>
+    value == null ? '—' : `${value.toFixed(2)}٪`;
+  const metric = (label: string, value: string) => (
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+      <div className="text-xs text-gray-500 mb-1">{label}</div>
+      <div className="font-bold text-sm">{value}</div>
+    </div>
+  );
+  const variantCard = (row: typeof control, title: string) => row ? (
+    <Card className="p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold">{title}</h3>
+        <span className="text-xs text-gray-500">{row.exposedUsers.toLocaleString('fa-IR')} نفر در معرض</span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {metric('نرخ تبدیل خرید اول', formatRate(row.conversionRatePercent))}
+        {metric('خریداران خرید اول', row.purchasedUsers.toLocaleString('fa-IR'))}
+        {metric('درآمد خرید اول', fmtMoney(row.revenueRials, 'IRT'))}
+        {metric('هزینه تخفیف', fmtMoney(row.discountRials, 'IRT'))}
+        {metric('نرخ خرید مجدد بین خریداران', formatRate(row.repeatPurchaseRatePercent))}
+        {metric('خریداران مجدد', row.repeatPurchasedUsers.toLocaleString('fa-IR'))}
+        {metric('تعداد خریدهای مجدد', row.repeatPurchaseCount.toLocaleString('fa-IR'))}
+        {metric('درآمد خرید مجدد', fmtMoney(row.repeatRevenueRials, 'IRT'))}
+        {metric('کل درآمد مشاهده‌شده', fmtMoney(row.totalObservedRevenueRials, 'IRT'))}
+        {metric('درآمد به‌ازای هر کاربر در معرض', fmtMoney(row.observedRevenuePerExposedUserRials, 'IRT'))}
+      </div>
+    </Card>
+  ) : <EmptyState text={`داده‌ای برای گروه ${title} در این بازه ثبت نشده است.`} />;
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <SectionTitle>آزمایش قیمت و اثر تخفیف</SectionTitle>
+          <GlobalText className="text-xs text-gray-500 -mt-2">
+            مقایسه گروه کنترل و تخفیف؛ شامل خرید اول، خرید مجدد و درآمد واقعی ثبت‌شده
+          </GlobalText>
+        </div>
+        <div className="flex flex-wrap gap-2 items-end">
+          <label className="text-xs text-gray-500">
+            شناسه آزمایش
+            <input
+              value={experimentId}
+              onChange={(event) => setExperimentId(event.target.value)}
+              className="block mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+              dir="ltr"
+            />
+          </label>
+          <label className="text-xs text-gray-500">
+            بازه گزارش
+            <select
+              value={days}
+              onChange={(event) => setDays(Number(event.target.value))}
+              className="block mt-1 border rounded-lg px-3 py-2 bg-white dark:bg-gray-800"
+            >
+              <option value={30}>۳۰ روز</option>
+              <option value={90}>۹۰ روز</option>
+              <option value={180}>۱۸۰ روز</option>
+              <option value={365}>۳۶۵ روز</option>
+            </select>
+          </label>
+          <button
+            onClick={() => refetch()}
+            className="rounded-lg border px-3 py-2 text-sm"
+            disabled={isLoading}
+          >
+            به‌روزرسانی
+          </button>
+        </div>
+      </div>
+      {isLoading ? <SectionSkeleton h="h-56" /> : null}
+      {isError ? (
+        <EmptyState text="گزارش آزمایش در دسترس نیست؛ شناسه آزمایش و اتصال API را بررسی کنید." />
+      ) : null}
+      {!isLoading && !isError && data ? (
+        <>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {variantCard(control, 'گروه کنترل')}
+            {variantCard(treatment, 'گروه تخفیف')}
+          </div>
+          <Card className="p-4">
+            <GlobalText className="text-xs text-amber-700 dark:text-amber-400">
+              این گزارش توصیفی است. اختلاف درآمد یا تبدیل، به‌تنهایی اثبات اثر علّی تخفیف یا معناداری آماری نیست. پیش از تصمیم‌گیری باید اندازه نمونه، مدت مشاهده، بازپرداخت/لغو و پنجره بلوغ خرید مجدد بررسی شود.
+            </GlobalText>
+          </Card>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
 // ─── صفحه اصلی ───────────────────────────────────────────────────────────────
 function RevenuesPage() {
   const [currency, setCurrency] = useState<RevenueCurrency>("IRT");
@@ -1182,7 +1281,7 @@ function RevenuesPage() {
         )}
       </div>
 
-      {/* ── ۲. MRR / ARR ── */}
+      <PricingExperimentSection />\n\n      {/* ── ۲. MRR / ARR ── */}
       <MrrSection currency={currency} />
 
       {/* ── ۳. نمودارهای تاریخی ── */}
