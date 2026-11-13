@@ -368,7 +368,7 @@ export interface AcquisitionGrowthRow {
   costCurrency: RevenueCurrency;
   cac: number | null;
   grossRevenuePerAcquiredUser: number | null;
-  ltvOverCac: number | null;
+  grossRevenueToCacRatio: number | null;
 }
 
 export interface AcquisitionGrowthReport {
