@@ -10,6 +10,8 @@ import { SocialService } from './services/social.service';
 import { MonetizationService } from './services/monetization.service';
 import { ReferralsModule } from './referrals/referrals.module';
 import { SeoStudioController } from './controllers/seo-studio.controller';
+import { ManualPromotionsController } from './controllers/manual-promotions.controller';
+import { ManualPromotionsService } from './services/manual-promotions.service';
 
 @Module({
   imports: [HttpModule, UserApiClientModule, ReferralsModule],
@@ -18,12 +20,14 @@ import { SeoStudioController } from './controllers/seo-studio.controller';
     SeoStudioController,
     SocialController,
     MonetizationController,
+    ManualPromotionsController,
   ],
   providers: [
     CampaignsService,
     SeoStudioService,
     SocialService,
     MonetizationService,
+    ManualPromotionsService,
   ],
   exports: [
     SeoStudioService, // ✅ مهم
