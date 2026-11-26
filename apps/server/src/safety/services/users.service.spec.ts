@@ -31,6 +31,21 @@ describe('UsersService AI advice read contract', () => {
 
     await expect(service.getAiAssistantAdvice(7)).rejects.toBe(error);
   });
+  it('propagates user image list failures instead of returning an empty collection', async () => {
+    const error = new Error('images unavailable');
+    userApi.get.mockRejectedValue(error);
+
+    await expect(service.getImages(7)).rejects.toBe(error);
+    expect(userApi.get).toHaveBeenCalledWith('/admin-api/safety/users/7/images');
+  });
+
+  it('propagates profile read failures', async () => {
+    const error = new Error('profile unavailable');
+    userApi.get.mockRejectedValue(error);
+
+    await expect(service.getProfile(7)).rejects.toBe(error);
+  });
+
   it('propagates user re-analysis failures', async () => {
     const error = new Error('re-analysis unavailable');
     userApi.post = jest.fn().mockRejectedValue(error);
