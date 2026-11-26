@@ -28,7 +28,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 export class AdminAuthModule implements OnModuleInit {
   constructor(private adminAuthService: AdminAuthService) {}
 
-  onModuleInit() {
-    this.adminAuthService.createInitialAdmin();
+  async onModuleInit() {
+    await this.adminAuthService.createInitialAdmin();
   }
 }
