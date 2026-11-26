@@ -68,7 +68,7 @@ function ModerationPage() {
       {activeTab === "images" && (
         <div>
           {imagesLoading && <Skeleton className="h-40" />}
-          {imagesError && <ErrorState message="خطا در بارگذاری تصاویر" />}
+          {imagesError && <ErrorState message="خطا در بارگذاری تصاویر" onRetry={refetchImages} />}
           {images && images.length === 0 && <p className="text-gray-500">هیچ تصویر پرچم‌داری وجود ندارد</p>}
           {images && images.length > 0 && (
             <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
@@ -99,7 +99,7 @@ function ModerationPage() {
       {activeTab === "messages" && (
         <div>
           {messagesLoading && <Skeleton className="h-40" />}
-          {messagesError && <ErrorState message="خطا در بارگذاری پیام‌ها" />}
+          {messagesError && <ErrorState message="خطا در بارگذاری پیام‌ها" onRetry={refetchMessages} />}
           {messages && messages.length === 0 && <p className="text-gray-500">هیچ پیام پرچم‌داری وجود ندارد</p>}
           {messages && messages.length > 0 && (
             <div className="space-y-3">
