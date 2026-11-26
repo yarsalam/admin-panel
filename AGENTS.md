@@ -16,3 +16,18 @@ Before changing code or claiming release readiness:
 12. Finish with a concise report of changes, tests actually run, failures/risks, and the single next action.
 
 Release readiness is a gated decision, not an inference from a green build or CI job.
+
+## Bounded, Stage-by-Stage Audit Policy
+
+Apply this policy to every audit task in addition to `QUALITY-ROADMAP.md`:
+
+1. Define a finite, risk-based list of required checks and explicit exit criteria before starting each stage.
+2. Do not rerun a check that has passed with reproducible evidence unless a code, dependency, configuration, environment, or infrastructure change invalidates that evidence.
+3. For a failed check, either make a targeted fix and perform a bounded verification, or record it as `FAILED`/`BLOCKED` with its cause, impact, risk, and follow-up owner. Do not repeat the same command without a new diagnostic hypothesis.
+4. Move to the next roadmap stage once the current stage's required checks are complete and evidence is recorded. Non-blocking follow-ups must not keep a stage open indefinitely.
+5. Record remaining work, limitations, and unresolved risks in the final report. Do not hide them, but do not stop the rest of the audit unnecessarily.
+6. At the end of each stage, report its status, checks run and remaining, then explicitly ask the user to run/provide the requested evidence so work can proceed to the next stage (Persian wording: «اجرا کن و خروجی را بفرست تا به مرحله بعد برویم.»).
+7. Operations validation MUST include starting the actual application/container and checking its runtime Healthcheck. A successful build or image creation alone is not runtime validation.
+
+Passing to the next stage does not imply that the previous stage passed. Preserve its actual status (`PASSED`, `FAILED`, `BLOCKED`, or `NOT_STARTED`) and keep the final release gate independent. Never trade away a release blocker merely to keep the audit moving.
+
