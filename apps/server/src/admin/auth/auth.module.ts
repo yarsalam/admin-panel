@@ -26,7 +26,4 @@ import { getRequiredJwtSecret } from 'src/config/security-config';
   providers: [AdminAuthService, JwtStrategy],
   exports: [JwtModule],
 })
-export class AdminAuthModule {
-  constructor(private adminAuthService: AdminAuthService) {}
-
-}
+export class AdminAuthModule {}
