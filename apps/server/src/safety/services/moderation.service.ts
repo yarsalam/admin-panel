@@ -19,13 +19,11 @@ export class ModerationService {
 
   async getFlaggedImages() {
     return this.userApi
-      .get('/admin-api/safety/moderation/flagged-images')
-      .catch(() => []);
+      .get('/admin-api/safety/moderation/flagged-images');
   }
   async getFlaggedMessages() {
     return this.userApi
-      .get('/admin-api/safety/moderation/flagged-messages')
-      .catch(() => []);
+      .get('/admin-api/safety/moderation/flagged-messages');
   }
   async approveContent(type: 'image' | 'message', id: number) {
     return this.userApi.post(
