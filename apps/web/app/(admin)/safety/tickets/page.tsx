@@ -51,11 +51,13 @@ function AIAnalysisTab({
   onReAnalyze,
   isPending,
   isLoading,
+  isError,
 }: {
   ticket: any;
   onReAnalyze: () => void;
   isPending: boolean;
   isLoading?: boolean;
+  isError?: boolean;
 }) {
   const ai = ticket.aiSuggestions ?? {};
   const sentiment = ticket.sentimentAnalysis ?? {};
@@ -84,7 +86,9 @@ function AIAnalysisTab({
         </button>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState message="خطا در دریافت تحلیل هوش مصنوعی" />
+      ) : isLoading ? (
         <div className="flex flex-col items-center justify-center py-12 text-gray-400 text-sm gap-2">
           <span className="animate-spin text-2xl inline-block w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full" />
           <p>در حال دریافت تحلیل AI...</p>
@@ -292,7 +296,11 @@ function TicketsPage() {
       }),
   });
 
-  const { data: ticketDetail, isLoading: detailLoading } = useQuery({
+  const {
+    data: ticketDetail,
+    isLoading: detailLoading,
+    isError: detailError,
+  } = useQuery({
     queryKey: ["safety", "tickets", selectedTicketId],
     queryFn: () => fetchTicketDetail(selectedTicketId!),
     enabled: !!selectedTicketId,
@@ -301,6 +309,7 @@ function TicketsPage() {
   const {
     data: aiAnalysisData,
     isLoading: aiLoading,
+    isError: aiError,
     refetch: refetchAi,
   } = useQuery({
     queryKey: ["safety", "tickets", selectedTicketId, "ai-analysis"],
@@ -517,6 +526,8 @@ function TicketsPage() {
               <Skeleton className="h-20" />
               <Skeleton className="h-40" />
             </div>
+          ) : detailError ? (
+            <div className="p-4"><ErrorState message="خطا در دریافت جزئیات تیکت" /></div>
           ) : ticketDetail ? (
             <div className="flex flex-col h-full">
               <div className="p-4 border-b dark:border-gray-700">
@@ -666,6 +677,7 @@ function TicketsPage() {
                   onReAnalyze={onReAnalyze}
                   isPending={reAnalyzeMutation.isPending}
                   isLoading={aiLoading}
+                  isError={aiError}
                 />
               )}
             </div>
