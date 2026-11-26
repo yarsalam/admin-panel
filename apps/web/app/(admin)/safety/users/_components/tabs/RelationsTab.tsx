@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useUserRelations } from "@/lib/api/safety/queries/useUser360";
 import { useRemoveRelation } from "@/lib/api/safety/mutations/useUser360Actions";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const typeColors: Record<string, string> = {
   match: "bg-green-100 text-green-700",
@@ -18,7 +19,7 @@ export default function RelationsTab({
 }) {
   const [filter, setFilter] = useState<string>("");
   // این تب خودش lazy fetch می‌کند چون data360 فقط 100 آیتم اول داره
-  const { data: relations = [], isLoading } = useUserRelations(
+  const { data: relations = [], isLoading, isError, refetch } = useUserRelations(
     userId,
     filter || undefined,
   );
@@ -44,6 +45,7 @@ export default function RelationsTab({
       </div>
 
       {isLoading && <p className="text-gray-500 text-sm">در حال بارگذاری...</p>}
+      {isError && <ErrorState message="خطا در دریافت روابط کاربر" onRetry={refetch} />}
 
       <div className="space-y-2">
         {(relations as any[]).map((r: any) => {
@@ -80,7 +82,7 @@ export default function RelationsTab({
             </div>
           );
         })}
-        {!isLoading && !(relations as any[]).length && (
+        {!isLoading && !isError && !(relations as any[]).length && (
           <p className="text-gray-500 text-sm">رابطه‌ای یافت نشد</p>
         )}
       </div>
