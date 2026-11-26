@@ -111,4 +111,8 @@ jobs:
 
       - name: Tear down isolated stack
         if: always()
-        run: docker compose --env-file .env.production -f docker-compose.production.yml down -v --remove-orphans
+        shell: bash
+        run: |
+          if [ -f .env.production ]; then
+            docker compose --env-file .env.production -f docker-compose.production.yml down -v --remove-orphans
+          fi
