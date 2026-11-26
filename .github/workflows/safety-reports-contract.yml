@@ -1,0 +1,38 @@
+name: Safety Reports Contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/server/src/safety/services/reports.service.ts"
+      - "apps/server/src/safety/services/reports.service.spec.ts"
+      - "apps/server/package.json"
+      - "apps/server/tsconfig.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/safety-reports-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  reports-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Install workspace dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Run ReportsService contract tests
+        run: pnpm --filter server test -- --runInBand safety/services/reports.service.spec.ts
+      - name: Build admin server
+        run: pnpm --filter server build
