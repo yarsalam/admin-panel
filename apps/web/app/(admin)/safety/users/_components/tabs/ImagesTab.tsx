@@ -6,6 +6,7 @@ import {
   useRejectImage,
 } from "@/lib/api/safety/mutations/useUser360Actions";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useState } from "react";
 
 export default function ImagesTab({
@@ -17,6 +18,7 @@ export default function ImagesTab({
   const {
     data: images,
     isLoading,
+    isError,
     refetch,
   } = useQuery({
     queryKey: ["safety", "user", userId, "images"],
@@ -30,6 +32,7 @@ export default function ImagesTab({
   const [rejectReason, setRejectReason] = useState("");
 
   if (isLoading) return <Skeleton className="h-60" />;
+  if (isError) return <ErrorState message="خطا در دریافت تصاویر کاربر" onRetry={refetch} />;
   if (!images?.length)
     return <p className="text-gray-500">هیچ عکسی وجود ندارد</p>;
 
