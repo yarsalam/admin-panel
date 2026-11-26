@@ -12,59 +12,51 @@ export class UserDetailService {
 
   // ── موجود در SafetyUsersController ───────────────────────────────
   getProfile(id: number) {
-    return this.userApi.get(`${this.u(id)}/profile`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/profile`);
   }
   getImages(id: number) {
-    return this.userApi.get(`${this.u(id)}/images`).catch(() => []);
+    return this.userApi.get(`${this.u(id)}/images`);
   }
   getActivity(id: number) {
-    return this.userApi.get(`${this.u(id)}/activity`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/activity`);
   }
   getFinancial(id: number) {
-    return this.userApi.get(`${this.u(id)}/financial`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/financial`);
   }
   getReports(id: number) {
-    return this.userApi.get(`${this.u(id)}/reports`).catch(() => []);
+    return this.userApi.get(`${this.u(id)}/reports`);
   }
   getModerationLogs(id: number) {
-    return this.userApi.get(`${this.u(id)}/moderation-logs`).catch(() => []);
+    return this.userApi.get(`${this.u(id)}/moderation-logs`);
   }
   getAiAdvice(id: number) {
-    return this.userApi.get(`${this.u(id)}/ai-advice`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/ai-advice`);
   }
 
   // ── موجود در SafetyUserDetailController ──────────────────────────
   getTrust(id: number) {
-    return this.userApi.get(`${this.u(id)}/trust`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/trust`);
   }
   getDevices(id: number) {
-    return this.userApi.get(`${this.u(id)}/devices`).catch(() => []);
+    return this.userApi.get(`${this.u(id)}/devices`);
   }
   getPhones(id: number) {
-    return this.userApi.get(`${this.u(id)}/phones`).catch(() => []);
+    return this.userApi.get(`${this.u(id)}/phones`);
   }
   getPersonality(id: number) {
-    return this.userApi.get(`${this.u(id)}/personality`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/personality`);
   }
   getBadges(id: number) {
-    return this.userApi.get(`${this.u(id)}/badges`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/badges`);
   }
   getMetrics(id: number) {
-    return this.userApi.get(`${this.u(id)}/metrics`).catch(() => null);
+    return this.userApi.get(`${this.u(id)}/metrics`);
   }
   getNotifications(id: number) {
-    return this.userApi
-      .get(`${this.u(id)}/notifications`)
-      .then((res) => {
-        console.log('[DEBUG] notifications raw:', JSON.stringify(res));
-        return res;
-      })
-      .catch(() => []);
+    return this.userApi.get(`${this.u(id)}/notifications`);
   }
   getRelations(id: number, type?: string) {
-    return this.userApi
-      .get(`${this.u(id)}/relations`, type ? { type } : {})
-      .catch(() => []);
+    return this.userApi.get(`${this.u(id)}/relations`, type ? { type } : {});
   }
 
   // ── Actions ───────────────────────────────────────────────────────
@@ -142,25 +134,37 @@ export class UserDetailService {
       this.getImages(id),
     ]);
 
-    const v = (r: PromiseSettledResult<any>) =>
-      r.status === 'fulfilled' ? r.value : null;
-
+    const fields = {
+      profile, trust, devices, phones, personality, badges, relations, reports,
+      moderationLogs: modLogs, notifications, metrics, activity, financial,
+      aiAdvice, images,
+    };
+    const value = (
+      result: PromiseSettledResult<any>,
+      fallback: any = null,
+    ) => (result.status === 'fulfilled' ? result.value : fallback);
+    const errors = Object.fromEntries(
+      Object.entries(fields)
+        .filter(([, result]) => result.status === 'rejected')
+        .map(([key]) => [key, true]),
+    );
     return {
-      profile: v(profile),
-      trust: v(trust),
-      devices: v(devices),
-      phones: v(phones),
-      personality: v(personality),
-      badges: v(badges),
-      relations: v(relations),
-      reports: v(reports),
-      moderationLogs: v(modLogs),
-      notifications: v(notifications),
-      metrics: v(metrics),
-      activity: v(activity),
-      financial: v(financial),
-      aiAdvice: v(aiAdvice),
-      images: v(images),
+      profile: value(profile),
+      trust: value(trust),
+      devices: value(devices, []),
+      phones: value(phones, []),
+      personality: value(personality),
+      badges: value(badges),
+      relations: value(relations, []),
+      reports: value(reports, []),
+      moderationLogs: value(modLogs, []),
+      notifications: value(notifications, []),
+      metrics: value(metrics),
+      activity: value(activity),
+      financial: value(financial),
+      aiAdvice: value(aiAdvice),
+      images: value(images, []),
+      _errors: errors,
     };
   }
 }

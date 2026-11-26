@@ -19,59 +19,49 @@ export class UsersService {
 
   getProfile(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/profile`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/profile`);
   }
   getImages(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/images`)
-      .catch(() => []);
+      .get(`/admin-api/safety/users/${userId}/images`);
   }
   getActivity(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/activity`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/activity`);
   }
   getFinancial(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/financial`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/financial`);
   }
   getReports(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/reports`)
-      .catch(() => []);
+      .get(`/admin-api/safety/users/${userId}/reports`);
   }
   getModerationLogs(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/moderation-logs`)
-      .catch(() => []);
+      .get(`/admin-api/safety/users/${userId}/moderation-logs`);
   }
   getAiAssistantAdvice(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/ai-advice`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/ai-advice`);
   }
   reAnalyzeUser(userId: number, bio: string, messages: string[]) {
-    return this.userApi
-      .post(`/admin-api/safety/users/${userId}/re-analyze`, { bio, messages })
-      .catch(() => null);
+    return this.userApi.post(
+      `/admin-api/safety/users/${userId}/re-analyze`,
+      { bio, messages },
+    );
   }
 
   async verifyFace(selfieBuffer: Buffer, profileBuffer: Buffer) {
-    try {
-      const FormData = (await import('form-data')).default;
-      const form = new FormData();
-      form.append('selfie', selfieBuffer, 'selfie.jpg');
-      form.append('profile_photo', profileBuffer, 'profile.jpg');
-      const { data } = await firstValueFrom(
-        this.http.post(`${this.aiVerificationUrl}/verify`, form, {
-          headers: form.getHeaders(),
-        }),
-      );
-      return data;
-    } catch {
-      return null;
-    }
+    const FormData = (await import('form-data')).default;
+    const form = new FormData();
+    form.append('selfie', selfieBuffer, 'selfie.jpg');
+    form.append('profile_photo', profileBuffer, 'profile.jpg');
+    const { data } = await firstValueFrom(
+      this.http.post(`${this.aiVerificationUrl}/verify`, form, {
+        headers: form.getHeaders(),
+      }),
+    );
+    return data;
   }
 }

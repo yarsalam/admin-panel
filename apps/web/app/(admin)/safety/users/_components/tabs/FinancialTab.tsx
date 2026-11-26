@@ -9,7 +9,14 @@ const statusColor: Record<string, string> = {
 
 export default function FinancialTab({ data360 }: { userId: number; data360: any }) {
   const { financial } = data360;
-  if (!financial) return <p className="text-gray-500">اطلاعات مالی موجود نیست</p>;
+  if (!financial)
+    return (
+      <p className="text-gray-500">
+        {data360?._errors?.financial
+          ? "دریافت اطلاعات مالی ناموفق بود؛ اطلاعات خالی نیست."
+          : "اطلاعات مالی موجود نیست"}
+      </p>
+    );
 
   const { payments = [], boost, vip, credits } = financial;
   const totalPaid   = payments.filter((p: any) => p.status === 'success').reduce((s: number, p: any) => s + (p.amount ?? 0), 0);

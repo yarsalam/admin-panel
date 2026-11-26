@@ -5,6 +5,7 @@ import { Tab } from "@headlessui/react";
 import { useUser360 } from "@/lib/api/safety/queries/useUser360";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { PartialDataWarning } from "@/components/safety/PartialDataWarning";
 
 // تب‌ها — lazy import برای کاهش bundle اولیه
 import dynamic from "next/dynamic";
@@ -29,13 +30,14 @@ const TABS = [
 function User360Page() {
   const { id } = useParams<{ id: string }>();
   const userId = parseInt(id);
-  const { data, isLoading, error } = useUser360(userId);
+  const { data, isLoading, error, refetch } = useUser360(userId);
 
   if (isLoading) return <Skeleton className="h-96" />;
-  if (error || !data?.profile) return <ErrorState message="خطا در بارگذاری" />;
+  if (error || !data?.profile) return <ErrorState message="خطا در بارگذاری اطلاعات اصلی کاربر" onRetry={refetch} />;
 
   return (
     <div className="space-y-6">
+      <PartialDataWarning errors={data._errors} />
       {/* هدر */}
       <div className="flex items-center gap-4">
         <div>

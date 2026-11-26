@@ -11,7 +11,8 @@ const statusColor: Record<string, string> = {
 
 export default function ReportsTab({ userId, data360 }: { userId: number; data360: any }) {
   const qc = useQueryClient();
-  const { reports = [], moderationLogs = [] } = data360;
+  const reports = Array.isArray(data360?.reports) ? data360.reports : [];
+  const moderationLogs = Array.isArray(data360?.moderationLogs) ? data360.moderationLogs : [];
 
   const confirmMut = useMutation({
     mutationFn: (id: number) => apiClient.post(`/safety/reports/${id}/confirm`),
