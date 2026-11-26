@@ -9,7 +9,7 @@ describe('TicketsService read contract', () => {
     userApi = { get: jest.fn(), post: jest.fn() };
     service = new TicketsService(
       {} as any,
-      {} as any,
+      { get: jest.fn().mockReturnValue(undefined) } as any,
       userApi as unknown as UserApiClientService,
     );
   });
