@@ -22,21 +22,18 @@ export class TicketsService {
     if (status) params.status = status;
     if (priority) params.priority = priority;
     return this.userApi
-      .get('/admin-api/safety/tickets', params)
-      .catch(() => []);
+      .get('/admin-api/safety/tickets', params);
   }
 
   async getTicketDetail(ticketId: number) {
     return this.userApi
-      .get(`/admin-api/safety/tickets/${ticketId}`)
-      .catch(() => null);
+      .get(`/admin-api/safety/tickets/${ticketId}`);
   }
 
   // ✅ اصلاح: باید از userApi بره به backend اصلی
   async getAIAnalysis(ticketId: number) {
     return this.userApi
-      .get(`/admin-api/safety/tickets/${ticketId}/ai-analysis`)
-      .catch(() => null);
+      .get(`/admin-api/safety/tickets/${ticketId}/ai-analysis`);
   }
 
   async resolveTicket(ticketId: number, resolution: string) {
