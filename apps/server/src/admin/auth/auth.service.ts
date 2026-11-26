@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AdminUser } from './entities/admin-user.entity';
@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { RoleDefaultPermissions } from './role-permissions';
 
 @Injectable()
-export class AdminAuthService {
+export class AdminAuthService implements OnModuleInit {
   constructor(
     @InjectRepository(AdminUser)
     private adminUserRepo: Repository<AdminUser>,
@@ -45,6 +45,10 @@ export class AdminAuthService {
     };
 
     return { access_token: this.jwtService.sign(payload) };
+  }
+
+  async onModuleInit() {
+    await this.createInitialAdmin();
   }
 
   async createInitialAdmin() {
