@@ -19,33 +19,27 @@ export class UsersService {
 
   getProfile(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/profile`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/profile`);
   }
   getImages(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/images`)
-      .catch(() => []);
+      .get(`/admin-api/safety/users/${userId}/images`);
   }
   getActivity(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/activity`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/activity`);
   }
   getFinancial(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/financial`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/financial`);
   }
   getReports(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/reports`)
-      .catch(() => []);
+      .get(`/admin-api/safety/users/${userId}/reports`);
   }
   getModerationLogs(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/moderation-logs`)
-      .catch(() => []);
+      .get(`/admin-api/safety/users/${userId}/moderation-logs`);
   }
   getAiAssistantAdvice(userId: number) {
     return this.userApi
