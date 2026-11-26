@@ -43,6 +43,7 @@ services:
       - shared_network
 
   admin-backend:
+    image: yarsalam-admin-backend:production
     build:
       context: .
       dockerfile: apps/server/Dockerfile.production
@@ -78,6 +79,7 @@ services:
       - shared_network
 
   admin-web:
+    image: yarsalam-admin-web:production
     build:
       context: .
       dockerfile: apps/web/Dockerfile.production
