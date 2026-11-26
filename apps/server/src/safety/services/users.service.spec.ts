@@ -1,5 +1,6 @@
 import { UsersService } from './users.service';
 import { UserApiClientService } from '../../admin/common/api-client/user-api-client.service';
+import { throwError } from 'rxjs';
 
 describe('UsersService AI advice read contract', () => {
   let service: UsersService;
@@ -30,4 +31,21 @@ describe('UsersService AI advice read contract', () => {
 
     await expect(service.getAiAssistantAdvice(7)).rejects.toBe(error);
   });
+  it('propagates user re-analysis failures', async () => {
+    const error = new Error('re-analysis unavailable');
+    userApi.post = jest.fn().mockRejectedValue(error);
+
+    await expect(service.reAnalyzeUser(7, 'bio', [])).rejects.toBe(error);
+  });
+
+  it('propagates face-verification service failures', async () => {
+    const error = new Error('verification service unavailable');
+    const http = (service as any).http;
+    http.post = jest.fn().mockReturnValue(throwError(() => error));
+
+    await expect(
+      service.verifyFace(Buffer.from('selfie'), Buffer.from('profile')),
+    ).rejects.toBe(error);
+  });
+
 });
