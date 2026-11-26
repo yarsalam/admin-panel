@@ -49,8 +49,7 @@ export class UsersService {
   }
   getAiAssistantAdvice(userId: number) {
     return this.userApi
-      .get(`/admin-api/safety/users/${userId}/ai-advice`)
-      .catch(() => null);
+      .get(`/admin-api/safety/users/${userId}/ai-advice`);
   }
   reAnalyzeUser(userId: number, bio: string, messages: string[]) {
     return this.userApi
