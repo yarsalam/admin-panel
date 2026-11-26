@@ -20,8 +20,15 @@ export default function ActivityTab({
 }) {
   const { activity } = data360;
 
-  if (!activity)
-    return <p className="text-gray-500 text-sm">داده فعالیتی وجود ندارد</p>;
+  if (!activity) {
+    return (
+      <p className="text-gray-500 text-sm">
+        {data360?._errors?.activity
+          ? "دریافت اطلاعات فعالیت ناموفق بود؛ اطلاعات خالی نیست."
+          : "داده فعالیتی وجود ندارد"}
+      </p>
+    );
+  }
 
   const {
     visitors = [],
