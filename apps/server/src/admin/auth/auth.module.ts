@@ -7,6 +7,7 @@ import { AdminAuthController } from './auth.controller';
 import { AdminUser } from './entities/admin-user.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { getRequiredJwtSecret } from 'src/config/security-config';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.getOrThrow<string>('JWT_SECRET'),
+        secret: getRequiredJwtSecret(configService),
         signOptions: { expiresIn: '24h' },
       }),
       inject: [ConfigService],
