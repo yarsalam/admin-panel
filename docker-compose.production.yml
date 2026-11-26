@@ -1,0 +1,102 @@
+# Standalone production/staging stack for the Admin panel.
+# The backend stack must create the external yarsalam_network first.
+# Start with:
+# docker compose --env-file .env.production -f docker-compose.production.yml up -d --build
+#
+# Do not set DB_SYNC=true against an existing or persistent database.
+# This repository currently has no TypeORM migrations; schema bootstrap must be
+# handled explicitly before a long-lived production deployment.
+
+services:
+  admin-mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ADMIN_DB_ROOT_PASSWORD:?Set ADMIN_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${ADMIN_DB_NAME:-admin_yarsalam}
+      MYSQL_USER: ${ADMIN_DB_USER:-admin_app}
+      MYSQL_PASSWORD: ${ADMIN_DB_PASSWORD:?Set ADMIN_DB_PASSWORD}
+      MYSQL_ROOT_HOST: localhost
+    volumes:
+      - admin_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - shared_network
+
+  admin-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - admin_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shared_network
+
+  admin-backend:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile.production
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      DB_HOST: admin-mysql
+      DB_PORT: "3306"
+      DB_USER: ${ADMIN_DB_USER:-admin_app}
+      DB_PASS: ${ADMIN_DB_PASSWORD:?Set ADMIN_DB_PASSWORD}
+      DB_NAME: ${ADMIN_DB_NAME:-admin_yarsalam}
+      DB_SYNC: ${DB_SYNC:-false}
+      DB_LOGGING: ${DB_LOGGING:-false}
+      REDIS_HOST: admin-redis
+      REDIS_PORT: "6379"
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      USER_API_BASE_URL: ${USER_API_BASE_URL:-http://backend:5000}
+      USER_API_KEY: ${USER_API_KEY:?Set USER_API_KEY to match Backend INTERNAL_API_KEY}
+      ADMIN_CORS_ORIGINS: ${ADMIN_CORS_ORIGINS:?Set ADMIN_CORS_ORIGINS}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      admin-mysql:
+        condition: service_healthy
+      admin-redis:
+        condition: service_healthy
+    networks:
+      - shared_network
+
+  admin-web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      admin-backend:
+        condition: service_healthy
+    networks:
+      - shared_network
+
+volumes:
+  admin_mysql_data:
+  admin_redis_data:
+
+networks:
+  shared_network:
+    external: true
+    name: yarsalam_network
