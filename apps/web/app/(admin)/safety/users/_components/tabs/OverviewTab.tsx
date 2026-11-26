@@ -14,14 +14,9 @@ export default function OverviewTab({
   userId: number;
   data360: any;
 }) {
-  const {
-    profile,
-    trust,
-    devices = [],
-    phones = [],
-    personality,
-    badges,
-  } = data360;
+  const { profile, trust, personality, badges } = data360;
+  const devices = Array.isArray(data360?.devices) ? data360.devices : [];
+  const phones = Array.isArray(data360?.phones) ? data360.phones : [];
 
   const flagDevice = useFlagDevice(userId);
   const revokeDevice = useRevokeDevice(userId);
