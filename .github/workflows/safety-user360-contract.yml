@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "apps/server/src/safety/services/user-detail.service.ts"
-      - "apps/server/src/safety/services/user-detail.service.spec.ts"
+      - "apps/server/src/safety/services/user-detail.service.spec.ts safety/services/users.service.spec.ts"
       - "apps/web/app/(admin)/safety/users/**"
       - "apps/web/components/safety/PartialDataWarning.tsx"
       - "apps/web/package.json"
