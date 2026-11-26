@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -26,10 +26,7 @@ import { getRequiredJwtSecret } from 'src/config/security-config';
   providers: [AdminAuthService, JwtStrategy],
   exports: [JwtModule],
 })
-export class AdminAuthModule implements OnModuleInit {
+export class AdminAuthModule {
   constructor(private adminAuthService: AdminAuthService) {}
 
-  async onModuleInit() {
-    await this.adminAuthService.createInitialAdmin();
-  }
 }
