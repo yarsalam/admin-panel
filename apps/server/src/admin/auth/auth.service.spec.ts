@@ -8,7 +8,7 @@ describe('AdminAuthService initial superadmin bootstrap', () => {
     const repository = {
       findOne: jest.fn(),
       create: jest.fn((value: any) => value),
-      save: jest.fn<(...args: any[]) => Promise<any>>().mockResolvedValue({}),
+      save: jest.fn().mockResolvedValue({}),
     };
     const config = {
       get: jest.fn((key: string) => configValues[key]),
