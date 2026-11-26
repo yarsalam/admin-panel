@@ -1,4 +1,3 @@
-import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import * as bcrypt from 'bcrypt';
 import { AdminAuthService } from './auth.service';
 
