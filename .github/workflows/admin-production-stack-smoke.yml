@@ -29,6 +29,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test secure admin bootstrap and CORS/JWT configuration
+        run: pnpm --filter server test -- --runInBand admin/auth/auth.service.spec.ts config/cors-origins.spec.ts config/security-config.spec.ts
+
+      - name: Build Admin server
+        run: pnpm --filter server build
+
       - name: Prepare isolated CI environment
         shell: bash
         run: |
