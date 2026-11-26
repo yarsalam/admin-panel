@@ -52,9 +52,10 @@ export class UsersService {
       .get(`/admin-api/safety/users/${userId}/ai-advice`);
   }
   reAnalyzeUser(userId: number, bio: string, messages: string[]) {
-    return this.userApi
-      .post(`/admin-api/safety/users/${userId}/re-analyze`, { bio, messages })
-      .catch(() => null);
+    return this.userApi.post(
+      `/admin-api/safety/users/${userId}/re-analyze`,
+      { bio, messages },
+    );
   }
 
   async verifyFace(selfieBuffer: Buffer, profileBuffer: Buffer) {
@@ -69,8 +70,8 @@ export class UsersService {
         }),
       );
       return data;
-    } catch {
-      return null;
+    } catch (error) {
+      throw error;
     }
   }
 }
