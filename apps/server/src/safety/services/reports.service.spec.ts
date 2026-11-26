@@ -3,14 +3,14 @@ import { UserApiClientService } from '../../admin/common/api-client/user-api-cli
 
 describe('ReportsService API contract', () => {
   let service: ReportsService;
-  let userApi: jest.Mocked<Pick<UserApiClientService, 'get' | 'post'>>;
+  let userApi: { get: jest.Mock; post: jest.Mock };
 
   beforeEach(() => {
     userApi = {
       get: jest.fn(),
       post: jest.fn(),
-    } as unknown as jest.Mocked<Pick<UserApiClientService, 'get' | 'post'>>;
-    service = new ReportsService(userApi as UserApiClientService);
+    };
+    service = new ReportsService(userApi as unknown as UserApiClientService);
   });
 
   it('lists reports through the backend safety reports route', async () => {
