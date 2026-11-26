@@ -30,11 +30,15 @@
       "brace-expansion@5.0.6": "5.0.11",
       "browserslist": "4.28.7",
       "fast-uri": "3.1.9",
+      "follow-redirects": "1.16.2",
       "ip-address": "10.3.1",
       "nanoid@3": "3.3.18",
       "nanoid@5": "5.1.16",
+      "pacote": "21.5.1",
       "picomatch": "4.0.4",
+      "proxy-addr": "2.0.8",
       "sharp": "0.35.5",
+      "sigstore": "4.1.1",
       "source-map-js": "1.2.2",
       "postcss": "8.5.23"
     }

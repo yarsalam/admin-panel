@@ -16,6 +16,9 @@ on:
       - "pnpm-workspace.yaml"
       - ".github/workflows/admin-production-stack-smoke.yml"
 
+  push:
+    branches: [chore/admin-vps-production-readiness-v2]
+
 permissions:
   contents: read
 
@@ -36,11 +39,14 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Regenerate lockfile for security-patched dependencies
+        run: pnpm install --lockfile-only --no-frozen-lockfile
 
-      - name: Test secure admin bootstrap and CORS configuration
-        run: pnpm --filter server test -- --runInBand admin/auth/auth.service.spec.ts config/cors-origins.spec.ts
+      - name: Install workspace dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Test secure admin bootstrap and CORS/JWT configuration
+        run: pnpm --filter server test -- --runInBand admin/auth/auth.service.spec.ts config/cors-origins.spec.ts config/security-config.spec.ts
 
       - name: Build Admin server
         run: pnpm --filter server build
@@ -108,4 +114,8 @@ jobs:
 
       - name: Tear down isolated stack
         if: always()
-        run: docker compose --env-file .env.production -f docker-compose.production.yml down -v --remove-orphans
+        shell: bash
+        run: |
+          if [ -f .env.production ]; then
+            docker compose --env-file .env.production -f docker-compose.production.yml down -v --remove-orphans
+          fi
