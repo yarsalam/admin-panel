@@ -4,10 +4,10 @@ import { throwError } from 'rxjs';
 
 describe('UsersService AI advice read contract', () => {
   let service: UsersService;
-  let userApi: { get: jest.Mock };
+  let userApi: { get: jest.Mock; post: jest.Mock };
 
   beforeEach(() => {
-    userApi = { get: jest.fn() };
+    userApi = { get: jest.fn(), post: jest.fn() };
     service = new UsersService(
       userApi as unknown as UserApiClientService,
       {} as any,
