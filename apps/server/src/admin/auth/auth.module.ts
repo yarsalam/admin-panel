@@ -7,7 +7,6 @@ import { AdminAuthController } from './auth.controller';
 import { AdminUser } from './entities/admin-user.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { SeederService } from './seeder.service';
 
 @Module({
   imports: [
@@ -16,14 +15,14 @@ import { SeederService } from './seeder.service';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET') || 'super-secret',
+        secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: { expiresIn: '24h' },
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [AdminAuthController],
-  providers: [AdminAuthService, JwtStrategy, SeederService],
+  providers: [AdminAuthService, JwtStrategy],
   exports: [JwtModule],
 })
 export class AdminAuthModule implements OnModuleInit {
