@@ -59,19 +59,15 @@ export class UsersService {
   }
 
   async verifyFace(selfieBuffer: Buffer, profileBuffer: Buffer) {
-    try {
-      const FormData = (await import('form-data')).default;
-      const form = new FormData();
-      form.append('selfie', selfieBuffer, 'selfie.jpg');
-      form.append('profile_photo', profileBuffer, 'profile.jpg');
-      const { data } = await firstValueFrom(
-        this.http.post(`${this.aiVerificationUrl}/verify`, form, {
-          headers: form.getHeaders(),
-        }),
-      );
-      return data;
-    } catch (error) {
-      throw error;
-    }
+    const FormData = (await import('form-data')).default;
+    const form = new FormData();
+    form.append('selfie', selfieBuffer, 'selfie.jpg');
+    form.append('profile_photo', profileBuffer, 'profile.jpg');
+    const { data } = await firstValueFrom(
+      this.http.post(`${this.aiVerificationUrl}/verify`, form, {
+        headers: form.getHeaders(),
+      }),
+    );
+    return data;
   }
 }
