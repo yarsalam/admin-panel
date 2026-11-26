@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api/client";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useSendNotification } from "@/lib/api/safety/mutations/useUser360Actions";
 import { useReAnalyzeUser } from "@/lib/api/safety/mutations/useUser360";
 import { useState } from "react";
@@ -168,7 +169,7 @@ export default function RiskTab({
 }) {
   const qc = useQueryClient();
 
-  const { data: risk, isLoading: riskLoading } = useQuery({
+  const { data: risk, isLoading: riskLoading, isError: riskError, refetch: refetchRisk } = useQuery({
     queryKey: ["safety", "risk", userId],
     queryFn: () => apiClient.get(`/safety/risk/${userId}`).then((r) => r.data),
   });
@@ -176,6 +177,7 @@ export default function RiskTab({
   const {
     data: aiAdvice,
     isLoading: aiLoading,
+    isError: aiError,
     refetch: refetchAdvice,
   } = useQuery({
     queryKey: ["safety", "user", userId, "ai-advice"],
@@ -184,7 +186,7 @@ export default function RiskTab({
     retry: false,
   });
 
-  const { data: notifsData } = useQuery({
+  const { data: notifsData, isError: notificationsError } = useQuery({
     queryKey: ["safety", "user", userId, "notifications"],
     queryFn: () =>
       apiClient
@@ -221,7 +223,9 @@ export default function RiskTab({
   return (
     <div className="space-y-5" dir="rtl">
       {/* ── Risk Score ── */}
-      {riskLoading ? (
+      {riskError ? (
+        <ErrorState message="خطا در دریافت ارزیابی ریسک" onRetry={refetchRisk} />
+      ) : riskLoading ? (
         <Skeleton className="h-44" />
       ) : risk ? (
         <div className={`rounded-xl border-2 p-5 ${levelCfg.bg}`}>
@@ -364,7 +368,9 @@ export default function RiskTab({
           </button>
         </div>
 
-        {aiLoading ? (
+        {aiError ? (
+          <ErrorState message="خطا در دریافت تحلیل هوش مصنوعی" onRetry={refetchAdvice} />
+        ) : aiLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
@@ -490,7 +496,9 @@ export default function RiskTab({
           </div>
         )}
 
-        {notifications.length > 0 ? (
+        {notificationsError ? (
+          <p className="text-sm text-red-500 text-center py-4">خطا در دریافت اعلان‌ها</p>
+        ) : notifications.length > 0 ? (
           <ul className="space-y-1 max-h-52 overflow-y-auto">
             {notifications.slice(0, 20).map((n: any, i: number) => (
               <li
