@@ -15,22 +15,15 @@ export class RiskService {
   constructor(private userApi: UserApiClientService) {}
 
   async calculateRisk(userId: number): Promise<RiskResult> {
+    // Risk must never be calculated from incomplete evidence. If any required
+    // upstream source is unavailable, propagate the error instead of treating
+    // missing data as an empty/low-risk result.
     const [profile, financial, reports, activity, modLogs] = await Promise.all([
-      this.userApi
-        .get(`/admin-api/safety/users/${userId}/profile`)
-        .catch(() => null),
-      this.userApi
-        .get(`/admin-api/safety/users/${userId}/financial`)
-        .catch(() => null),
-      this.userApi
-        .get(`/admin-api/safety/users/${userId}/reports`)
-        .catch(() => []),
-      this.userApi
-        .get(`/admin-api/safety/users/${userId}/activity`)
-        .catch(() => null),
-      this.userApi
-        .get(`/admin-api/safety/users/${userId}/moderation-logs`)
-        .catch(() => []),
+      this.userApi.get(`/admin-api/safety/users/${userId}/profile`),
+      this.userApi.get(`/admin-api/safety/users/${userId}/financial`),
+      this.userApi.get(`/admin-api/safety/users/${userId}/reports`),
+      this.userApi.get(`/admin-api/safety/users/${userId}/activity`),
+      this.userApi.get(`/admin-api/safety/users/${userId}/moderation-logs`),
     ]);
 
     let riskScore = 0;
@@ -82,7 +75,7 @@ export class RiskService {
       }
     }
 
-    // ── Activity anomalies ───────────────────────────────────────────────────
+    // ── Activity anomalies ────────────────────────────────────────────────────
     const msgCount = activity?.messages?.length ?? 0;
     if (msgCount > 500) {
       riskScore += 10;
