@@ -20,8 +20,8 @@ import databaseConfig from 'src/config/database.config';
         // رفع: synchronize=false در production — از migration استفاده شود
         // synchronize: config.get('NODE_ENV') !== 'production',
         autoLoadEntities: true,
-        synchronize: true,
-        logging: true,
+        synchronize: config.get<boolean>('database.synchronize') ?? false,
+        logging: config.get<boolean>('database.logging') ?? false,
       }),
     }),
   ],
